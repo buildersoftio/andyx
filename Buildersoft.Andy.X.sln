@@ -1,0 +1,67 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Buildersoft.Andy.X", "src\Buildersoft.Andy.X\Buildersoft.Andy.X.csproj", "{CECFA00C-66CA-4419-92BA-A67ECCA1200A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729} = {89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729}
+		{67E6F485-0B70-42C3-B6E7-3FC83DA53D2D} = {67E6F485-0B70-42C3-B6E7-3FC83DA53D2D}
+		{EC75C3E5-641A-4E12-B792-3C17707825F6} = {EC75C3E5-641A-4E12-B792-3C17707825F6}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Buildersoft.Andy.X.Data.Model", "src\Buildersoft.Andy.X.Data.Model\Buildersoft.Andy.X.Data.Model.csproj", "{89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Buildersoft.Andy.X.Logic", "src\Buildersoft.Andy.X.Logic\Buildersoft.Andy.X.Logic.csproj", "{67E6F485-0B70-42C3-B6E7-3FC83DA53D2D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729} = {89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729}
+		{EC75C3E5-641A-4E12-B792-3C17707825F6} = {EC75C3E5-641A-4E12-B792-3C17707825F6}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Buildersoft.Andy.X.Utilities", "src\Buildersoft.Andy.X.Utilities\Buildersoft.Andy.X.Utilities.csproj", "{EC75C3E5-641A-4E12-B792-3C17707825F6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729} = {89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729}
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Buildersoft.Andy.X.FileConfig", "src\Buildersoft.Andy.X.FileConfig\Buildersoft.Andy.X.FileConfig.csproj", "{C8509DF5-12AE-4E36-9463-6101E30387FF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Buildersoft.Andy.X.Router", "src\Buildersoft.Andy.X.Router\Buildersoft.Andy.X.Router.csproj", "{D5D2ED04-159E-4576-A200-801B24C298E8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CECFA00C-66CA-4419-92BA-A67ECCA1200A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CECFA00C-66CA-4419-92BA-A67ECCA1200A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CECFA00C-66CA-4419-92BA-A67ECCA1200A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CECFA00C-66CA-4419-92BA-A67ECCA1200A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67E6F485-0B70-42C3-B6E7-3FC83DA53D2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67E6F485-0B70-42C3-B6E7-3FC83DA53D2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67E6F485-0B70-42C3-B6E7-3FC83DA53D2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67E6F485-0B70-42C3-B6E7-3FC83DA53D2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC75C3E5-641A-4E12-B792-3C17707825F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC75C3E5-641A-4E12-B792-3C17707825F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC75C3E5-641A-4E12-B792-3C17707825F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC75C3E5-641A-4E12-B792-3C17707825F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8509DF5-12AE-4E36-9463-6101E30387FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8509DF5-12AE-4E36-9463-6101E30387FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8509DF5-12AE-4E36-9463-6101E30387FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8509DF5-12AE-4E36-9463-6101E30387FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5D2ED04-159E-4576-A200-801B24C298E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5D2ED04-159E-4576-A200-801B24C298E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5D2ED04-159E-4576-A200-801B24C298E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5D2ED04-159E-4576-A200-801B24C298E8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2B444DF4-48E4-4CEF-B178-41095DDEE38A}
+	EndGlobalSection
+EndGlobal
