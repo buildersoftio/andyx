@@ -5,15 +5,15 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src
-COPY ["Buildersoft.Andy.X/Buildersoft.Andy.X.csproj", "Buildersoft.Andy.X/"]
-COPY ["Buildersoft.Andy.X.Data.Model/Buildersoft.Andy.X.Data.Model.csproj", "Buildersoft.Andy.X.Data.Model/"]
-COPY ["Buildersoft.Andy.X.Logic/Buildersoft.Andy.X.Logic.csproj", "Buildersoft.Andy.X.Logic/"]
-COPY ["Buildersoft.Andy.X.Utilities/Buildersoft.Andy.X.Utilities.csproj", "Buildersoft.Andy.X.Utilities/"]
-COPY ["Buildersoft.Andy.X.Router/Buildersoft.Andy.X.Router.csproj", "Buildersoft.Andy.X.Router/"]
-COPY ["Buildersoft.Andy.X.FileConfig/Buildersoft.Andy.X.FileConfig.csproj", "Buildersoft.Andy.X.FileConfig/"]
-RUN dotnet restore "Buildersoft.Andy.X/Buildersoft.Andy.X.csproj"
+COPY ["src/Buildersoft.Andy.X/Buildersoft.Andy.X.csproj", "src/Buildersoft.Andy.X/"]
+COPY ["src/Buildersoft.Andy.X.Data.Model/Buildersoft.Andy.X.Data.Model.csproj", "src/Buildersoft.Andy.X.Data.Model/"]
+COPY ["src/Buildersoft.Andy.X.Logic/Buildersoft.Andy.X.Logic.csproj", "src/Buildersoft.Andy.X.Logic/"]
+COPY ["src/Buildersoft.Andy.X.Utilities/Buildersoft.Andy.X.Utilities.csproj", "src/Buildersoft.Andy.X.Utilities/"]
+COPY ["src/Buildersoft.Andy.X.Router/Buildersoft.Andy.X.Router.csproj", "src/Buildersoft.Andy.X.Router/"]
+COPY ["src/Buildersoft.Andy.X.FileConfig/Buildersoft.Andy.X.FileConfig.csproj", "src/Buildersoft.Andy.X.FileConfig/"]
+RUN dotnet restore "src/Buildersoft.Andy.X/Buildersoft.Andy.X.csproj"
 COPY . .
-WORKDIR "/src/Buildersoft.Andy.X"
+WORKDIR "/src/src/Buildersoft.Andy.X"
 RUN dotnet build "Buildersoft.Andy.X.csproj" -c Release -o /app/build
 
 FROM build AS publish
