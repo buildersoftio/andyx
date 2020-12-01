@@ -1,4 +1,5 @@
 ﻿using Buildersoft.Andy.X.Data.Model.DataStorages;
+using Buildersoft.Andy.X.Data.Model.Readers.Events;
 using Buildersoft.Andy.X.Data.Model.Router.DataStorages;
 using Buildersoft.Andy.X.Router.Hubs.DataStorage;
 using Buildersoft.Andy.X.Router.Hubs.Interfaces.DataStorages;
@@ -62,6 +63,47 @@ namespace Buildersoft.Andy.X.Router.Services.DataStorages
                     break;
                 }
             }
+        }
+
+        public async Task StoreMessageAcknowledged(MessageAcknowledgedArgs messageAcknowledgedArgs)
+        {
+            //This implementation should change, the acked message should go to all, but only to the datastorage where the message is stored should take it.
+            foreach (var item in Enum.GetNames(typeof(DataStorageEnvironment)))
+            {
+                DataStorageEnvironment dse = (DataStorageEnvironment)Enum.Parse(typeof(DataStorageEnvironment), item);
+
+                var dataStoragesProductionExclusive = _dataStorageRepository.GetDataStorages(dse,
+                    DataStorageType.Exclusive,
+                    DataStorageStatus.Active);
+
+                if (dataStoragesProductionExclusive.Count() > 0)
+                {
+                    string dataStorageConnectionId = dataStoragesProductionExclusive.First().Key;
+                    await _hub.Clients.Client(dataStorageConnectionId).MessageAcknowledgeStored(messageAcknowledgedArgs);
+
+                    // Create a method to send this message to a backup DataStorage
+
+                    break;
+                }
+
+                var dataStoragesProductionShared = _dataStorageRepository.GetDataStorages(dse,
+                   DataStorageType.Shared,
+                   DataStorageStatus.Active);
+
+                if (dataStoragesProductionShared.Count() > 0)
+                {
+                    int randomSharedDataStorage = RandomGenerator.GetRandomSharedReader(0, dataStoragesProductionShared.Count());
+
+                    string dataStorageConnectionId = dataStoragesProductionShared.ToList()[randomSharedDataStorage].Key;
+
+                    await _hub.Clients.Client(dataStorageConnectionId).MessageAcknowledgeStored(messageAcknowledgedArgs);
+
+                    // Create a method to send this message to a backup DataStorage
+
+                    break;
+                }
+            }
+
         }
     }
 }

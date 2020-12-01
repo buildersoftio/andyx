@@ -1,4 +1,5 @@
 ﻿using Buildersoft.Andy.X.Data.Model.DataStorages;
+using Buildersoft.Andy.X.Data.Model.Readers.Events;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,6 +12,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Interfaces.DataStorages
         Task DataStorageConnected(DataStorageConnectionDetail connectionDetail);
         Task DataStorageDisconnected(DataStorageDisconnectionDetail disconnectionDetail);
         Task MessageStored(MessageDetail message);
+        Task MessageAcknowledgeStored(MessageAcknowledgedArgs messageAcknowledgedArgs);
         Task ReaderStored(ReaderDetail reader);
 
 

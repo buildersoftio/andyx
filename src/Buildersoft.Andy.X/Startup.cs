@@ -35,6 +35,12 @@ namespace Buildersoft.Andy.X
                     opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
 
+            services.AddSignalR()
+                .AddJsonProtocol(opts =>
+                {
+                    opts.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
+
             // Here we will add Authentication and Authorization
             services.AddApiAuthentication(Configuration);
             services.AddApiAuthorization();
@@ -43,12 +49,12 @@ namespace Buildersoft.Andy.X
             services.AddCors();
             services.AddCors(options =>
             {
-                options.AddPolicy("CorsPolicy", builder => 
+                options.AddPolicy("CorsPolicy", builder =>
 
-                builder.WithOrigins("http://localhost:4200", "https://localhost:4200", "")
+                builder.WithOrigins("http://localhost:4200", "https://localhost:4200")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
-                .AllowCredentials()) ;
+                .AllowCredentials());
             });
 
             // Add Health Checks
@@ -70,7 +76,6 @@ namespace Buildersoft.Andy.X
             services.AddDashboardServices();
 
             // Implementing SignalR
-            services.AddSignalR();
             services.AddRouterServices();
         }
 
