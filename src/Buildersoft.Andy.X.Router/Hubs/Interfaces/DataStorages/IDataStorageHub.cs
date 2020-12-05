@@ -12,8 +12,10 @@ namespace Buildersoft.Andy.X.Router.Hubs.Interfaces.DataStorages
         Task DataStorageConnected(DataStorageConnectionDetail connectionDetail);
         Task DataStorageDisconnected(DataStorageDisconnectionDetail disconnectionDetail);
         Task MessageStored(MessageDetail message);
-        Task MessageAcknowledgeStored(MessageAcknowledgedArgs messageAcknowledgedArgs);
-        Task ReaderStored(ReaderDetail reader);
+        Task MessageLogStored(MessageLogedArgs messageAcknowledgedArgs);
+
+        Task ReaderConnectStored(ReaderDetail reader);
+        Task ReaderDisconnectStored(ReaderDetail reader);
 
 
         Task TenantCreated(TenantDetail tenant);

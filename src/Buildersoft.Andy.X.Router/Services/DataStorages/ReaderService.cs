@@ -26,7 +26,15 @@ namespace Buildersoft.Andy.X.Router.Services.DataStorages
         {
             foreach (var storage in _dataStorageRepository.GetAll())
             {
-                await _hub.Clients.Client(storage.Key).ReaderStored(reader);
+                await _hub.Clients.Client(storage.Key).ReaderConnectStored(reader);
+            }
+        }
+
+        public async Task StoreReaderDisconnectedLog(ReaderDetail reader)
+        {
+            foreach (var storage in _dataStorageRepository.GetAll())
+            {
+                await _hub.Clients.Client(storage.Key).ReaderDisconnectStored(reader);
             }
         }
     }

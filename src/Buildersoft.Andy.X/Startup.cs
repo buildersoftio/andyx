@@ -46,7 +46,6 @@ namespace Buildersoft.Andy.X
             services.AddApiAuthorization();
 
             // Add cors
-            services.AddCors();
             services.AddCors(options =>
             {
                 options.AddPolicy("CorsPolicy", builder =>
@@ -90,8 +89,6 @@ namespace Buildersoft.Andy.X
 
             // Logging per Rest Calls po e ndalim njehere pasi qe kemi problem me connection me SignalR ne Docker.
             // app.UseHttpReqResLogging();
-
-
 
             app.UseMiddleware<AuthorizationMiddleware>();
 

@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace Buildersoft.Andy.X.Controllers
 {
     [Route("datastorages")]
-    [Authorize(Policy = "Internal")]
     [ApiController]
     [RequireHttps]
     public class StorageController : ControllerBase

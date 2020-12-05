@@ -65,7 +65,7 @@ namespace Buildersoft.Andy.X.Router.Services.DataStorages
             }
         }
 
-        public async Task StoreMessageAcknowledged(MessageAcknowledgedArgs messageAcknowledgedArgs)
+        public async Task StoreMessageLogedAsync(MessageLogedArgs messageAcknowledgedArgs)
         {
             //This implementation should change, the acked message should go to all, but only to the datastorage where the message is stored should take it.
             foreach (var item in Enum.GetNames(typeof(DataStorageEnvironment)))
@@ -79,7 +79,7 @@ namespace Buildersoft.Andy.X.Router.Services.DataStorages
                 if (dataStoragesProductionExclusive.Count() > 0)
                 {
                     string dataStorageConnectionId = dataStoragesProductionExclusive.First().Key;
-                    await _hub.Clients.Client(dataStorageConnectionId).MessageAcknowledgeStored(messageAcknowledgedArgs);
+                    await _hub.Clients.Client(dataStorageConnectionId).MessageLogStored(messageAcknowledgedArgs);
 
                     // Create a method to send this message to a backup DataStorage
 
@@ -96,7 +96,7 @@ namespace Buildersoft.Andy.X.Router.Services.DataStorages
 
                     string dataStorageConnectionId = dataStoragesProductionShared.ToList()[randomSharedDataStorage].Key;
 
-                    await _hub.Clients.Client(dataStorageConnectionId).MessageAcknowledgeStored(messageAcknowledgedArgs);
+                    await _hub.Clients.Client(dataStorageConnectionId).MessageLogStored(messageAcknowledgedArgs);
 
                     // Create a method to send this message to a backup DataStorage
 

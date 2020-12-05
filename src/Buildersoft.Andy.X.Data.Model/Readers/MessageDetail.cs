@@ -7,7 +7,6 @@ namespace Buildersoft.Andy.X.Data.Model.Readers
     public class MessageDetail
     {
         public string MessageId { get; set; }
-
         public string Tenant { get; set; }
         public string Product { get; set; }
         public string Component { get; set; }

@@ -23,16 +23,20 @@ namespace Buildersoft.Andy.X.Router.Hubs.Readers
         private readonly ILogger<ReaderHub> _logger;
         private readonly StorageMemoryRepository _storageMemoryRepository;
         private readonly Services.DataStorages.ReaderService _readerService;
+        private readonly Services.DataStorages.MessageService _messageService;
         private readonly ReaderRepository _readerRepository;
 
         public ReaderHub(ILogger<ReaderHub> logger,
             IHubRepository<Data.Model.Router.Readers.Reader> readerRepository,
             StorageMemoryRepository storageMemoryRepository,
-            Services.DataStorages.ReaderService readerService)
+            Services.DataStorages.ReaderService readerService,
+            Services.DataStorages.MessageService messageService)
         {
             _logger = logger;
             _storageMemoryRepository = storageMemoryRepository;
             _readerService = readerService;
+            _messageService = messageService;
+
             _readerRepository = readerRepository as ReaderRepository;
         }
 
@@ -87,16 +91,41 @@ namespace Buildersoft.Andy.X.Router.Hubs.Readers
 
         public override Task OnDisconnectedAsync(Exception exception)
         {
+            var readerToDelete = _readerRepository.GetById(Context.ConnectionId);
+
+            _ = _readerService.StoreReaderDisconnectedLog(new Data.Model.DataStorages.ReaderDetail()
+            {
+                Tenant = readerToDelete.Tenant,
+                Product = readerToDelete.Product,
+                Component = readerToDelete.Component,
+                Book = readerToDelete.Book,
+                ReaderAs = readerToDelete.ReaderAs,
+                ReaderType = readerToDelete.ReaderType,
+                ReaderName = readerToDelete.ReaderName
+            });
+
             _readerRepository.Remove(Context.ConnectionId);
 
             return base.OnDisconnectedAsync(exception);
         }
 
 
-        public void AcknowledgeMessage(MessageAcknowledgedArgs messageAcked)
+        public async Task AcknowledgeMessage(MessageLogedArgs messageLoged)
         {
-            var readerRepository = new ReaderMemoryRepository(_storageMemoryRepository.GetReaders(messageAcked.Tenant, messageAcked.Product, messageAcked.Component, messageAcked.Book));
-            readerRepository.MessageAcknowledged(messageAcked.Reader, messageAcked.MessageId);
+            var readerRepository = new ReaderMemoryRepository(_storageMemoryRepository.GetReaders(messageLoged.Tenant, messageLoged.Product, messageLoged.Component, messageLoged.Book));
+            readerRepository.MessageAcknowledged(messageLoged.Reader, messageLoged.MessageId);
+
+            await _messageService.StoreMessageLogedAsync(new MessageLogedArgs()
+            {
+                Tenant = messageLoged.Tenant,
+                Product = messageLoged.Product,
+                Component = messageLoged.Component,
+                Book = messageLoged.Book,
+                Reader = messageLoged.Reader,
+                MessageId = messageLoged.MessageId,
+                Log = "acknowledged",
+                Date = DateTime.Now
+            });
         }
     }
 }
