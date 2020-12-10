@@ -7,15 +7,15 @@ namespace Buildersoft.Andy.X.Logic.Services.Interfaces
 {
     public interface IDashboardRestService
     {
-        List<Tenant> GetTenants();
         ICollection<string> GetTenantNames();
+        Tenant GetTenantDetails(string tenant);
         ICollection<string> GetProductNames(string tenant);
-        List<Product> GetProducts(string tenant);
+        Product GetProductDetails(string tenant, string product);
         ICollection<string> GetComponentNames(string tenant, string product);
-        List<Component> GetComponents(string tenant, string product);
+        Component GetComponentDetails(string tenant, string product, string component);
         ICollection<string> GetBookNames(string tenant, string product, string component);
-        List<Book> GetBooks(string tenant, string product, string component);
+        Book GetBookDetails(string tenant, string product, string component, string book);
         ICollection<string> GetReaderNames(string tenant, string product, string component, string books);
-        List<Reader> GetReaders(string tenant, string product, string component, string books);
+        Reader GetReaderDetails(string tenant, string product, string component, string books, string reader);
     }
 }
