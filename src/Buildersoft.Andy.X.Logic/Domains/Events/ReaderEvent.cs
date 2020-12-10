@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Buildersoft.Andy.X.Logic.Domain.Events
+namespace Buildersoft.Andy.X.Logic.Domains.Events
 {
     public class ReaderEvent
     {

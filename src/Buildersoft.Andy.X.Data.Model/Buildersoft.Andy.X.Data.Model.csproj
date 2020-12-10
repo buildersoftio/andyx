@@ -10,4 +10,8 @@
     <Copyright>Copyright © Buildersoft 2020</Copyright>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Dashboard\Reports\" />
+  </ItemGroup>
+
 </Project>

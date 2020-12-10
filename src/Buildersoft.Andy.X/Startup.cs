@@ -50,10 +50,9 @@ namespace Buildersoft.Andy.X
             {
                 options.AddPolicy("CorsPolicy", builder =>
 
-                builder.WithOrigins("http://localhost:4200", "https://localhost:4200")
+                builder.AllowAnyOrigin()
                 .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials());
+                .AllowAnyHeader());
             });
 
             // Add Health Checks
@@ -86,9 +85,6 @@ namespace Buildersoft.Andy.X
                 app.UseDeveloperExceptionPage();
                 app.UseSwaggerView();
             }
-
-            // Logging per Rest Calls po e ndalim njehere pasi qe kemi problem me connection me SignalR ne Docker.
-            // app.UseHttpReqResLogging();
 
             app.UseMiddleware<AuthorizationMiddleware>();
 
