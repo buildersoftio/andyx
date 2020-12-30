@@ -10,5 +10,8 @@ namespace Buildersoft.Andy.X.Data.Model.DataStorages
         public string TenantName { get; set; }
         public string ProductName { get; set; }
         public string ComponentName { get; set; }
+
+        public string ComponentDescription { get; set; }
+        public bool ComponentStatus { get; set; }
     }
 }

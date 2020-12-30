@@ -44,7 +44,16 @@ namespace Buildersoft.Andy.X.Middleware
         {
             var tenantName = context.Request.Headers["x-andy-x-tenant"].ToString();
             if (tenantName == "")
+            {
                 context.Items["IsTenantValidated"] = false;
+                
+                var dataStorageName = context.Request.Headers["x-andyx-datastorage"].ToString();
+                if (dataStorageName != "")
+                {
+                    // Check datastorage service
+                    // TODO... implement token validation for DataStorages
+                }
+            }
             else
                 CheckTenantAccessToken(tenantName, context);
 

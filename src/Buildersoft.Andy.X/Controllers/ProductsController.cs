@@ -58,7 +58,14 @@ namespace Buildersoft.Andy.X.Controllers
             Product product = _productLogic.CreateProduct(productName);
             if (product != null)
             {
-                await _productService.CreateProductAsync(new Data.Model.DataStorages.ProductDetail() { ProductId = product.Id, TenantName = tenantName, ProductName = productName });
+                await _productService.CreateProductAsync(new Data.Model.DataStorages.ProductDetail()
+                {
+                    ProductId = product.Id,
+                    TenantName = tenantName,
+                    ProductName = productName,
+                    ProductDescription = product.Description,
+                    ProductStatus = product.Status
+                });
                 return Ok(product);
             }
 

@@ -67,7 +67,9 @@ namespace Buildersoft.Andy.X.Controllers
                     ComponentId = component.Id,
                     TenantName = tenantName,
                     ProductName = productName,
-                    ComponentName = componentName
+                    ComponentName = componentName,
+                    ComponentDescription = component.Description,
+                    ComponentStatus = component.Status
                 });
 
                 return Ok(component);

@@ -106,5 +106,14 @@ namespace Buildersoft.Andy.X.Router.Repositories.Readers
             }
             return true;
         }
+
+        public bool IsTenantProductComponentActive(Reader reader)
+        {
+            if (_storageMemoryRepository.GetTenants()[reader.Tenant].Status == true)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }
