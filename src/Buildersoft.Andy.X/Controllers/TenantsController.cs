@@ -42,7 +42,11 @@ namespace Buildersoft.Andy.X.Controllers
 
             Tenant tenant = _tenantLogic.GetTenant(tenantName);
             if (tenant != null)
-                return Ok(tenant);
+            {
+                if (tenant.Status == true)
+                    return Ok(tenant);
+                return BadRequest($"Tenant {tenantName} is inactive");
+            }
 
             return NotFound("TENANT_NOT_FOUND");
         }
@@ -62,7 +66,9 @@ namespace Buildersoft.Andy.X.Controllers
                     TenantName = tenantName,
                     Encryption = tenant.GetEncryption(),
                     Signature = tenant.GetSignature(),
-                    TenantId = tenant.Id
+                    TenantId = tenant.Id,
+                    TenantDescription = tenant.Description,
+                    TenantStatus = tenant.Status
                 });
 
                 return Ok(new

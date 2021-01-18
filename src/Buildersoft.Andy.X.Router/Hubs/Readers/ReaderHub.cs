@@ -62,11 +62,19 @@ namespace Buildersoft.Andy.X.Router.Hubs.Readers
                 ReaderAs = (ReaderAs)Enum.Parse(typeof(ReaderAs), headers["x-andy-x-readeras"].ToString())
             };
 
+            if (_readerRepository.IsTenantProductComponentActive(reader) != true)
+            {
+                Context.Abort();
+                return base.OnDisconnectedAsync(new Exception($"{reader.Tenant}/{reader.Product}/{reader.Component}, tenant, product or component is inactive: reader can not be connected"));
+            }
+
             if (_readerRepository.IsReaderConnectable(reader) != true)
             {
                 Context.Abort();
                 return base.OnDisconnectedAsync(new Exception($"This reader is already connected to this book {reader.Book}, please check the dashboard."));
             }
+
+            //connect only if tenant, product and component states are true.
 
             _readerRepository.Add(clientConnectionId, reader);
 

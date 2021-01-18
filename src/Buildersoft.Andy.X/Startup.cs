@@ -50,9 +50,10 @@ namespace Buildersoft.Andy.X
             {
                 options.AddPolicy("CorsPolicy", builder =>
 
-                builder.AllowAnyOrigin()
+                builder.WithOrigins("http://localhost:4200", "https://localhost:4200", "https://calm-sand-01dfcac03.azurestaticapps.net")
                 .AllowAnyMethod()
-                .AllowAnyHeader());
+                .AllowAnyHeader()
+                .AllowCredentials());
             });
 
             // Add Health Checks
