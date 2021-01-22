@@ -23,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Buildersoft.Andy.X.Utilitie
 		{89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729} = {89AF1B22-CFA0-44BD-84D9-ABCA8AE9E729}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Buildersoft.Andy.X.FileConfig", "src\Buildersoft.Andy.X.FileConfig\Buildersoft.Andy.X.FileConfig.csproj", "{C8509DF5-12AE-4E36-9463-6101E30387FF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Buildersoft.Andy.X.IO", "src\Buildersoft.Andy.X.FileConfig\Buildersoft.Andy.X.IO.csproj", "{C8509DF5-12AE-4E36-9463-6101E30387FF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Buildersoft.Andy.X.Router", "src\Buildersoft.Andy.X.Router\Buildersoft.Andy.X.Router.csproj", "{D5D2ED04-159E-4576-A200-801B24C298E8}"
 EndProject

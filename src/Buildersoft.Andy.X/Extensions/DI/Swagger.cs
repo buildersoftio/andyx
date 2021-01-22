@@ -16,7 +16,7 @@ namespace Buildersoft.Andy.X.Extensions.DI
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    Version = "v1",
+                    Version = "v1.1",
                     Title = "Buildersoft Andy X",
                     Description = "Welcome to Buildersoft Andy X, the first distributed message streaming platform designed for .NET"
                 });

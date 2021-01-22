@@ -1,6 +1,7 @@
 ﻿using Buildersoft.Andy.X.Data.Model.Enums;
 using Buildersoft.Andy.X.Data.Model.Readers.Events;
 using Buildersoft.Andy.X.Logic;
+using Buildersoft.Andy.X.Logic.Books;
 using Buildersoft.Andy.X.Logic.Readers;
 using Buildersoft.Andy.X.Router.Hubs.Interfaces.Readers;
 using Buildersoft.Andy.X.Router.Repositories;
@@ -76,6 +77,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Readers
 
             //connect only if tenant, product and component states are true.
 
+            // Check how to send schema in header of Reader Request to check if the schemas are the same.
+            //var bookLogic = new BookLogic(
+            //     _storageMemoryRepository.GetBooks(reader.Tenant, reader.Product, reader.Component));
+
+            //if (await bookLogic.IsSchemaValidAsync(reader.Book, msg.ToString()) != true)
+            //    return BadRequest("INVALID_SCHEMA");
+
+
             _readerRepository.Add(clientConnectionId, reader);
 
             _ = _readerService.StoreReaderAsync(new Data.Model.DataStorages.ReaderDetail()
@@ -111,7 +120,6 @@ namespace Buildersoft.Andy.X.Router.Hubs.Readers
                 ReaderType = readerToDelete.ReaderType,
                 ReaderName = readerToDelete.ReaderName
             });
-
             _readerRepository.Remove(Context.ConnectionId);
 
             return base.OnDisconnectedAsync(exception);

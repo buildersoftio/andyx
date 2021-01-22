@@ -57,7 +57,11 @@ namespace Buildersoft.Andy.X.Controllers
         public async Task<ActionResult<Guid>> CreateMessageAsJsonFromApi(string tenantName, string productName, string componentName, string bookName, [FromBody] object msg)
         {
             Guid generatedMessageId = Guid.NewGuid();
+            var bookLogic = new BookLogic(
+                _memoryRepository.GetBooks(tenantName, productName, componentName));
 
+            if (await bookLogic.IsSchemaValidAsync(bookName, msg.ToString()) != true)
+                return BadRequest("INVALID_SCHEMA");
 
             //Store the message into DataStorage
             await _messageService.StoreMessageAsync(new Data.Model.DataStorages.MessageDetail()
@@ -90,6 +94,12 @@ namespace Buildersoft.Andy.X.Controllers
             Guid generatedMessageId = msgId;
             if (generatedMessageId == Guid.Empty)
                 generatedMessageId = Guid.NewGuid();
+
+            var bookLogic = new BookLogic(
+                _memoryRepository.GetBooks(tenantName, productName, componentName));
+
+            if (await bookLogic.IsSchemaValidAsync(bookName, msg.ToString()) != true)
+                return BadRequest("INVALID_SCHEMA");
 
             //Store the message into DataStorage
             await _messageService.StoreMessageAsync(new Data.Model.DataStorages.MessageDetail()

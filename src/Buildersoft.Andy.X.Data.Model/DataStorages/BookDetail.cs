@@ -14,6 +14,6 @@ namespace Buildersoft.Andy.X.Data.Model.DataStorages
         public string BookName { get; set; }
         public DataTypes DataType { get; set; }
 
-        // TODO... Add properties for this Book
+        public Schema Schema { get; set; }
     }
 }
