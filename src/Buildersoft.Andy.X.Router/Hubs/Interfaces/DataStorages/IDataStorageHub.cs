@@ -40,5 +40,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Interfaces.DataStorages
         Task BookRead(BookDetail book);
         Task BookUpdated(BookDetail book);
         Task BookDeleted(BookDetail book);
+
+        Task BookSchemaUpdated(BookDetail book);
     }
 }

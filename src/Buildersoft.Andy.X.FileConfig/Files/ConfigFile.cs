@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Buildersoft.Andy.X.FileConfig.Files
+namespace Buildersoft.Andy.X.IO.Files
 {
     public static class ConfigFile
     {

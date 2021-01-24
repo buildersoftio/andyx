@@ -30,5 +30,13 @@ namespace Buildersoft.Andy.X.Router.Services.DataStorages
                 await _hub.Clients.Client(storage.Key).BookCreated(book);
             }
         }
+
+        public async Task UpdateBookSchemaAsync(BookDetail book)
+        {
+            foreach (var storage in _dataStorageRepository.GetAll())
+            {
+                await _hub.Clients.Client(storage.Key).BookSchemaUpdated(book);
+            }
+        }
     }
 }
