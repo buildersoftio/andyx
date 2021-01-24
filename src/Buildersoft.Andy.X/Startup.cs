@@ -35,7 +35,10 @@ namespace Buildersoft.Andy.X
                     opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
 
-            services.AddSignalR()
+            services.AddSignalR(opt =>
+                {
+                    opt.MaximumReceiveMessageSize = null;
+                })
                 .AddJsonProtocol(opts =>
                 {
                     opts.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
