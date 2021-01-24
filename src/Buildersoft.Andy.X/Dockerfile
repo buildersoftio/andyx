@@ -10,7 +10,7 @@ COPY ["src/Buildersoft.Andy.X.Data.Model/Buildersoft.Andy.X.Data.Model.csproj", 
 COPY ["src/Buildersoft.Andy.X.Logic/Buildersoft.Andy.X.Logic.csproj", "src/Buildersoft.Andy.X.Logic/"]
 COPY ["src/Buildersoft.Andy.X.Utilities/Buildersoft.Andy.X.Utilities.csproj", "src/Buildersoft.Andy.X.Utilities/"]
 COPY ["src/Buildersoft.Andy.X.Router/Buildersoft.Andy.X.Router.csproj", "src/Buildersoft.Andy.X.Router/"]
-COPY ["src/Buildersoft.Andy.X.FileConfig/Buildersoft.Andy.X.FileConfig.csproj", "src/Buildersoft.Andy.X.FileConfig/"]
+COPY ["src/Buildersoft.Andy.X.FileConfig/Buildersoft.Andy.X.IO.csproj", "src/Buildersoft.Andy.X.FileConfig/"]
 RUN dotnet restore "src/Buildersoft.Andy.X/Buildersoft.Andy.X.csproj"
 COPY . .
 WORKDIR "/src/src/Buildersoft.Andy.X"
