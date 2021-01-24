@@ -28,20 +28,21 @@ namespace Buildersoft.Andy.X.Logic.Books
             {
                 InstanceName = name,
                 DataType = dataTypes,
-            };
-
-            if (schemaRawData != "")
-            {
-                book.Schema = new Schema()
+                Schema = new Schema()
                 {
                     Name = $"{name}-schema",
                     SchemaRawData = schemaRawData,
-                    SchemaValidationStatus = true
-                };
+                }
+            };
+
+            if (schemaRawData != "" && schemaRawData != "{}")
+            {
+                book.Schema.SchemaValidationStatus = true;
             }
 
             if (_bookRepository.Add(book))
                 return book;
+
             return null;
         }
 
