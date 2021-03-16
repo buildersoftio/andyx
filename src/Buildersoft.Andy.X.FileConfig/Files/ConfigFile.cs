@@ -6,30 +6,33 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Buildersoft.Andy.X.IO.Files
+namespace Buildersoft.Andy.X.FileConfig.Files
 {
     public static class ConfigFile
     {
         public static List<DataStorage> GetDataStoragesFromConfig()
         {
-            string filePath = AppDomain.CurrentDomain.BaseDirectory + "\\Configurations\\dataStorages_config.json";
-            if (!Directory.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\Configurations"))
-                Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "\\Configurations");
+            string configRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Configurations");
+            string dataStorageFileConfigLocation = Path.Combine(configRoot, "dataStorages_config.json");
+            if (!Directory.Exists(configRoot))
+                Directory.CreateDirectory(configRoot);
 
-            if (!File.Exists(filePath))
+            if (!File.Exists(dataStorageFileConfigLocation))
                 return new List<DataStorage>();
 
-            return File.ReadAllText(filePath).JsonToObject<List<DataStorage>>();
+            return File.ReadAllText(dataStorageFileConfigLocation).JsonToObject<List<DataStorage>>();
         }
 
         public static bool SetDataStoragesInConfig(List<DataStorage> dataStorages)
         {
-            string filePath = AppDomain.CurrentDomain.BaseDirectory + "\\Configurations\\dataStorages_config.json";
-            if (!Directory.Exists(AppDomain.CurrentDomain.BaseDirectory + "\\Configurations"))
-                Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "\\Configurations");
+            string configRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Configurations");
+            string dataStorageFileConfigLocation = Path.Combine(configRoot, "dataStorages_config.json");
+
+            if (!Directory.Exists(configRoot))
+                Directory.CreateDirectory(configRoot);
 
             if (dataStorages != null)
-                File.WriteAllText(filePath, dataStorages.ToPrettyJson());
+                File.WriteAllText(dataStorageFileConfigLocation, dataStorages.ToPrettyJson());
             else
                 throw new Exception("dataStorages can not be null");
 
