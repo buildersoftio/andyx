@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <Version>2.0.0.1</Version>
+    <Company>Buildersoft</Company>
+    <Product>Buildersoft Andy</Product>
+    <Authors>Buildersoft</Authors>
+    <Description>Buildersoft Andy X is a distributed messaging system. This system will empower developers to move into Event Driven Systems. Andy X is a multi-tenant system.</Description>
+    <Copyright>Copyright © Buildersoft 2021</Copyright>
+    <RootNamespace>Buildersoft.Andy.X.Core</RootNamespace>
+  </PropertyGroup>
+
+</Project>
