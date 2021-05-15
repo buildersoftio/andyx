@@ -11,4 +11,8 @@
     <RootNamespace>Buildersoft.Andy.X.Core</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
+  </ItemGroup>
+
 </Project>
