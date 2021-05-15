@@ -2,7 +2,6 @@
 using Buildersoft.Andy.X.Model.Storages;
 using Buildersoft.Andy.X.Model.Storages.Agents;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Concurrent;
 
 namespace Buildersoft.Andy.X.Router.Repositories.Storages
@@ -100,6 +99,19 @@ namespace Buildersoft.Andy.X.Router.Repositories.Storages
             }
 
             return _storages[storageName].Agents.TryRemove(connectionId, out _);
+        }
+
+        public bool RemoveAgent(string connectionId)
+        {
+            foreach (var storage in _storages)
+            {
+                if (storage.Value.Agents.ContainsKey(connectionId))
+                {
+                    return RemoveAgent(storage.Key, connectionId);
+                }
+            }
+
+            return false;
         }
 
         public bool RemoveStorage(string storageName)

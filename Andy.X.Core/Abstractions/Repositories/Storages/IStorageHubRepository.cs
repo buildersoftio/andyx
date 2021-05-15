@@ -10,6 +10,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages
         bool AddAgent(string storageName, string connectionId, Agent agent);
         bool RemoveStorage(string storageName);
         bool RemoveAgent(string storageName, string connectionId);
+        bool RemoveAgent(string connectionId);
 
         Storage GetStorageByName(string storageName);
         Agent GetAgentById(string storageName, string connectionId);

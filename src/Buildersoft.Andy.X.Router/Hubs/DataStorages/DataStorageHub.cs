@@ -23,7 +23,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.DataStorage
         private readonly DataStorageRepository _dataStorageRepository;
         private readonly StorageMemoryRepository _memoryRepository;
 
-        public DataStorageHub(ILogger<DataStorageHub> logger, IHubRepository<Data.Model.Router.DataStorages.DataStorage> dataStorageRepository, StorageMemoryRepository memoryRepository)
+        public DataStorageHub(ILogger<DataStorageHub> logger, 
+            IHubRepository<Data.Model.Router.DataStorages.DataStorage> dataStorageRepository, 
+            StorageMemoryRepository memoryRepository)
         {
             _logger = logger;
             _dataStorageRepository = dataStorageRepository as DataStorageRepository;

@@ -6,7 +6,7 @@ namespace Buildersoft.Andy.X.Model.Storages
 {
     public class Storage
     {
-        public Guid StorageId { get; set; }
+        public Guid StorageId { get; private set; }
         public string StorageName { get; set; }
         public StorageStatus StorageStatus { get; set; }
         public ConcurrentDictionary<string, Agent> Agents { get; set; }
@@ -16,6 +16,7 @@ namespace Buildersoft.Andy.X.Model.Storages
         // If IsLoadBalanced is false AgentMaxNumber will be default number of data storage agents connected to node.
         public int AgnetMaxNumber { get; set; }
         public int AgnetMinNumber { get; set; }
+
 
         public Storage()
         {
