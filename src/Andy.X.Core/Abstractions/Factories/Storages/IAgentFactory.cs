@@ -10,6 +10,6 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Factories.Storages
     public interface IAgentFactory
     {
         Agent CreateAgent();
-        Agent CreateAgent(string connectionId, string agentName);
+        Agent CreateAgent(string  agentId,string connectionId, string agentName);
     }
 }

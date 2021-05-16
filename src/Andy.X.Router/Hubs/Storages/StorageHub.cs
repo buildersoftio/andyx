@@ -30,19 +30,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             Storage storageToRegister;
             string clientConnectionId = Context.ConnectionId;
             var headers = Context.GetHttpContext().Request.Headers;
-            // Send Basic info of DATA STORAGE from HEADER
-
-            // Header Keys
-
-            // x-andyx-storage-name
-            // x-andyx-storage-status => string
-            // x-andyx-storage-agent-max => int
-            // x-andyx-storage-agent-min => int
-            // x-andyx-storage-agent-loadbalanced => bool
 
             // Check if this storage is already connected.
             string storageName = headers["x-andyx-storage-name"].ToString();
-            if (storageHubRepository.GetStorageByName(headers["x-andyx-storage-name"].ToString()) == null)
+            string agentId = headers["x-andyx-storage-agent-id"].ToString();
+
+            logger.LogInformation($"ANDYX#STORAGE|{agentId}|ASKED TO CONNECT");
+
+            if (storageHubRepository.GetStorageByName(storageName) == null)
             {
                 StorageStatus storageStatus;
                 var stroageParsed = Enum.TryParse<StorageStatus>(headers["x-andyx-storage-status"].ToString(), true, out storageStatus);
@@ -63,15 +58,16 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             if (storageToRegister.Agents.Count - 1 == storageToRegister.AgnetMaxNumber)
                 return base.OnDisconnectedAsync(new Exception($"There are '{storageToRegister.AgnetMaxNumber}' agents connected, connection refused"));
 
-            Agent agentToRegister = agentFactory.CreateAgent(clientConnectionId, $"{storageName}-{Guid.NewGuid()}");
+            Agent agentToRegister = agentFactory.CreateAgent(agentId, clientConnectionId, $"{storageName}-{Guid.NewGuid()}");
             storageHubRepository.AddAgent(storageName, clientConnectionId, agentToRegister);
 
             Clients.Caller.StorageConnected(new Model.Storages.Events.Agents.AgentConnectedDetails()
             {
                 AgentId = agentToRegister.AgentId,
-                ConnectionId = Guid.NewGuid(),
                 Agent = agentToRegister.AgentName
             });
+
+            logger.LogInformation($"ANDYX#STORAGE|{agentId}|CONNECTED");
 
             return base.OnConnectedAsync();
         }
@@ -79,8 +75,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
         public override Task OnDisconnectedAsync(Exception exception)
         {
             string clientConnectionId = Context.ConnectionId;
+            Agent agentToRemove = storageHubRepository.GetAgentById(clientConnectionId);
             storageHubRepository.RemoveAgent(clientConnectionId);
-
+            logger.LogInformation($"ANDYX#STORAGE|{agentToRemove.AgentId}|DISCONNECTED");
             return base.OnDisconnectedAsync(exception);
         }
     }

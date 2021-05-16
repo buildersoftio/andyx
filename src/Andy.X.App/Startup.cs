@@ -1,9 +1,12 @@
+using Buildersoft.Andy.X.Extensions.DependencyInjection;
+using Buildersoft.Andy.X.Router.Hubs.Storages;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
 
 namespace Andy.X.App
 {
@@ -21,10 +24,24 @@ namespace Andy.X.App
         {
 
             services.AddControllers();
+            services.AddSignalR(opt =>
+            {
+                opt.MaximumReceiveMessageSize = null;
+            })
+            .AddJsonProtocol(opts =>
+            {
+                opts.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Andy.X.App", Version = "v1" });
             });
+
+            services.AddSerilogLoggingConfiguration(Configuration);
+
+            services.AddStorageFactoryMethods();
+            services.AddStorageRepository();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,6 +60,9 @@ namespace Andy.X.App
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+
+                // Mapping SignalR Hubs
+                endpoints.MapHub<StorageHub>("/realtime/v2/storage");
             });
         }
     }

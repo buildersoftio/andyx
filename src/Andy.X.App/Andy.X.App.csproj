@@ -22,4 +22,8 @@
     <Folder Include="Controllers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Andy.X.Router\Andy.X.Router.csproj" />
+  </ItemGroup>
+
 </Project>

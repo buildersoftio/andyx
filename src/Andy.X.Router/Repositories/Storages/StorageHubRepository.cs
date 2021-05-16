@@ -77,7 +77,6 @@ namespace Buildersoft.Andy.X.Router.Repositories.Storages
         {
             if (_storages.ContainsKey(storageName) != true)
             {
-                _logger.LogError($"Storage with name {storageName} doesn't exists");
                 return null;
             }
 

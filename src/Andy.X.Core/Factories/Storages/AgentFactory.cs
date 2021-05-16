@@ -11,9 +11,9 @@ namespace Buildersoft.Andy.X.Core.Factories.Storages
             return new Agent();
         }
 
-        public Agent CreateAgent(string connectionId, string agentName)
+        public Agent CreateAgent(string agentId, string connectionId, string agentName)
         {
-            return new Agent() { ConnectionId = connectionId, AgentName = agentName };
+            return new Agent() { AgentId = Guid.Parse(agentId), ConnectionId = connectionId, AgentName = agentName };
         }
     }
 }
