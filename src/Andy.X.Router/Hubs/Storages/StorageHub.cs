@@ -1,5 +1,6 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages;
 using Buildersoft.Andy.X.Model.Storages;
 using Buildersoft.Andy.X.Model.Storages.Agents;
@@ -14,13 +15,15 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
     {
         private readonly ILogger<StorageHub> logger;
         private readonly IStorageHubRepository storageHubRepository;
+        private readonly ITenantRepository tenantMemoryRepository;
         private readonly IStorageFactory storageFactory;
         private readonly IAgentFactory agentFactory;
 
-        public StorageHub(ILogger<StorageHub> logger, IStorageHubRepository storageHubRepository, IStorageFactory storageFactory, IAgentFactory agentFactory)
+        public StorageHub(ILogger<StorageHub> logger, IStorageHubRepository storageHubRepository, ITenantRepository tenantMemoryRepository, IStorageFactory storageFactory, IAgentFactory agentFactory)
         {
             this.logger = logger;
             this.storageHubRepository = storageHubRepository;
+            this.tenantMemoryRepository = tenantMemoryRepository;
             this.storageFactory = storageFactory;
             this.agentFactory = agentFactory;
         }
@@ -46,6 +49,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
                     storageStatus = StorageStatus.Blocked;
                     return base.OnDisconnectedAsync(new Exception($"Invalid status code '{headers["x-andyx-storage-status"]}'"));
                 }
+
                 int agentMaxValue = Convert.ToInt32(headers["x-andyx-storage-agent-max"].ToString());
                 int agentMinValue = Convert.ToInt32(headers["x-andyx-storage-agent-min"].ToString());
                 bool isLoadBalanced = Convert.ToBoolean(headers["x-andyx-storage-agent-loadbalanced"].ToString());
@@ -64,7 +68,10 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             Clients.Caller.StorageConnected(new Model.Storages.Events.Agents.AgentConnectedDetails()
             {
                 AgentId = agentToRegister.AgentId,
-                Agent = agentToRegister.AgentName
+                Agent = agentToRegister.AgentName,
+
+                // Send online state of tenants to storage.
+                Tenants = tenantMemoryRepository.GetTenants()
             });
 
             logger.LogInformation($"ANDYX#STORAGE|{agentId}|CONNECTED");
@@ -78,6 +85,16 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             Agent agentToRemove = storageHubRepository.GetAgentById(clientConnectionId);
             storageHubRepository.RemoveAgent(clientConnectionId);
             logger.LogInformation($"ANDYX#STORAGE|{agentToRemove.AgentId}|DISCONNECTED");
+
+            Clients.Caller.StorageDisconnected(new Model.Storages.Events.Agents.AgentDisconnectedDetails()
+            {
+                AgentId = agentToRemove.AgentId,
+                Agent = agentToRemove.AgentName,
+
+                // Send online state of tenants to storage.
+                Tenants = tenantMemoryRepository.GetTenants()
+            });
+
             return base.OnDisconnectedAsync(exception);
         }
     }

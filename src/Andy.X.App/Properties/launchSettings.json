@@ -20,7 +20,7 @@
     "Andy.X.App": {
       "commandName": "Project",
       "dotnetRunMessages": "true",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:9001;http://localhost:9000",
       "environmentVariables": {

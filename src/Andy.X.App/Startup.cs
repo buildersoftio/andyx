@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using System;
 using System.Text.Json.Serialization;
 
 namespace Andy.X.App
@@ -41,11 +42,15 @@ namespace Andy.X.App
             services.AddSerilogLoggingConfiguration(Configuration);
 
             services.AddStorageFactoryMethods();
+            services.AddAppFactoryMethods();
+
             services.AddStorageRepository();
+            services.AddTenantMemoryRepository();
+            services.AddConfigurations(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider)
         {
             if (env.IsDevelopment())
             {
@@ -53,6 +58,8 @@ namespace Andy.X.App
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Andy.X.App v1"));
             }
+
+            app.UseTenantMemoryRepository(serviceProvider);
 
             app.UseHttpsRedirection();
             app.UseRouting();
