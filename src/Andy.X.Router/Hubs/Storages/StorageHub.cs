@@ -38,7 +38,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             string storageName = headers["x-andyx-storage-name"].ToString();
             string agentId = headers["x-andyx-storage-agent-id"].ToString();
 
-            logger.LogInformation($"ANDYX#STORAGE|{agentId}|ASKED TO CONNECT");
+            logger.LogInformation($"ANDYX#STORAGE|{agentId}|ASKED_TO_CONNECT");
 
             if (storageHubRepository.GetStorageByName(storageName) == null)
             {

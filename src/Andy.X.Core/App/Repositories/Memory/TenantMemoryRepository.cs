@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Model.App.Components;
 using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
+using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Configurations;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
@@ -36,6 +37,15 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
         }
 
 
+        public bool AddTopic(string tenant, string product, string component, string topicName, Topic topic)
+        {
+            if (_tenants.ContainsKey(tenant))
+                if (_tenants[tenant].Products.ContainsKey(product))
+                    if (_tenants[tenant].Products[product].Components.ContainsKey(component))
+                        _tenants[tenant].Products[product].Components[component].Topics.TryAdd(topicName, topic);
+
+            return false;
+        }
 
         public bool AddComponent(string tenant, string product, string componentName, Component component)
         {
@@ -112,6 +122,28 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
         public ConcurrentDictionary<string, Tenant> GetTenants()
         {
             return _tenants;
+        }
+
+
+        public Topic GetTopic(string tenant, string product, string component, string topic)
+        {
+            if (_tenants.ContainsKey(tenant))
+                if (_tenants[tenant].Products.ContainsKey(product))
+                    if (_tenants[tenant].Products[product].Components.ContainsKey(component))
+                        if (_tenants[tenant].Products[product].Components[component].Topics.ContainsKey(topic))
+                            return _tenants[tenant].Products[product].Components[component].Topics[topic];
+
+            return null;
+        }
+
+        public ConcurrentDictionary<string, Topic> GetTopics(string tenant, string product, string component)
+        {
+            if (_tenants.ContainsKey(tenant))
+                if (_tenants[tenant].Products.ContainsKey(product))
+                    if (_tenants[tenant].Products[product].Components.ContainsKey(component))
+                        return _tenants[tenant].Products[product].Components[component].Topics;
+
+            return null;
         }
     }
 }

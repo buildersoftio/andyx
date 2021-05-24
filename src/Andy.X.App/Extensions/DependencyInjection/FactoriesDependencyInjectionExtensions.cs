@@ -1,12 +1,10 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Storages;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Producers;
+using Buildersoft.Andy.X.Core.Abstractions.Factories.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
+using Buildersoft.Andy.X.Core.Factories.Producers;
 using Buildersoft.Andy.X.Core.Factories.Storages;
 using Buildersoft.Andy.X.Core.Factories.Tenants;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Extensions.DependencyInjection
 {
@@ -21,6 +19,11 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
         public static void AddAppFactoryMethods(this IServiceCollection services)
         {
             services.AddSingleton<ITenantFactory, TenantFactory>();
+        }
+
+        public static void AddProducerFactoryMethods(this IServiceCollection services)
+        {
+            services.AddSingleton<IProducerFactory, ProducerFactory>();
         }
     }
 }

@@ -1,7 +1,7 @@
-﻿using Buildersoft.Andy.X.Model.Storages.Events.Agents;
+﻿using Buildersoft.Andy.X.Model.Producers.Events;
+using Buildersoft.Andy.X.Model.Storages.Events.Agents;
 using Buildersoft.Andy.X.Model.Storages.Events.Components;
 using Buildersoft.Andy.X.Model.Storages.Events.Consumers;
-using Buildersoft.Andy.X.Model.Storages.Events.Producers;
 using Buildersoft.Andy.X.Model.Storages.Events.Products;
 using Buildersoft.Andy.X.Model.Storages.Events.Tenants;
 using Buildersoft.Andy.X.Model.Storages.Events.Topics;
