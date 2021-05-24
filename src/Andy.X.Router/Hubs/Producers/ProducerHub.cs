@@ -39,7 +39,6 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             string clientConnectionId = Context.ConnectionId;
             var headers = Context.GetHttpContext().Request.Headers;
 
-            //check if the producer is already connected
             string tenant = headers["x-andyx-tenant"].ToString();
             string product = headers["x-andyx-product"].ToString();
             string component = headers["x-andyx-component"].ToString();
@@ -47,6 +46,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             string producerName = headers["x-andyx-producer"].ToString();
 
             logger.LogInformation($"ANDYX#PRODUCERS|{tenant}|{product}|{component}|{topic}|{producerName}|ASKED_TO_CONNECT");
+
+            //check if the producer is already connected
 
             if (tenantRepository.GetTenant(tenant) == null)
             {
@@ -74,7 +75,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
                 // TODO: Create a new DataStorage Service
                 tenantRepository.AddTopic(tenant, product, component, topic, tenantFactory.CreateTopic(topic));
             }
-            //getResult.Equals(default(KeyValuePair<T,U>))
+
             if (producerHubRepository.GetProducerByProducerName(tenant, product, component, topic, producerName).Equals(default(KeyValuePair<string, Producer>)) != true)
             {
                 logger.LogInformation($"ANDYX#PRODUCERS|{tenant}|{product}|{component}|{topic}|{producerName}|PRODUCER_ALREADY_CONNECTED");
@@ -106,7 +107,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
             producerHubRepository.RemoveProducer(clientConnectionId);
 
-            logger.LogInformation($"ANDYX#PRODUCERS|{producerToRemove.Tenant}|{producerToRemove.Product}|{producerToRemove.Component}|{producerToRemove.Topic}|{producerToRemove.Id}|DISCONNECTED");
+            logger.LogInformation($"ANDYX#PRODUCERS|{producerToRemove.Tenant}|{producerToRemove.Product}|{producerToRemove.Component}|{producerToRemove.Topic}|{producerToRemove.ProducerName}|{producerToRemove.Id}|DISCONNECTED");
 
             Clients.Caller.ProducerDisconnected(new Model.Producers.Events.ProducerDisconnectedDetails()
             {

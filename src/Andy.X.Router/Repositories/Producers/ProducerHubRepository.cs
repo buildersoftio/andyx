@@ -1,7 +1,6 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
 using Buildersoft.Andy.X.Model.Producers;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +33,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Producers
 
         public KeyValuePair<string, Producer> GetProducerByProducerName(string tenant, string product, string component, string topic, string producerName)
         {
-                return _producers.Where(x => x.Value.Tenant == tenant
+            return _producers.Where(x => x.Value.Tenant == tenant
                 && x.Value.Product == product
                 && x.Value.Component == component
                 && x.Value.Topic == topic

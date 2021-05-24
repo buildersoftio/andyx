@@ -1,4 +1,5 @@
 using Buildersoft.Andy.X.Extensions.DependencyInjection;
+using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Buildersoft.Andy.X.Router.Hubs.Producers;
 using Buildersoft.Andy.X.Router.Hubs.Storages;
 using Microsoft.AspNetCore.Builder;
@@ -47,6 +48,7 @@ namespace Andy.X.App
             services.AddProducerFactoryMethods();
 
             services.AddStorageRepository();
+            services.AddHubRepository();
             services.AddTenantMemoryRepository();
             services.AddConfigurations(Configuration);
         }
@@ -73,6 +75,7 @@ namespace Andy.X.App
                 // Mapping SignalR Hubs
                 endpoints.MapHub<StorageHub>("/realtime/v2/storage");
                 endpoints.MapHub<ProducerHub>("/realtime/v2/producer");
+                endpoints.MapHub<ConsumerHub>("/realtime/v2/consumer");
             });
         }
     }
