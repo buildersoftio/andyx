@@ -3,9 +3,7 @@ using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Consumers;
-using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Model.Producers;
-using Buildersoft.Andy.X.Model.Producers.Events;
 using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Services.Storages
