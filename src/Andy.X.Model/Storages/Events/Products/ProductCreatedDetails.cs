@@ -1,8 +1,10 @@
-﻿namespace Buildersoft.Andy.X.Model.Storages.Events.Products
+﻿using System;
+
+namespace Buildersoft.Andy.X.Model.Storages.Events.Products
 {
     public class ProductCreatedDetails
     {
-
-        // TODO: Implement
+        public Guid Id { get; set; }
+        public string Name { get; set; }
     }
 }

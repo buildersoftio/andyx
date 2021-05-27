@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Model.Producers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -19,18 +20,21 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         private readonly ITenantRepository tenantRepository;
         private readonly ITenantFactory tenantFactory;
         private readonly IProducerFactory producerFactory;
+        private readonly IStorageHubService storageHubService;
 
         public ProducerHub(ILogger<ProducerHub> logger,
             IProducerHubRepository producerHubRepository,
             ITenantRepository tenantRepository,
             ITenantFactory tenantFactory,
-            IProducerFactory producerFactory)
+            IProducerFactory producerFactory,
+            IStorageHubService storageHubService)
         {
             this.logger = logger;
             this.producerHubRepository = producerHubRepository;
             this.tenantRepository = tenantRepository;
             this.tenantFactory = tenantFactory;
             this.producerFactory = producerFactory;
+            this.storageHubService = storageHubService;
         }
 
         public override Task OnConnectedAsync()
@@ -51,29 +55,29 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
             if (tenantRepository.GetTenant(tenant) == null)
             {
-                logger.LogInformation($"ANDYX#PRODUCERS|{tenant}|{product}|{component}|{topic}|{producerName}|TENANT_DOES_NOT_EXISTS");
+                logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|TENANT_DOES_NOT_EXISTS");
                 return OnDisconnectedAsync(new Exception($"There is no tenant registered with this name '{tenant}'"));
             }
 
             if (tenantRepository.GetProduct(tenant, product) == null)
             {
-                // Create new product, store this product to ALL DATA STORAGES
-                // TODO: Create a new DataStorage Service
-                tenantRepository.AddProduct(tenant, product, tenantFactory.CreateProduct(product));
+                var productDetails = tenantFactory.CreateProduct(product);
+                tenantRepository.AddProduct(tenant, product, productDetails);
+                storageHubService.CreateProductAsync(productDetails);
             }
 
             if (tenantRepository.GetComponent(tenant, product, component) == null)
             {
-                // Create new component, store this product to ALL DATA STORAGES
-                // TODO: Create a new DataStorage Service
-                tenantRepository.AddComponent(tenant, product, component, tenantFactory.CreateComponent(component));
+                var componentDetails = tenantFactory.CreateComponent(component);
+                tenantRepository.AddComponent(tenant, product, component, componentDetails);
+                storageHubService.CreateComponentAsync(componentDetails);
             }
 
             if (tenantRepository.GetTopic(tenant, product, component, topic) == null)
             {
-                // Create new topic, store this product to ALL DATA STORAGES
-                // TODO: Create a new DataStorage Service
-                tenantRepository.AddTopic(tenant, product, component, topic, tenantFactory.CreateTopic(topic));
+                var topicDetails = tenantFactory.CreateTopic(topic);
+                tenantRepository.AddTopic(tenant, product, component, topic, topicDetails);
+                storageHubService.CreateTopicAsync(topicDetails);
             }
 
             if (producerHubRepository.GetProducerByProducerName(tenant, product, component, topic, producerName).Equals(default(KeyValuePair<string, Producer>)) != true)
@@ -84,8 +88,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
             producerToRegister = producerFactory.CreateProducer(tenant, product, component, topic, producerName);
             producerHubRepository.AddProducer(clientConnectionId, producerToRegister);
-            // Create new producer, store this product to ALL DATA STORAGES
-            // TODO: Create a new DataStorage Service
+            storageHubService.ConnectProducerAsync(producerToRegister);
 
             Clients.Caller.ProducerConnected(new Model.Producers.Events.ProducerConnectedDetails()
             {
@@ -104,6 +107,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         {
             string clientConnectionId = Context.ConnectionId;
             Producer producerToRemove = producerHubRepository.GetProducerById(clientConnectionId);
+            storageHubService.DisconnectProducerAsync(producerToRemove);
 
             producerHubRepository.RemoveProducer(clientConnectionId);
 

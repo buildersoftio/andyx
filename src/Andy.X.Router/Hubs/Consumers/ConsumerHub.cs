@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Model.Consumers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -19,18 +20,21 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         private readonly ITenantRepository tenantRepository;
         private readonly ITenantFactory tenantFactory;
         private readonly IConsumerFactory consumerFactory;
+        private readonly IStorageHubService storageHubService;
 
         public ConsumerHub(ILogger<ConsumerHub> logger,
             IConsumerHubRepository consumerHubRepository,
             ITenantRepository tenantRepository,
             ITenantFactory tenantFactory,
-            IConsumerFactory consumerFactory)
+            IConsumerFactory consumerFactory,
+            IStorageHubService storageHubService)
         {
             this.logger = logger;
             this.consumerHubRepository = consumerHubRepository;
             this.tenantRepository = tenantRepository;
             this.tenantFactory = tenantFactory;
             this.consumerFactory = consumerFactory;
+            this.storageHubService = storageHubService;
         }
 
         public override Task OnConnectedAsync()
@@ -58,23 +62,23 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
             if (tenantRepository.GetProduct(tenant, product) == null)
             {
-                // Create new product, store this product to ALL DATA STORAGES
-                // TODO: Create a new DataStorage Service
-                tenantRepository.AddProduct(tenant, product, tenantFactory.CreateProduct(product));
+                var productDetails = tenantFactory.CreateProduct(product);
+                tenantRepository.AddProduct(tenant, product, productDetails);
+                storageHubService.CreateProductAsync(productDetails);
             }
 
             if (tenantRepository.GetComponent(tenant, product, component) == null)
             {
-                // Create new component, store this product to ALL DATA STORAGES
-                // TODO: Create a new DataStorage Service
-                tenantRepository.AddComponent(tenant, product, component, tenantFactory.CreateComponent(component));
+                var componentDetails = tenantFactory.CreateComponent(component);
+                tenantRepository.AddComponent(tenant, product, component, componentDetails);
+                storageHubService.CreateComponentAsync(componentDetails);
             }
 
             if (tenantRepository.GetTopic(tenant, product, component, topic) == null)
             {
-                // Create new topic, store this product to ALL DATA STORAGES
-                // TODO: Create a new DataStorage Service
-                tenantRepository.AddTopic(tenant, product, component, topic, tenantFactory.CreateTopic(topic));
+                var topicDetails = tenantFactory.CreateTopic(topic);
+                tenantRepository.AddTopic(tenant, product, component, topic, topicDetails);
+                storageHubService.CreateTopicAsync(topicDetails);
             }
 
             var consumerConencted = consumerHubRepository.GetConsumerByConsumerName(tenant, product, component, topic, consumerName);
@@ -95,8 +99,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
             consumerToRegister = consumerFactory.CreateConsumer(tenant, product, component, topic, consumerName, consumerType);
             consumerHubRepository.AddConsumer(clientConnectionId, consumerToRegister);
-            // Create new consumer, store this product to ALL DATA STORAGES
-            // TODO: Create a new DataStorage Service
+            storageHubService.ConnectConsumerAsync(consumerToRegister);
 
             Clients.Caller.ConsumerConnected(new Model.Consumers.Events.ConsumerConnectedDetails()
             {
@@ -116,6 +119,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         {
             string clientConnectionId = Context.ConnectionId;
             Consumer consumerToRemove = consumerHubRepository.GetConsumerById(clientConnectionId);
+            storageHubService.DisconnectConsumerAsync(consumerToRemove);
 
             consumerHubRepository.RemoveConsumer(clientConnectionId);
 
