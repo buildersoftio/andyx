@@ -83,6 +83,11 @@ namespace Buildersoft.Andy.X.Router.Repositories.Storages
             return _storages[storageName];
         }
 
+        public ConcurrentDictionary<string, Storage> GetStorages()
+        {
+            return _storages;
+        }
+
         public bool RemoveAgent(string storageName, string connectionId)
         {
             if (_storages.ContainsKey(storageName) != true)

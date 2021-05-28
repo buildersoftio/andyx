@@ -15,6 +15,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages
         Storage GetStorageByName(string storageName);
         Agent GetAgentById(string storageName, string connectionId);
         Agent GetAgentById(string connectionId);
+        ConcurrentDictionary<string, Storage> GetStorages();
 
         ConcurrentDictionary<string, Agent> GetAgentsByStorageName(string storageName);
     }

@@ -10,6 +10,7 @@ using Buildersoft.Andy.X.Model.Producers;
 using Buildersoft.Andy.X.Router.Hubs.Storages;
 using Microsoft.AspNetCore.SignalR;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Router.Services.Storages
@@ -27,44 +28,151 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
             this.storageHubRepository = storageHubRepository;
         }
 
-        public Task ConnectConsumerAsync(Consumer consumer)
+        public async Task ConnectConsumerAsync(Consumer consumer)
         {
-            throw new NotImplementedException();
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ConsumerConnected(new Model.Consumers.Events.ConsumerConnectedDetails()
+                    {
+                        Id = consumer.Id,
+                        Tenant = consumer.Tenant,
+                        Product = consumer.Product,
+                        Component = consumer.Component,
+                        Topic = consumer.Topic,
+                        ConsumerName = consumer.ConsumerName,
+                        ConsumerType = consumer.ConsumerType
+                    });
+                }
+            }
         }
 
-        public Task ConnectProducerAsync(Producer producer)
+        public async Task ConnectProducerAsync(Producer producer)
         {
-            throw new NotImplementedException();
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProducerConnected(new Model.Producers.Events.ProducerConnectedDetails()
+                    {
+                        Id = producer.Id,
+                        Tenant = producer.Tenant,
+                        Product = producer.Product,
+                        Component = producer.Component,
+                        Topic = producer.Topic,
+                        ProducerName = producer.ProducerName
+                    });
+                }
+            }
         }
 
-        public Task CreateComponentAsync(Component component)
+        public async Task CreateComponentAsync(Component component)
         {
-            throw new NotImplementedException();
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ComponentCreated(new Model.Storages.Events.Components.ComponentCreatedDetails()
+                    {
+                        Id = component.Id,
+                        Name = component.Name
+                    });
+                }
+            }
         }
 
-        public Task CreateProductAsync(Product product)
+        public async Task CreateProductAsync(Product product)
         {
-            throw new NotImplementedException();
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProductCreated(new Model.Storages.Events.Products.ProductCreatedDetails()
+                    {
+                        Id = product.Id,
+                        Name = product.Name
+                    });
+                }
+            }
         }
 
-        public Task CreateTenantAsync(Tenant tenant)
+        public async Task CreateTenantAsync(Tenant tenant)
         {
-            throw new NotImplementedException();
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).TenantCreated(new Model.Storages.Events.Tenants.TenantCreatedDetails()
+                    {
+                        Id = tenant.Id,
+                        Name = tenant.Name,
+                        DigitalSignature = tenant.DigitalSignature
+                    });
+                }
+            }
         }
 
-        public Task CreateTopicAsync(Topic topic)
+        public async Task CreateTopicAsync(Topic topic)
         {
-            throw new NotImplementedException();
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).TopicCreated(new Model.Storages.Events.Topics.TopicCreatedDetails()
+                    {
+                        Id = topic.Id,
+                        Name = topic.Name,
+                        Schema = topic.Schema
+                    });
+                }
+            }
         }
 
-        public Task DisconnectConsumerAsync(Consumer consumer)
+        public async Task DisconnectConsumerAsync(Consumer consumer)
         {
-            throw new NotImplementedException();
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ConsumerDisconnected(new Model.Consumers.Events.ConsumerDisconnectedDetails()
+                    {
+                        Id = consumer.Id,
+                        Tenant = consumer.Tenant,
+                        Product = consumer.Product,
+                        Component = consumer.Component,
+                        Topic = consumer.Topic,
+                        ConsumerName = consumer.ConsumerName
+                    });
+                }
+            }
         }
 
-        public Task DisconnectProducerAsync(Producer producer)
+        public async Task DisconnectProducerAsync(Producer producer)
         {
-            throw new NotImplementedException();
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProducerDisconnected(new Model.Producers.Events.ProducerDisconnectedDetails()
+                    {
+                        Id = producer.Id,
+                        Tenant = producer.Tenant,
+                        Product = producer.Product,
+                        Component = producer.Component,
+                        Topic = producer.Topic,
+                        ProducerName = producer.ProducerName
+                    });
+                }
+            }
         }
     }
 }

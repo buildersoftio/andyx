@@ -55,7 +55,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
             if (tenantRepository.GetTenant(tenant) == null)
             {
-                logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|TENANT_DOES_NOT_EXISTS");
+                logger.LogInformation($"ANDYX#PRODUCERS|{tenant}|{product}|{component}|{topic}|{producerName}|TENANT_DOES_NOT_EXISTS");
                 return OnDisconnectedAsync(new Exception($"There is no tenant registered with this name '{tenant}'"));
             }
 
