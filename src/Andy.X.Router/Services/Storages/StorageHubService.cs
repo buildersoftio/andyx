@@ -69,7 +69,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
             }
         }
 
-        public async Task CreateComponentAsync(Component component)
+        public async Task CreateComponentAsync(string tenant, string product, Component component)
         {
             foreach (var storage in storageHubRepository.GetStorages())
             {
@@ -79,13 +79,16 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                     await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ComponentCreated(new Model.Storages.Events.Components.ComponentCreatedDetails()
                     {
                         Id = component.Id,
-                        Name = component.Name
+                        Name = component.Name,
+
+                        Tenant = tenant,
+                        Product = product
                     });
                 }
             }
         }
 
-        public async Task CreateProductAsync(Product product)
+        public async Task CreateProductAsync(string tenant, Product product)
         {
             foreach (var storage in storageHubRepository.GetStorages())
             {
@@ -95,7 +98,9 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                     await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProductCreated(new Model.Storages.Events.Products.ProductCreatedDetails()
                     {
                         Id = product.Id,
-                        Name = product.Name
+                        Name = product.Name,
+
+                        Tenant = tenant
                     });
                 }
             }
@@ -118,7 +123,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
             }
         }
 
-        public async Task CreateTopicAsync(Topic topic)
+        public async Task CreateTopicAsync(string tenant, string product, string component, Topic topic)
         {
             foreach (var storage in storageHubRepository.GetStorages())
             {
@@ -129,7 +134,10 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                     {
                         Id = topic.Id,
                         Name = topic.Name,
-                        Schema = topic.Schema
+                        Schema = topic.Schema,
+                        Tenant = tenant,
+                        Product = product,
+                        Component = component
                     });
                 }
             }

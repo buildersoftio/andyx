@@ -63,21 +63,21 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             {
                 var productDetails = tenantFactory.CreateProduct(product);
                 tenantRepository.AddProduct(tenant, product, productDetails);
-                storageHubService.CreateProductAsync(productDetails);
+                storageHubService.CreateProductAsync(tenant, productDetails);
             }
 
             if (tenantRepository.GetComponent(tenant, product, component) == null)
             {
                 var componentDetails = tenantFactory.CreateComponent(component);
                 tenantRepository.AddComponent(tenant, product, component, componentDetails);
-                storageHubService.CreateComponentAsync(componentDetails);
+                storageHubService.CreateComponentAsync(tenant, product, componentDetails);
             }
 
             if (tenantRepository.GetTopic(tenant, product, component, topic) == null)
             {
                 var topicDetails = tenantFactory.CreateTopic(topic);
                 tenantRepository.AddTopic(tenant, product, component, topic, topicDetails);
-                storageHubService.CreateTopicAsync(topicDetails);
+                storageHubService.CreateTopicAsync(tenant, product, component, topicDetails);
             }
 
             if (producerHubRepository.GetProducerByProducerName(tenant, product, component, topic, producerName).Equals(default(KeyValuePair<string, Producer>)) != true)
