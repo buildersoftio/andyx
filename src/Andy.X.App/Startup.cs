@@ -25,8 +25,6 @@ namespace Andy.X.App
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
-            services.AddControllers();
             services.AddSignalR(opt =>
             {
                 opt.MaximumReceiveMessageSize = null;
@@ -34,11 +32,6 @@ namespace Andy.X.App
             .AddJsonProtocol(opts =>
             {
                 opts.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            });
-
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Andy.X.App", Version = "v1" });
             });
 
             services.AddSerilogLoggingConfiguration(Configuration);
@@ -59,8 +52,6 @@ namespace Andy.X.App
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Andy.X.App v1"));
             }
 
             app.UseTenantMemoryRepository(serviceProvider);
@@ -70,8 +61,6 @@ namespace Andy.X.App
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
-
                 // Mapping SignalR Hubs
                 endpoints.MapHub<StorageHub>("/realtime/v2/storage");
                 endpoints.MapHub<ProducerHub>("/realtime/v2/producer");

@@ -16,8 +16,17 @@ namespace Buildersoft.Andy.X.Model.Consumers
 
     public enum ConsumerType
     {
+        /// <summary>
+        /// Only one reader
+        /// </summary>
         Exclusive,
-        Shared,
-        Failover
+        /// <summary>
+        /// One reader with one backup
+        /// </summary>
+        Failover,
+        /// <summary>
+        /// Shared to more than one reader.
+        /// </summary>
+        Shared
     }
 }
