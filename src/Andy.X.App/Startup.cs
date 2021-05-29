@@ -39,10 +39,17 @@ namespace Andy.X.App
             services.AddAppFactoryMethods();
             services.AddProducerFactoryMethods();
 
-            services.AddStorageRepository();
-            services.AddHubRepository();
-            services.AddTenantMemoryRepository();
             services.AddConfigurations(Configuration);
+
+            services.AddTenantMemoryRepository();
+
+            services.AddStorageRepository();
+            services.AddConsumerRepository();
+            services.AddProducerRepository();
+
+            services.AddStorageHubService();
+            services.AddConsumerHubService();
+            services.AddProducerHubService();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

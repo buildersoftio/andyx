@@ -8,7 +8,6 @@ using Buildersoft.Andy.X.Model.Consumers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Router.Hubs.Consumers
@@ -81,8 +80,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 storageHubService.CreateTopicAsync(tenant, product, component, topicDetails);
             }
 
-            var consumerConencted = consumerHubRepository.GetConsumerByConsumerName(tenant, product, component, topic, consumerName);
-            if (consumerConencted.Equals(default(KeyValuePair<string, Consumer>)) != true)
+            var consumerConencted = consumerHubRepository.GetConsumerByName(consumerName);
+            if (consumerConencted != null)
             {
                 if (consumerType == ConsumerType.Exclusive)
                 {
@@ -90,15 +89,20 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                     return OnDisconnectedAsync(new Exception($"There is a consumer with name '{consumerName}' and with type 'EXCLUSIVE' is connected to this node"));
                 }
 
-                if (consumerConencted.Value.ConsumerType == ConsumerType.Shared && consumerType != ConsumerType.Shared)
+                if (consumerType == ConsumerType.Failover)
                 {
-                    logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|CONSUMER_SHARED_ALREADY_CONNECTED");
-                    return OnDisconnectedAsync(new Exception($"There is a consumer with name '{consumerName}' and with type 'SHARED' is connected to this node, only shared consumers can connect"));
+                    if (consumerConencted.Connections.Count >= 2)
+                    {
+                        logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|CONSUMER_FAILOVER_ALREADY_CONNECTED_2_INSTANCES");
+                        return OnDisconnectedAsync(new Exception($"There are two consumers with name '{consumerName}' and with type 'Failover' are connected to this node"));
+                    }
                 }
             }
 
             consumerToRegister = consumerFactory.CreateConsumer(tenant, product, component, topic, consumerName, consumerType);
-            consumerHubRepository.AddConsumer(clientConnectionId, consumerToRegister);
+            consumerHubRepository.AddConsumer(consumerName, consumerToRegister);
+            consumerHubRepository.AddConsumerConnection(consumerName, clientConnectionId);
+
             storageHubService.ConnectConsumerAsync(consumerToRegister);
 
             Clients.Caller.ConsumerConnected(new Model.Consumers.Events.ConsumerConnectedDetails()
@@ -118,7 +122,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         public override Task OnDisconnectedAsync(Exception exception)
         {
             string clientConnectionId = Context.ConnectionId;
-            Consumer consumerToRemove = consumerHubRepository.GetConsumerById(clientConnectionId);
+            Consumer consumerToRemove = consumerHubRepository.GetConsumerByConnectionId(clientConnectionId);
             storageHubService.DisconnectConsumerAsync(consumerToRemove);
 
             consumerHubRepository.RemoveConsumer(clientConnectionId);

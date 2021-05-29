@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Buildersoft.Andy.X.Model.Consumers
 {
@@ -9,9 +10,16 @@ namespace Buildersoft.Andy.X.Model.Consumers
         public string Component { get; set; }
         public string Topic { get; set; }
 
+        public List<string> Connections { get; set; }
+
         public Guid Id { get; set; }
         public string ConsumerName { get; set; }
         public ConsumerType ConsumerType { get; set; }
+
+        public Consumer()
+        {
+            Connections = new List<string>();
+        }
     }
 
     public enum ConsumerType

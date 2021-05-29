@@ -1,5 +1,4 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
-using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Model.Consumers;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
@@ -18,38 +17,66 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
             _consumers = new ConcurrentDictionary<string, Consumer>();
         }
 
-        public bool AddConsumer(string connectionId, Consumer consumer)
+        public bool AddConsumer(string consumerName, Consumer consumer)
         {
-            return _consumers.TryAdd(connectionId, consumer);
+            return _consumers.TryAdd(consumerName, consumer);
         }
 
-        public Consumer GetConsumerById(string connectionId)
+        public bool AddConsumerConnection(string consumerName, string connectionId)
         {
-            if (_consumers.ContainsKey(connectionId))
-                return _consumers[connectionId];
+            if (_consumers.ContainsKey(consumerName))
+            {
+                _consumers[consumerName].Connections.Add(connectionId);
+                return true;
+            }
+
+            return false;
+        }
+
+        public Consumer GetConsumerByConnectionId(string connectionId)
+        {
+            return _consumers.Values.Where(x => x.Connections.Contains(connectionId)).FirstOrDefault();
+        }
+
+        public Consumer GetConsumerByName(string consumerName)
+        {
+            if (_consumers.ContainsKey(consumerName))
+                return _consumers[consumerName];
 
             return null;
         }
 
-        public KeyValuePair<string, Consumer> GetConsumerByConsumerName(string tenant, string product, string component, string topic, string consumerName)
+        public Dictionary<string, Consumer> GetConsumersByTopic(string tenant, string product, string component, string topic)
         {
             return _consumers.Where(x => x.Value.Tenant == tenant
                 && x.Value.Product == product
                 && x.Value.Component == component
-                && x.Value.Topic == topic
-                && x.Value.ConsumerName == consumerName).FirstOrDefault();
+                && x.Value.Topic == topic)
+                .ToDictionary(x => x.Key, x => x.Value);
         }
 
-        public Dictionary<string, Consumer> GetConsumersByTenantName(string tenantName)
+        public bool RemoveConsumer(string consumerName)
         {
-            return _consumers
-              .Where(x => x.Value.Tenant == tenantName)
-              .ToDictionary(x => x.Key, x => x.Value);
+            if (_consumers.ContainsKey(consumerName))
+            {
+                if (_consumers[consumerName].Connections.Count == 0)
+                    return _consumers.TryRemove(consumerName, out _);
+
+                return true;
+            }
+
+            return false;
         }
 
-        public bool RemoveConsumer(string connectionId)
+        public bool RemoveConsumerConnection(string consumerName, string connectionId)
         {
-            return _consumers.TryRemove(connectionId, out _);
+            if (_consumers.ContainsKey(consumerName))
+            {
+                _consumers[consumerName].Connections.Remove(connectionId);
+                return true;
+            }
+
+            return false;
         }
     }
 }

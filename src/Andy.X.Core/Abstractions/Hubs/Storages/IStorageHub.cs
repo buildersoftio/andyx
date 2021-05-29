@@ -2,6 +2,7 @@
 using Buildersoft.Andy.X.Model.Producers.Events;
 using Buildersoft.Andy.X.Model.Storages.Events.Agents;
 using Buildersoft.Andy.X.Model.Storages.Events.Components;
+using Buildersoft.Andy.X.Model.Storages.Events.Messages;
 using Buildersoft.Andy.X.Model.Storages.Events.Products;
 using Buildersoft.Andy.X.Model.Storages.Events.Tenants;
 using Buildersoft.Andy.X.Model.Storages.Events.Topics;
@@ -35,5 +36,8 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages
         Task TopicCreated(TopicCreatedDetails topic);
         Task TopicUpdated(TopicUpdatedDetails topic);
         Task TopicDeleted(TopicDeletedDetails topic);
+
+        Task MessageStored(MessageStoredDetails message);
+        Task MessageAcknowledged(MessageAcknowledgedDetails message);
     }
 }

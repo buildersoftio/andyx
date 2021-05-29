@@ -2,6 +2,7 @@
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Model.App.Components;
+using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
@@ -178,6 +179,78 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                         Component = producer.Component,
                         Topic = producer.Topic,
                         ProducerName = producer.ProducerName
+                    });
+                }
+            }
+        }
+
+        public async Task StoreMessage(Message message)
+        {
+            // TODO: Implement Geo-Replication Settings for this cluster.
+            // Check if geo-replication is enabled, add geo-replication feature to appsettings.json soo the developer can config from env-variables.
+            // WE are simulating that Geo-Replication is off.
+
+            bool IsGeoReplicationActive = false;
+            if (IsGeoReplicationActive == true)
+            {
+                // Geo-replication is on
+                foreach (var storage in storageHubRepository.GetStorages())
+                {
+                    int index = new Random().Next(storage.Value.Agents.Count);
+                    if (!storage.Value.Agents.IsEmpty)
+                    {
+                        await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).MessageStored(new Model.Storages.Events.Messages.MessageStoredDetails()
+                        {
+                            Id = message.Id,
+                            Tenant = message.Tenant,
+                            Product = message.Product,
+                            Component = message.Component,
+                            Topic = message.Topic,
+                            MessageRaw = message.MessageRaw
+                        });
+                    }
+                }
+            }
+            else
+            {
+                // Geo-replication is off - storages are shared
+                int indexOfStorage = new Random().Next(storageHubRepository.GetStorages().Count);
+                if (!storageHubRepository.GetStorages().IsEmpty)
+                {
+                    var storage = storageHubRepository.GetStorages().ElementAt(indexOfStorage);
+                    int index = new Random().Next(storage.Value.Agents.Count);
+                    if (!storage.Value.Agents.IsEmpty)
+                    {
+                        await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).MessageStored(new Model.Storages.Events.Messages.MessageStoredDetails()
+                        {
+                            Id = message.Id,
+                            Tenant = message.Tenant,
+                            Product = message.Product,
+                            Component = message.Component,
+                            Topic = message.Topic,
+                            MessageRaw = message.MessageRaw
+                        });
+                    }
+                }
+            }
+        }
+
+        public async Task AcknowledgeMessage(string tenant, string product, string component, string topic, string consumerName, bool isAcknowledged, Guid messageId)
+        {
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).MessageAcknowledged(new Model.Storages.Events.Messages.MessageAcknowledgedDetails()
+                    {
+                        Tenant = tenant,
+                        Product = product,
+                        Component = component,
+                        Topic = topic,
+                        AcknowledgedByConsumer = consumerName,
+                        IsAcknowledged = isAcknowledged,
+                        MessageId = messageId
                     });
                 }
             }

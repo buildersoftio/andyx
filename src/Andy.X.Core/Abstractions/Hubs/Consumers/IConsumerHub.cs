@@ -8,7 +8,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers
         Task ConsumerConnected(ConsumerConnectedDetails consumerConnectedDetails);
         Task ConsumerDisconnected(ConsumerDisconnectedDetails consumerDisconnectedDetails);
 
-        Task MessageSent(object messageSentDetails);
+        Task MessageSent(MessageSentDetails messageSentDetails);
         Task MessageAcknowledged(object messageAcknowledgedDetails);
     }
 }
