@@ -11,6 +11,6 @@ namespace Buildersoft.Andy.X.Model.Consumers.Events
 
         public Guid Id { get; set; }
         public string ConsumerName { get; set; }
-        public ConsumerType ConsumerType { get; set; }
+        public SubscriptionType SubscriptionType { get; set; }
     }
 }

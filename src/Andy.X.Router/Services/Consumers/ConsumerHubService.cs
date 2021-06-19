@@ -35,7 +35,7 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
             foreach (var consumer in consumerHubRepository.GetConsumersByTopic(message.Tenant, message.Product, message.Component, message.Topic))
             {
                 int index = new Random().Next(consumer.Value.Connections.Count);
-                if (consumer.Value.ConsumerType == ConsumerType.Exclusive || consumer.Value.ConsumerType == ConsumerType.Failover)
+                if (consumer.Value.SubscriptionType == SubscriptionType.Exclusive || consumer.Value.SubscriptionType == SubscriptionType.Failover)
                 {
                     index = 0;
                 }

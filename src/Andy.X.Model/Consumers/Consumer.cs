@@ -14,7 +14,7 @@ namespace Buildersoft.Andy.X.Model.Consumers
 
         public Guid Id { get; set; }
         public string ConsumerName { get; set; }
-        public ConsumerType ConsumerType { get; set; }
+        public SubscriptionType SubscriptionType { get; set; }
 
         public Consumer()
         {
@@ -22,7 +22,7 @@ namespace Buildersoft.Andy.X.Model.Consumers
         }
     }
 
-    public enum ConsumerType
+    public enum SubscriptionType
     {
         /// <summary>
         /// Only one reader

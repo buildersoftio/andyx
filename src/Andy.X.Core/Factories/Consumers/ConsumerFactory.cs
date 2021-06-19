@@ -11,7 +11,7 @@ namespace Buildersoft.Andy.X.Core.Factories.Consumers
             return new Consumer();
         }
 
-        public Consumer CreateConsumer(string tenant, string product, string component, string topic, string consumerName, ConsumerType consumerType)
+        public Consumer CreateConsumer(string tenant, string product, string component, string topic, string consumerName, SubscriptionType consumerType)
         {
             return new Consumer()
             {
@@ -21,7 +21,7 @@ namespace Buildersoft.Andy.X.Core.Factories.Consumers
                 Component = component,
                 Topic = topic,
                 ConsumerName = consumerName,
-                ConsumerType = consumerType
+                SubscriptionType = consumerType
             };
         }
     }

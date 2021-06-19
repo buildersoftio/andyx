@@ -3,7 +3,9 @@ using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
+using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Producers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -21,13 +23,15 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         private readonly ITenantFactory tenantFactory;
         private readonly IProducerFactory producerFactory;
         private readonly IStorageHubService storageHubService;
+        private readonly IConsumerHubService consumerHubService;
 
         public ProducerHub(ILogger<ProducerHub> logger,
             IProducerHubRepository producerHubRepository,
             ITenantRepository tenantRepository,
             ITenantFactory tenantFactory,
             IProducerFactory producerFactory,
-            IStorageHubService storageHubService)
+            IStorageHubService storageHubService,
+            IConsumerHubService consumerHubService)
         {
             this.logger = logger;
             this.producerHubRepository = producerHubRepository;
@@ -35,6 +39,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             this.tenantFactory = tenantFactory;
             this.producerFactory = producerFactory;
             this.storageHubService = storageHubService;
+            this.consumerHubService = consumerHubService;
         }
 
         public override Task OnConnectedAsync()
@@ -99,6 +104,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
                 Topic = topic,
                 ProducerName = producerName
             });
+            logger.LogInformation($"ANDYX#PRODUCERS|{tenant}|{product}|{component}|{topic}|{producerName}|{producerToRegister.Id}|CONNECTED");
 
             return base.OnConnectedAsync();
         }
@@ -119,6 +125,11 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             });
 
             return base.OnDisconnectedAsync(exception);
+        }
+
+        public async Task TransmitMessage(Message messageDetails)
+        {
+            await consumerHubService.TransmitMessage(messageDetails);
         }
     }
 }

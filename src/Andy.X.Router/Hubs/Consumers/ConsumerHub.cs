@@ -47,7 +47,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             string component = headers["x-andyx-component"].ToString();
             string topic = headers["x-andyx-topic"].ToString();
             string consumerName = headers["x-andyx-consumer"].ToString();
-            ConsumerType consumerType = (ConsumerType)Enum.Parse(typeof(ConsumerType), headers["x-andyx-consumer-type"].ToString());
+            SubscriptionType consumerType = (SubscriptionType)Enum.Parse(typeof(SubscriptionType), headers["x-andyx-consumer-type"].ToString());
 
             logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|{consumerType}|ASKED_TO_CONNECT");
 
@@ -83,13 +83,13 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             var consumerConencted = consumerHubRepository.GetConsumerByName(consumerName);
             if (consumerConencted != null)
             {
-                if (consumerType == ConsumerType.Exclusive)
+                if (consumerType == SubscriptionType.Exclusive)
                 {
                     logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|CONSUMER_EXCLUSIVE_ALREADY_CONNECTED");
                     return OnDisconnectedAsync(new Exception($"There is a consumer with name '{consumerName}' and with type 'EXCLUSIVE' is connected to this node"));
                 }
 
-                if (consumerType == ConsumerType.Failover)
+                if (consumerType == SubscriptionType.Failover)
                 {
                     if (consumerConencted.Connections.Count >= 2)
                     {
@@ -112,9 +112,10 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 Product = product,
                 Component = component,
                 Topic = topic,
-                ConsumerName = consumerName,
-                ConsumerType = consumerType
+                ConsumerName = consumerName
             });
+
+            logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|{consumerType}|{consumerToRegister.Id}|CONNECTED");
 
             return base.OnConnectedAsync();
         }
@@ -125,13 +126,19 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             Consumer consumerToRemove = consumerHubRepository.GetConsumerByConnectionId(clientConnectionId);
             storageHubService.DisconnectConsumerAsync(consumerToRemove);
 
-            consumerHubRepository.RemoveConsumer(clientConnectionId);
+            consumerHubRepository.RemoveConsumerConnection(consumerToRemove.ConsumerName, clientConnectionId);
+            consumerHubRepository.RemoveConsumer(consumerToRemove.ConsumerName);
 
-            logger.LogInformation($"ANDYX#CONSUMERS|{consumerToRemove.Tenant}|{consumerToRemove.Product}|{consumerToRemove.Component}|{consumerToRemove.Topic}|{consumerToRemove.ConsumerName}|{consumerToRemove.Id}|DISCONNECTED");
+            logger.LogInformation($"ANDYX#CONSUMERS|{consumerToRemove.Tenant}|{consumerToRemove.Product}|{consumerToRemove.Component}|{consumerToRemove.Topic}|{consumerToRemove.ConsumerName}|{consumerToRemove.SubscriptionType}|{consumerToRemove.Id}|DISCONNECTED");
 
             Clients.Caller.ConsumerDisconnected(new Model.Consumers.Events.ConsumerDisconnectedDetails()
             {
-                Id = consumerToRemove.Id
+                Id = consumerToRemove.Id,
+                Tenant = consumerToRemove.Tenant,
+                Product = consumerToRemove.Product,
+                Component = consumerToRemove.Component,
+                Topic = consumerToRemove.Topic,
+                ConsumerName = consumerToRemove.ConsumerName
             });
 
             return base.OnDisconnectedAsync(exception);

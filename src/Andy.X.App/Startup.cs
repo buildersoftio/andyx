@@ -38,6 +38,7 @@ namespace Andy.X.App
             services.AddStorageFactoryMethods();
             services.AddAppFactoryMethods();
             services.AddProducerFactoryMethods();
+            services.AddConsumerFactoryMethods();
 
             services.AddConfigurations(Configuration);
 
