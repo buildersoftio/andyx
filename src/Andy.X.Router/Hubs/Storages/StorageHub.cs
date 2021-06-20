@@ -2,6 +2,8 @@
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
+using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Storages;
 using Buildersoft.Andy.X.Model.Storages.Agents;
 using Microsoft.AspNetCore.SignalR;
@@ -18,14 +20,20 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
         private readonly ITenantRepository tenantMemoryRepository;
         private readonly IStorageFactory storageFactory;
         private readonly IAgentFactory agentFactory;
+        private readonly IConsumerHubService consumerHubService;
 
-        public StorageHub(ILogger<StorageHub> logger, IStorageHubRepository storageHubRepository, ITenantRepository tenantMemoryRepository, IStorageFactory storageFactory, IAgentFactory agentFactory)
+        public StorageHub(ILogger<StorageHub> logger, 
+            IStorageHubRepository storageHubRepository, 
+            ITenantRepository tenantMemoryRepository, 
+            IStorageFactory storageFactory, 
+            IAgentFactory agentFactory, IConsumerHubService consumerHubService)
         {
             this.logger = logger;
             this.storageHubRepository = storageHubRepository;
             this.tenantMemoryRepository = tenantMemoryRepository;
             this.storageFactory = storageFactory;
             this.agentFactory = agentFactory;
+            this.consumerHubService = consumerHubService;
         }
 
         public override Task OnConnectedAsync()
@@ -96,6 +104,11 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             });
 
             return base.OnDisconnectedAsync(exception);
+        }
+
+        public async Task TransmitMessageToThisNodeConsumers(Message messageDetails)
+        {
+            // await consumerHubService.TransmitMessage(messageDetails, true);
         }
     }
 }

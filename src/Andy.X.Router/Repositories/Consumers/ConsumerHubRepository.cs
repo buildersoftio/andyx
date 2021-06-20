@@ -48,11 +48,21 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
 
         public Dictionary<string, Consumer> GetConsumersByTopic(string tenant, string product, string component, string topic)
         {
-            return _consumers.Where(x => x.Value.Tenant == tenant
-                && x.Value.Product == product
-                && x.Value.Component == component
-                && x.Value.Topic == topic)
-                .ToDictionary(x => x.Key, x => x.Value);
+            try
+            {
+                return _consumers.Where(x => x.Value.Tenant == tenant
+            && x.Value.Product == product
+            && x.Value.Component == component
+            && x.Value.Topic == topic)
+            .ToDictionary(x => x.Key, x => x.Value);
+            }
+
+            catch (System.Exception)
+            {
+                // Return Empty Dictionary there is not consumer connected.
+                return new Dictionary<string, Consumer>();
+            }
+
         }
 
         public bool RemoveConsumer(string consumerName)

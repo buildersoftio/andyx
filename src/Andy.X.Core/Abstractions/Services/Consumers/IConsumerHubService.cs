@@ -5,6 +5,6 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Consumers
 {
     public interface IConsumerHubService
     {
-        Task TransmitMessage(Message message);
+        Task TransmitMessage(Message message, bool isStoredAlready = false);
     }
 }

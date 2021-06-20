@@ -30,7 +30,7 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
             this.storageHubService = storageHubService;
         }
 
-        public async Task TransmitMessage(Message message)
+        public async Task TransmitMessage(Message message, bool isStoredAlready = false)
         {
             foreach (var consumer in consumerHubRepository.GetConsumersByTopic(message.Tenant, message.Product, message.Component, message.Topic))
             {
@@ -50,8 +50,8 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     MessageRaw = message.MessageRaw
                 });
             }
-
-            await storageHubService.StoreMessage(message);
+            if (isStoredAlready == false)
+                await storageHubService.StoreMessage(message);
         }
     }
 }
