@@ -22,10 +22,10 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
         private readonly IAgentFactory agentFactory;
         private readonly IConsumerHubService consumerHubService;
 
-        public StorageHub(ILogger<StorageHub> logger, 
-            IStorageHubRepository storageHubRepository, 
-            ITenantRepository tenantMemoryRepository, 
-            IStorageFactory storageFactory, 
+        public StorageHub(ILogger<StorageHub> logger,
+            IStorageHubRepository storageHubRepository,
+            ITenantRepository tenantMemoryRepository,
+            IStorageFactory storageFactory,
             IAgentFactory agentFactory, IConsumerHubService consumerHubService)
         {
             this.logger = logger;
@@ -108,7 +108,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
 
         public async Task TransmitMessageToThisNodeConsumers(Message messageDetails)
         {
-            // await consumerHubService.TransmitMessage(messageDetails, true);
+            await consumerHubService.TransmitMessage(messageDetails, true);
         }
     }
 }
