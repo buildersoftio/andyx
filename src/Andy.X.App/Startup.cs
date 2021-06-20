@@ -1,3 +1,4 @@
+using Buildersoft.Andy.X.Core.Services.App;
 using Buildersoft.Andy.X.Extensions.DependencyInjection;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Buildersoft.Andy.X.Router.Hubs.Producers;
@@ -34,7 +35,7 @@ namespace Andy.X.App
             });
 
             services.AddSerilogLoggingConfiguration(Configuration);
-
+            services.AddSingleton<ApplicationService>();
             services.AddStorageFactoryMethods();
             services.AddAppFactoryMethods();
             services.AddProducerFactoryMethods();
@@ -61,6 +62,7 @@ namespace Andy.X.App
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseApplicationService(serviceProvider);
             app.UseTenantMemoryRepository(serviceProvider);
 
             app.UseHttpsRedirection();
