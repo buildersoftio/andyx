@@ -113,17 +113,21 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         {
             string clientConnectionId = Context.ConnectionId;
             Producer producerToRemove = producerHubRepository.GetProducerById(clientConnectionId);
-            storageHubService.DisconnectProducerAsync(producerToRemove);
 
-            producerHubRepository.RemoveProducer(clientConnectionId);
-
-            logger.LogInformation($"ANDYX#PRODUCERS|{producerToRemove.Tenant}|{producerToRemove.Product}|{producerToRemove.Component}|{producerToRemove.Topic}|{producerToRemove.ProducerName}|{producerToRemove.Id}|DISCONNECTED");
-
-            Clients.Caller.ProducerDisconnected(new Model.Producers.Events.ProducerDisconnectedDetails()
+            // When the producer with the same name try to connect more than one.
+            if (producerToRemove != null)
             {
-                Id = producerToRemove.Id
-            });
+                storageHubService.DisconnectProducerAsync(producerToRemove);
 
+                producerHubRepository.RemoveProducer(clientConnectionId);
+
+                logger.LogInformation($"ANDYX#PRODUCERS|{producerToRemove.Tenant}|{producerToRemove.Product}|{producerToRemove.Component}|{producerToRemove.Topic}|{producerToRemove.ProducerName}|{producerToRemove.Id}|DISCONNECTED");
+
+                Clients.Caller.ProducerDisconnected(new Model.Producers.Events.ProducerDisconnectedDetails()
+                {
+                    Id = producerToRemove.Id
+                });
+            }
             return base.OnDisconnectedAsync(exception);
         }
 

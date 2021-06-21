@@ -124,23 +124,27 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         {
             string clientConnectionId = Context.ConnectionId;
             Consumer consumerToRemove = consumerHubRepository.GetConsumerByConnectionId(clientConnectionId);
-            storageHubService.DisconnectConsumerAsync(consumerToRemove);
 
-            consumerHubRepository.RemoveConsumerConnection(consumerToRemove.ConsumerName, clientConnectionId);
-            consumerHubRepository.RemoveConsumer(consumerToRemove.ConsumerName);
-
-            logger.LogInformation($"ANDYX#CONSUMERS|{consumerToRemove.Tenant}|{consumerToRemove.Product}|{consumerToRemove.Component}|{consumerToRemove.Topic}|{consumerToRemove.ConsumerName}|{consumerToRemove.SubscriptionType}|{consumerToRemove.Id}|DISCONNECTED");
-
-            Clients.Caller.ConsumerDisconnected(new Model.Consumers.Events.ConsumerDisconnectedDetails()
+            // When the consumer as Exclusive with the same name try to connect
+            if (consumerToRemove != null)
             {
-                Id = consumerToRemove.Id,
-                Tenant = consumerToRemove.Tenant,
-                Product = consumerToRemove.Product,
-                Component = consumerToRemove.Component,
-                Topic = consumerToRemove.Topic,
-                ConsumerName = consumerToRemove.ConsumerName
-            });
+                storageHubService.DisconnectConsumerAsync(consumerToRemove);
 
+                consumerHubRepository.RemoveConsumerConnection(consumerToRemove.ConsumerName, clientConnectionId);
+                consumerHubRepository.RemoveConsumer(consumerToRemove.ConsumerName);
+
+                logger.LogInformation($"ANDYX#CONSUMERS|{consumerToRemove.Tenant}|{consumerToRemove.Product}|{consumerToRemove.Component}|{consumerToRemove.Topic}|{consumerToRemove.ConsumerName}|{consumerToRemove.SubscriptionType}|{consumerToRemove.Id}|DISCONNECTED");
+
+                Clients.Caller.ConsumerDisconnected(new Model.Consumers.Events.ConsumerDisconnectedDetails()
+                {
+                    Id = consumerToRemove.Id,
+                    Tenant = consumerToRemove.Tenant,
+                    Product = consumerToRemove.Product,
+                    Component = consumerToRemove.Component,
+                    Topic = consumerToRemove.Topic,
+                    ConsumerName = consumerToRemove.ConsumerName
+                });
+            }
             return base.OnDisconnectedAsync(exception);
         }
     }
