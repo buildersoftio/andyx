@@ -207,6 +207,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                             Product = message.Product,
                             Component = message.Component,
                             Topic = message.Topic,
+                            ConsumersCurrentTransmitted = message.ConsumersCurrentTransmitted,
                             MessageRaw = message.MessageRaw
                         });
                     }
@@ -229,6 +230,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                             Product = message.Product,
                             Component = message.Component,
                             Topic = message.Topic,
+                            ConsumersCurrentTransmitted = message.ConsumersCurrentTransmitted,
                             MessageRaw = message.MessageRaw
                         });
                     }

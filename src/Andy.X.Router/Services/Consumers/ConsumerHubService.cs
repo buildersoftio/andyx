@@ -8,6 +8,7 @@ using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Router.Services.Consumers
@@ -32,8 +33,18 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
 
         public async Task TransmitMessage(Message message, bool isStoredAlready = false)
         {
+            if (isStoredAlready == false)
+                message.ConsumersCurrentTransmitted = new List<string>();
+
             foreach (var consumer in consumerHubRepository.GetConsumersByTopic(message.Tenant, message.Product, message.Component, message.Topic))
             {
+                if (isStoredAlready == true)
+                {
+                    // If the message is sent to other nodes, do not send to the same consumer connected.
+                    if (message.ConsumersCurrentTransmitted.Contains(consumer.Key))
+                        continue;
+                }
+
                 int index = new Random().Next(consumer.Value.Connections.Count);
                 if (consumer.Value.SubscriptionType == SubscriptionType.Exclusive || consumer.Value.SubscriptionType == SubscriptionType.Failover)
                 {
@@ -49,8 +60,12 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     Topic = message.Topic,
                     MessageRaw = message.MessageRaw
                 });
+
+                if (isStoredAlready != true)
+                    message.ConsumersCurrentTransmitted.Add(consumer.Key);
             }
-            if (isStoredAlready == false)
+
+            if (isStoredAlready != true)
                 await storageHubService.StoreMessage(message);
         }
     }
