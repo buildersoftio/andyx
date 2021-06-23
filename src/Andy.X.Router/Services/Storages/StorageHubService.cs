@@ -1,6 +1,5 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages;
-using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Model.App.Components;
 using Buildersoft.Andy.X.Model.App.Messages;
@@ -19,8 +18,6 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
 {
     public class StorageHubService : IStorageHubService
     {
-        // TODO: implement StorageHubService
-
         private readonly IHubContext<StorageHub, IStorageHub> hub;
         private readonly IStorageHubRepository storageHubRepository;
 
@@ -50,7 +47,6 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
-
         public async Task ConnectProducerAsync(Producer producer)
         {
             foreach (var storage in storageHubRepository.GetStorages())
@@ -71,6 +67,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
             }
         }
 
+
         public async Task CreateComponentAsync(string tenant, string product, Component component)
         {
             foreach (var storage in storageHubRepository.GetStorages())
@@ -89,6 +86,25 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
+        public async Task UpdateComponentAsync(string tenant, string product, Component component)
+        {
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ComponentUpdated(new Model.Storages.Events.Components.ComponentUpdatedDetails()
+                    {
+                        Id = component.Id,
+                        Name = component.Name,
+
+                        Tenant = tenant,
+                        Product = product
+                    });
+                }
+            }
+        }
+
 
         public async Task CreateProductAsync(string tenant, Product product)
         {
@@ -107,6 +123,24 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
+        public async Task UpdateProductAsync(string tenant, Product product)
+        {
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProductUpdated(new Model.Storages.Events.Products.ProductUpdatedDetails()
+                    {
+                        Id = product.Id,
+                        Name = product.Name,
+
+                        Tenant = tenant
+                    });
+                }
+            }
+        }
+
 
         public async Task CreateTenantAsync(Tenant tenant)
         {
@@ -125,6 +159,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
             }
         }
 
+
         public async Task CreateTopicAsync(string tenant, string product, string component, Topic topic)
         {
             foreach (var storage in storageHubRepository.GetStorages())
@@ -133,6 +168,25 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 if (!storage.Value.Agents.IsEmpty)
                 {
                     await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).TopicCreated(new Model.Storages.Events.Topics.TopicCreatedDetails()
+                    {
+                        Id = topic.Id,
+                        Name = topic.Name,
+                        Schema = topic.Schema,
+                        Tenant = tenant,
+                        Product = product,
+                        Component = component
+                    });
+                }
+            }
+        }
+        public async Task UpdateTopicAsync(string tenant, string product, string component, Topic topic)
+        {
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).TopicUpdated(new Model.Storages.Events.Topics.TopicUpdatedDetails()
                     {
                         Id = topic.Id,
                         Name = topic.Name,
@@ -164,7 +218,6 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
-
         public async Task DisconnectProducerAsync(Producer producer)
         {
             foreach (var storage in storageHubRepository.GetStorages())
@@ -184,7 +237,6 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
-
         public async Task StoreMessage(Message message)
         {
             // TODO: Implement Geo-Replication Settings for this cluster.
@@ -237,7 +289,6 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
-
         public async Task AcknowledgeMessage(string tenant, string product, string component, string topic, string consumerName, bool isAcknowledged, Guid messageId)
         {
             foreach (var storage in storageHubRepository.GetStorages())
@@ -258,5 +309,6 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
+
     }
 }

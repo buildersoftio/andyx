@@ -64,26 +64,45 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
                 return OnDisconnectedAsync(new Exception($"There is no tenant registered with this name '{tenant}'"));
             }
 
-            if (tenantRepository.GetProduct(tenant, product) == null)
+
+            var connectedProduct = tenantRepository.GetProduct(tenant, product);
+            if (connectedProduct == null)
             {
                 var productDetails = tenantFactory.CreateProduct(product);
                 tenantRepository.AddProduct(tenant, product, productDetails);
                 storageHubService.CreateProductAsync(tenant, productDetails);
             }
+            else
+            {
+                storageHubService.UpdateProductAsync(tenant, connectedProduct);
+            }
 
-            if (tenantRepository.GetComponent(tenant, product, component) == null)
+
+            var connectedComponent = tenantRepository.GetComponent(tenant, product, component);
+            if (connectedComponent == null)
             {
                 var componentDetails = tenantFactory.CreateComponent(component);
                 tenantRepository.AddComponent(tenant, product, component, componentDetails);
                 storageHubService.CreateComponentAsync(tenant, product, componentDetails);
             }
+            else
+            {
+                storageHubService.UpdateComponentAsync(tenant, product, connectedComponent);
+            }
 
-            if (tenantRepository.GetTopic(tenant, product, component, topic) == null)
+
+            var connectedTopic = tenantRepository.GetTopic(tenant, product, component, topic);
+            if (connectedTopic == null)
             {
                 var topicDetails = tenantFactory.CreateTopic(topic);
                 tenantRepository.AddTopic(tenant, product, component, topic, topicDetails);
                 storageHubService.CreateTopicAsync(tenant, product, component, topicDetails);
             }
+            else
+            {
+                storageHubService.UpdateTopicAsync(tenant, product, component, connectedTopic);
+            }
+
 
             if (producerHubRepository.GetProducerByProducerName(tenant, product, component, topic, producerName).Equals(default(KeyValuePair<string, Producer>)) != true)
             {

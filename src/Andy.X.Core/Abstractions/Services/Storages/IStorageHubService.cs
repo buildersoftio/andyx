@@ -13,9 +13,15 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Storages
     public interface IStorageHubService
     {
         Task CreateTenantAsync(Tenant tenant);
+
         Task CreateProductAsync(string tenant, Product product);
+        Task UpdateProductAsync(string tenant, Product product);
+
         Task CreateComponentAsync(string tenant, string product, Component component);
+        Task UpdateComponentAsync(string tenant, string product, Component component);
+
         Task CreateTopicAsync(string tenant, string product, string component, Topic topic);
+        Task UpdateTopicAsync(string tenant, string product, string component, Topic topic);
 
         Task ConnectProducerAsync(Producer producer);
         Task DisconnectProducerAsync(Producer producer);
