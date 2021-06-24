@@ -302,13 +302,12 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                         Product = product,
                         Component = component,
                         Topic = topic,
-                        AcknowledgedByConsumer = consumerName,
+                        Consumer = consumerName,
                         IsAcknowledged = isAcknowledged,
                         MessageId = messageId
                     });
                 }
             }
         }
-
     }
 }

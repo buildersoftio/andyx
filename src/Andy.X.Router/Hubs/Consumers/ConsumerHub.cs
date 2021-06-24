@@ -5,6 +5,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Model.Consumers;
+using Buildersoft.Andy.X.Model.Storages.Events.Messages;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
@@ -164,6 +165,11 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 });
             }
             return base.OnDisconnectedAsync(exception);
+        }
+        public async Task AcknowledgeMessage(MessageAcknowledgedDetails message)
+        {
+            await storageHubService.AcknowledgeMessage(message.Tenant, message.Product, message.Component, message.Topic, message.Consumer, message.IsAcknowledged, message.MessageId);
+            //await consumerHubService.TransmitMessage(messageDetails);
         }
     }
 }
