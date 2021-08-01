@@ -110,5 +110,10 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
         {
             await consumerHubService.TransmitMessage(messageDetails, true);
         }
+
+        public async Task TransmitMessagesToConsumer(ConsumerMessage message)
+        {
+            await consumerHubService.TransmitMessageToConsumer(message);
+        }
     }
 }

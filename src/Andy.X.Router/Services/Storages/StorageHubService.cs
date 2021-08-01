@@ -309,5 +309,26 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
+
+        public async Task RequestUnacknowledgedMessagesConsumer(Consumer consumer)
+        {
+            foreach (var storage in storageHubRepository.GetStorages())
+            {
+                int index = new Random().Next(storage.Value.Agents.Count);
+                if (!storage.Value.Agents.IsEmpty)
+                {
+                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ConsumerUnacknowledgedMessagesRequested(new Model.Consumers.Events.ConsumerConnectedDetails()
+                    {
+                        Id = consumer.Id,
+                        Tenant = consumer.Tenant,
+                        Product = consumer.Product,
+                        Component = consumer.Component,
+                        Topic = consumer.Topic,
+                        ConsumerName = consumer.ConsumerName,
+                        SubscriptionType = consumer.SubscriptionType
+                    });
+                }
+            }
+        }
     }
 }

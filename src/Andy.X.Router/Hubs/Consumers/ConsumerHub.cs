@@ -134,6 +134,16 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 ConsumerName = consumerName
             });
 
+            // Sent not acknoledged messages to this consumer (for exclusive and for the first shared consumer connected)
+            if (consumerType == SubscriptionType.Exclusive || consumerType == SubscriptionType.Failover)
+                storageHubService.RequestUnacknowledgedMessagesConsumer(consumerToRegister);
+
+            if (consumerType == SubscriptionType.Shared)
+            {
+                if (consumerConencted == null)
+                    storageHubService.RequestUnacknowledgedMessagesConsumer(consumerToRegister);
+            }
+
             logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|{consumerType}|{consumerToRegister.Id}|CONNECTED");
 
             return base.OnConnectedAsync();
