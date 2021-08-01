@@ -68,5 +68,28 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
             if (isStoredAlready != true)
                 await storageHubService.StoreMessage(message);
         }
+
+        public async Task TransmitMessageToConsumer(ConsumerMessage consumerMessage)
+        {
+            var consumer = consumerHubRepository.GetConsumerByName(consumerMessage.Consumer);
+            if (consumer != null)
+            {
+                int index = new Random().Next(consumer.Connections.Count);
+                if (consumer.SubscriptionType == SubscriptionType.Exclusive || consumer.SubscriptionType == SubscriptionType.Failover)
+                {
+                    index = 0;
+                }
+
+                await hub.Clients.Client(consumer.Connections[index]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
+                {
+                    Id = consumerMessage.Message.Id,
+                    Tenant = consumerMessage.Message.Tenant,
+                    Product = consumerMessage.Message.Product,
+                    Component = consumerMessage.Message.Component,
+                    Topic = consumerMessage.Message.Topic,
+                    MessageRaw = consumerMessage.Message.MessageRaw
+                });
+            }
+        }
     }
 }

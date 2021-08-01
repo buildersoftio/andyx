@@ -28,6 +28,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Storages
 
         Task ConnectConsumerAsync(Consumer consumer);
         Task DisconnectConsumerAsync(Consumer consumer);
+        Task RequestUnacknowledgedMessagesConsumer(Consumer consumer);
 
         Task StoreMessage(Message message);
         Task AcknowledgeMessage(string tenant, string product, string component, string topic, string consumerName, bool isAcknowledged, Guid messageId);

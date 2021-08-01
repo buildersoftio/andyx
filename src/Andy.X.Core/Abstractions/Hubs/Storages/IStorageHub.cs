@@ -20,6 +20,8 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages
 
         Task ConsumerConnected(ConsumerConnectedDetails connectedDetails);
         Task ConsumerDisconnected(ConsumerDisconnectedDetails disconnectedDetails);
+        Task ConsumerUnacknowledgedMessagesRequested(ConsumerConnectedDetails consumerConnectedDetails);
+
 
         Task TenantCreated(TenantCreatedDetails tenant);
         Task TenantUpdated(TenantUpdatedDetails tenant);
