@@ -10,6 +10,8 @@ namespace Buildersoft.Andy.X.Model.Storages
         public string StorageName { get; set; }
         public StorageStatus StorageStatus { get; set; }
         public ConcurrentDictionary<string, Agent> Agents { get; set; }
+        public int ActiveAgentIndex { get; set; }
+
 
         public bool IsLoadBalanced { get; set; }
 
@@ -22,6 +24,7 @@ namespace Buildersoft.Andy.X.Model.Storages
         {
             StorageId = Guid.NewGuid();
             Agents = new ConcurrentDictionary<string, Agent>();
+            ActiveAgentIndex = 0;
         }
     }
 }
