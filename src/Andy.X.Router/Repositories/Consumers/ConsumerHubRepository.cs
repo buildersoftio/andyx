@@ -59,7 +59,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
 
             catch (System.Exception)
             {
-                // Return Empty Dictionary there is not consumer connected.
+                // return Empty Dictionary, there is not consumer connected.
                 return new Dictionary<string, Consumer>();
             }
 
