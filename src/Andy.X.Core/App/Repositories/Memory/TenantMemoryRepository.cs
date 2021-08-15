@@ -69,8 +69,6 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
             return _tenants.TryAdd(tenantName, tenant);
         }
 
-
-
         public Component GetComponent(string tenant, string product, string component)
         {
             if (_tenants.ContainsKey(tenant))
