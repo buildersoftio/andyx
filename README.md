@@ -34,8 +34,3 @@ Andy X can be easily deployed on a docker container using docker-compose, for mo
 This project has adopted the code of conduct defined by the Contributor Covenant to clarify expected behavior in our community.
 
 For more information, see the [.NET Foundation Code of Conduct](https://dotnetfoundation.org/code-of-conduct).
-
-## Support
-Let's do it together! You can support us by clicking on the link below!
-
-[![alt text](https://img.buymeacoffee.com/api/?url=aHR0cHM6Ly9pbWcuYnV5bWVhY29mZmVlLmNvbS9hcGkvP3VybD1hSFIwY0hNNkx5OWpaRzR1WW5WNWJXVmhZMjltWm1WbExtTnZiUzkxY0d4dllXUnpMM0J5YjJacGJHVmZjR2xqZEhWeVpYTXZNakF5TVM4d09DOWxObVUwTkRWaU1UVXhPVGRqWm1JNFlXWTVZalV5TWpjek5qSXlaV05rTnk1d2JtYz0mc2l6ZT0zMDAmbmFtZT1BbmR5K1g=&creator=Andy+X&is_creating=free%20and%20open%20source%20Distributed%20Streaming%20Platform&design_code=1&design_color=%2379D6B5&slug=buildersoft)](https://www.buymeacoffee.com/buildersoft).
