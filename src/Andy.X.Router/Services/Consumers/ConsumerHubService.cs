@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Model.App.Messages;
+using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -47,10 +48,10 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     consumer.Value.CurrentConnectionIndex = 0;
 
                 // This one is not needed, but let is stay for some time.
-                //if (consumer.Value.SubscriptionType == SubscriptionType.Exclusive || consumer.Value.SubscriptionType == SubscriptionType.Failover)
-                //{
-                //    consumer.Value.CurrentConnectionIndex = 0;
-                //}
+                if (consumer.Value.SubscriptionType == SubscriptionType.Exclusive || consumer.Value.SubscriptionType == SubscriptionType.Failover)
+                {
+                    consumer.Value.CurrentConnectionIndex = 0;
+                }
 
                 await hub.Clients.Client(consumer.Value.Connections[consumer.Value.CurrentConnectionIndex]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
                 {
@@ -80,10 +81,11 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                 if (consumer.CurrentConnectionIndex >= consumer.Connections.Count)
                     consumer.CurrentConnectionIndex = 0;
 
-                //if (consumer.SubscriptionType == SubscriptionType.Exclusive || consumer.SubscriptionType == SubscriptionType.Failover)
-                //{
-                //    consumer.CurrentConnectionIndex = 0;
-                //}
+                if (consumer.SubscriptionType == SubscriptionType.Exclusive || consumer.SubscriptionType == SubscriptionType.Failover)
+                {
+                    consumer.CurrentConnectionIndex = 0;
+                }
+
                 await hub.Clients.Client(consumer.Connections[consumer.CurrentConnectionIndex]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
                 {
                     Id = consumerMessage.Message.Id,
