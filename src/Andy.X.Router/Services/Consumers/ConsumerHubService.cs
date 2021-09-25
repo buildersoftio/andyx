@@ -64,7 +64,8 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                 if (isStoredAlready != true)
                     message.ConsumersCurrentTransmitted.Add(consumer.Key);
             }
-
+            if(storageHubService.GetStorageHubRepository())
+            { }
             if (isStoredAlready != true)
                 await storageHubService.StoreMessage(message);
         }

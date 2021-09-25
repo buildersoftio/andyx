@@ -13,6 +13,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants
         Product CreateProduct(string productName);
         Component CreateComponent(string componentName);
         Topic CreateTopic(string topicName);
+        Topic CreateTopic(string topicName, bool isPersistent);
 
     }
 }

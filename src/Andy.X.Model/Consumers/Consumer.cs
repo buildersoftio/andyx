@@ -16,9 +16,21 @@ namespace Buildersoft.Andy.X.Model.Consumers
         public string ConsumerName { get; set; }
         public SubscriptionType SubscriptionType { get; set; }
 
+        public ConsumerSettings ConsumerSettings { get; set; }
+
         public Consumer()
         {
             Connections = new List<string>();
+            ConsumerSettings = new ConsumerSettings();
+        }
+    }
+
+    public class ConsumerSettings
+    {
+        public InitialPosition InitialPosition { get; set; }
+        public ConsumerSettings()
+        {
+            InitialPosition = InitialPosition.Latest;
         }
     }
 
@@ -36,5 +48,11 @@ namespace Buildersoft.Andy.X.Model.Consumers
         /// Shared to more than one reader.
         /// </summary>
         Shared
+    }
+
+    public enum InitialPosition
+    {
+        Earliest,
+        Latest
     }
 }

@@ -52,6 +52,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             string product = headers["x-andyx-product"].ToString();
             string component = headers["x-andyx-component"].ToString();
             string topic = headers["x-andyx-topic"].ToString();
+            bool isPersistent = Boolean.Parse(headers["x-andyx-topic-is-persistent"]);
+
             string producerName = headers["x-andyx-producer"].ToString();
 
             logger.LogInformation($"ANDYX#PRODUCERS|{tenant}|{product}|{component}|{topic}|{producerName}|ASKED_TO_CONNECT");
@@ -94,7 +96,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             var connectedTopic = tenantRepository.GetTopic(tenant, product, component, topic);
             if (connectedTopic == null)
             {
-                var topicDetails = tenantFactory.CreateTopic(topic);
+                var topicDetails = tenantFactory.CreateTopic(topic, isPersistent);
                 tenantRepository.AddTopic(tenant, product, component, topic, topicDetails);
                 storageHubService.CreateTopicAsync(tenant, product, component, topicDetails);
             }

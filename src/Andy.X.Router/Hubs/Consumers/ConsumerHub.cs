@@ -47,10 +47,13 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             string product = headers["x-andyx-product"].ToString();
             string component = headers["x-andyx-component"].ToString();
             string topic = headers["x-andyx-topic"].ToString();
+            bool isPersistent = Boolean.Parse(headers["x-andyx-topic-is-persistent"]);
             string consumerName = headers["x-andyx-consumer"].ToString();
-            SubscriptionType consumerType = (SubscriptionType)Enum.Parse(typeof(SubscriptionType), headers["x-andyx-consumer-type"].ToString());
 
-            logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|{consumerType}|ASKED_TO_CONNECT");
+            SubscriptionType subscriptionType = (SubscriptionType)Enum.Parse(typeof(SubscriptionType), headers["x-andyx-consumer-type"].ToString());
+            InitialPosition initialPosition = (InitialPosition)Enum.Parse(typeof(InitialPosition), headers["x-andyx-consumer-initial-position"].ToString());
+
+            logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|{subscriptionType}|ASKED_TO_CONNECT");
 
             // check if the consumer is already connected
             if (tenantRepository.GetTenant(tenant) == null)
@@ -58,7 +61,6 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|TENANT_DOES_NOT_EXISTS");
                 return OnDisconnectedAsync(new Exception($"There is no tenant registered with this name '{tenant}'"));
             }
-
 
             var connectedProduct = tenantRepository.GetProduct(tenant, product);
             if (connectedProduct == null)
@@ -72,7 +74,6 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 storageHubService.UpdateProductAsync(tenant, connectedProduct);
             }
 
-
             var connectedComponent = tenantRepository.GetComponent(tenant, product, component);
             if (connectedComponent == null)
             {
@@ -85,11 +86,10 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 storageHubService.UpdateComponentAsync(tenant, product, connectedComponent);
             }
 
-
             var connectedTopic = tenantRepository.GetTopic(tenant, product, component, topic);
             if (connectedTopic == null)
             {
-                var topicDetails = tenantFactory.CreateTopic(topic);
+                var topicDetails = tenantFactory.CreateTopic(topic, isPersistent);
                 tenantRepository.AddTopic(tenant, product, component, topic, topicDetails);
                 storageHubService.CreateTopicAsync(tenant, product, component, topicDetails);
             }
@@ -102,13 +102,13 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             var consumerConencted = consumerHubRepository.GetConsumerByName(consumerName);
             if (consumerConencted != null)
             {
-                if (consumerType == SubscriptionType.Exclusive)
+                if (subscriptionType == SubscriptionType.Exclusive)
                 {
                     logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|CONSUMER_EXCLUSIVE_ALREADY_CONNECTED");
                     return OnDisconnectedAsync(new Exception($"There is a consumer with name '{consumerName}' and with type 'EXCLUSIVE' is connected to this node"));
                 }
 
-                if (consumerType == SubscriptionType.Failover)
+                if (subscriptionType == SubscriptionType.Failover)
                 {
                     if (consumerConencted.Connections.Count >= 2)
                     {
@@ -118,7 +118,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 }
             }
 
-            consumerToRegister = consumerFactory.CreateConsumer(tenant, product, component, topic, consumerName, consumerType);
+            consumerToRegister = consumerFactory.CreateConsumer(tenant, product, component, topic, consumerName, subscriptionType, initialPosition);
             consumerHubRepository.AddConsumer(consumerName, consumerToRegister);
             consumerHubRepository.AddConsumerConnection(consumerName, clientConnectionId);
 
@@ -131,20 +131,22 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 Product = product,
                 Component = component,
                 Topic = topic,
-                ConsumerName = consumerName
+                ConsumerName = consumerName,
+                SubscriptionType = subscriptionType,
+                InitialPosition = initialPosition
             });
 
             // Sent not acknoledged messages to this consumer (for exclusive and for the first shared consumer connected)
-            if (consumerType == SubscriptionType.Exclusive || consumerType == SubscriptionType.Failover)
+            if (subscriptionType == SubscriptionType.Exclusive || subscriptionType == SubscriptionType.Failover)
                 storageHubService.RequestUnacknowledgedMessagesConsumer(consumerToRegister);
 
-            if (consumerType == SubscriptionType.Shared)
+            if (subscriptionType == SubscriptionType.Shared)
             {
                 if (consumerConencted == null)
                     storageHubService.RequestUnacknowledgedMessagesConsumer(consumerToRegister);
             }
 
-            logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|{consumerType}|{consumerToRegister.Id}|CONNECTED");
+            logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|{subscriptionType}|{consumerToRegister.Id}|CONNECTED");
 
             return base.OnConnectedAsync();
         }

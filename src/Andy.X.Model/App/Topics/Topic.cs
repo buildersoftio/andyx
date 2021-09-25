@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Model.App.Topics
 {
@@ -10,10 +6,24 @@ namespace Buildersoft.Andy.X.Model.App.Topics
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+
+        public TopicSettings TopicSettings { get; set; }
+
         public Schema Schema { get; set; }
         public Topic()
         {
             Schema = new Schema();
+            TopicSettings = new TopicSettings();
+        }
+    }
+
+    public class TopicSettings
+    {
+        public bool IsPersistent { get; set; }
+
+        public TopicSettings()
+        {
+            IsPersistent = true;
         }
     }
 
