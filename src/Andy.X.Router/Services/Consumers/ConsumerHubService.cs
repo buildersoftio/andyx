@@ -1,5 +1,6 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Model.App.Messages;
@@ -19,16 +20,19 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
         private readonly IHubContext<ConsumerHub, IConsumerHub> hub;
         private readonly IConsumerHubRepository consumerHubRepository;
         private readonly IStorageHubService storageHubService;
+        private readonly ITenantRepository tenantRepository;
 
         public ConsumerHubService(ILogger<ConsumerHubService> logger,
             IHubContext<ConsumerHub, IConsumerHub> hub,
             IConsumerHubRepository consumerHubRepository,
-            IStorageHubService storageHubService)
+            IStorageHubService storageHubService,
+            ITenantRepository tenantRepository)
         {
             this.logger = logger;
             this.hub = hub;
             this.consumerHubRepository = consumerHubRepository;
             this.storageHubService = storageHubService;
+            this.tenantRepository = tenantRepository;
         }
 
         public async Task TransmitMessage(Message message, bool isStoredAlready = false)
@@ -64,10 +68,12 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                 if (isStoredAlready != true)
                     message.ConsumersCurrentTransmitted.Add(consumer.Key);
             }
-            if(storageHubService.GetStorageHubRepository())
-            { }
-            if (isStoredAlready != true)
-                await storageHubService.StoreMessage(message);
+
+            // If 'Message is Persistent', store it!
+            var topicDetails = tenantRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic);
+            if (topicDetails.TopicSettings.IsPersistent == true)
+                if (isStoredAlready != true)
+                    await storageHubService.StoreMessage(message);
         }
 
         public async Task TransmitMessageToConsumer(ConsumerMessage consumerMessage)

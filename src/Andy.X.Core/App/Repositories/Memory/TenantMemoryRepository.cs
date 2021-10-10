@@ -2,7 +2,6 @@
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Model.App.Components;
 using Buildersoft.Andy.X.Model.App.Products;
-using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Configurations;
 using Microsoft.Extensions.Logging;
@@ -15,14 +14,14 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
     {
         private readonly ILogger<TenantMemoryRepository> logger;
         private readonly ITenantFactory tenantFactory;
-        private ConcurrentDictionary<string, Tenant> _tenants;
+        private ConcurrentDictionary<string, Model.App.Tenants.Tenant> _tenants;
 
         public TenantMemoryRepository(ILogger<TenantMemoryRepository> logger, List<TenantConfiguration> tenantConfigurations, ITenantFactory tenantFactory)
         {
             this.logger = logger;
             this.tenantFactory = tenantFactory;
 
-            _tenants = new ConcurrentDictionary<string, Tenant>();
+            _tenants = new ConcurrentDictionary<string, Model.App.Tenants.Tenant>();
 
             AddTenantsFromConfiguration(tenantConfigurations);
         }
@@ -64,7 +63,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
             return false;
         }
 
-        public bool AddTenant(string tenantName, Tenant tenant)
+        public bool AddTenant(string tenantName, Model.App.Tenants.Tenant tenant)
         {
             return _tenants.TryAdd(tenantName, tenant);
         }
@@ -111,7 +110,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
 
 
-        public Tenant GetTenant(string tenant)
+        public Model.App.Tenants.Tenant GetTenant(string tenant)
         {
             if (_tenants.ContainsKey(tenant))
                 return _tenants[tenant];
@@ -119,7 +118,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
             return null;
         }
 
-        public ConcurrentDictionary<string, Tenant> GetTenants()
+        public ConcurrentDictionary<string, Model.App.Tenants.Tenant> GetTenants()
         {
             return _tenants;
         }
