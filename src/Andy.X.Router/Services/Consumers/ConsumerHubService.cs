@@ -8,7 +8,6 @@ using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -49,13 +48,16 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                         continue;
                 }
 
-                int index = new Random().Next(consumer.Value.Connections.Count);
+                if (consumer.Value.CurrentConnectionIndex >= consumer.Value.Connections.Count)
+                    consumer.Value.CurrentConnectionIndex = 0;
+
+                // This one is not needed, but let is stay for some time.
                 if (consumer.Value.SubscriptionType == SubscriptionType.Exclusive || consumer.Value.SubscriptionType == SubscriptionType.Failover)
                 {
-                    index = 0;
+                    consumer.Value.CurrentConnectionIndex = 0;
                 }
 
-                await hub.Clients.Client(consumer.Value.Connections[index]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
+                await hub.Clients.Client(consumer.Value.Connections[consumer.Value.CurrentConnectionIndex]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
                 {
                     Id = message.Id,
                     Tenant = message.Tenant,
@@ -64,6 +66,8 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     Topic = message.Topic,
                     MessageRaw = message.MessageRaw
                 });
+
+                consumer.Value.CurrentConnectionIndex++;
 
                 if (isStoredAlready != true)
                     message.ConsumersCurrentTransmitted.Add(consumer.Key);
@@ -81,13 +85,15 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
             var consumer = consumerHubRepository.GetConsumerByName(consumerMessage.Consumer);
             if (consumer != null)
             {
-                int index = new Random().Next(consumer.Connections.Count);
+                if (consumer.CurrentConnectionIndex >= consumer.Connections.Count)
+                    consumer.CurrentConnectionIndex = 0;
+
                 if (consumer.SubscriptionType == SubscriptionType.Exclusive || consumer.SubscriptionType == SubscriptionType.Failover)
                 {
-                    index = 0;
+                    consumer.CurrentConnectionIndex = 0;
                 }
 
-                await hub.Clients.Client(consumer.Connections[index]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
+                await hub.Clients.Client(consumer.Connections[consumer.CurrentConnectionIndex]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
                 {
                     Id = consumerMessage.Message.Id,
                     Tenant = consumerMessage.Message.Tenant,
@@ -96,6 +102,8 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     Topic = consumerMessage.Message.Topic,
                     MessageRaw = consumerMessage.Message.MessageRaw
                 });
+
+                consumer.CurrentConnectionIndex++;
             }
         }
     }

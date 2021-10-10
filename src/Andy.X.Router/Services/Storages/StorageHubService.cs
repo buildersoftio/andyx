@@ -251,7 +251,11 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 // Geo-replication is on
                 foreach (var storage in storageHubRepository.GetStorages())
                 {
+                    //if (storage.Value.ActiveAgentIndex >= storage.Value.Agents.Count)
+                    //    storage.Value.ActiveAgentIndex = 0;
+
                     int index = new Random().Next(storage.Value.Agents.Count);
+
                     if (!storage.Value.Agents.IsEmpty)
                     {
                         await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).MessageStored(new Model.Storages.Events.Messages.MessageStoredDetails()
@@ -265,16 +269,24 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                             MessageRaw = message.MessageRaw
                         });
                     }
+                    //storage.Value.ActiveAgentIndex++;
                 }
             }
             else
             {
                 // Geo-replication is off - storages are shared
                 int indexOfStorage = new Random().Next(storageHubRepository.GetStorages().Count);
+
                 if (!storageHubRepository.GetStorages().IsEmpty)
                 {
                     var storage = storageHubRepository.GetStorages().ElementAt(indexOfStorage);
                     int index = new Random().Next(storage.Value.Agents.Count);
+
+                    // For Storages this feature will not work for now. Why?- When more than one producer will produce at the same time, the ActiveAgnetIndex will increase
+                    // and it will fail to out of bound index.
+                    //if (storage.Value.ActiveAgentIndex >= storage.Value.Agents.Count)
+                    //    storage.Value.ActiveAgentIndex = 0;
+
                     if (!storage.Value.Agents.IsEmpty)
                     {
                         await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).MessageStored(new Model.Storages.Events.Messages.MessageStoredDetails()
@@ -288,6 +300,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                             MessageRaw = message.MessageRaw
                         });
                     }
+                    //storage.Value.ActiveAgentIndex++;
                 }
             }
         }

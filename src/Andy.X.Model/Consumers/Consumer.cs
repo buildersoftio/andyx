@@ -12,6 +12,9 @@ namespace Buildersoft.Andy.X.Model.Consumers
 
         public List<string> Connections { get; set; }
 
+        // This property is used to send to the next shared consumer. (This property will replace the random)
+        public int CurrentConnectionIndex { get; set; }
+
         public Guid Id { get; set; }
         public string ConsumerName { get; set; }
         public SubscriptionType SubscriptionType { get; set; }
