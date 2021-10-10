@@ -136,14 +136,18 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 InitialPosition = initialPosition
             });
 
-            // Sent not acknoledged messages to this consumer (for exclusive and for the first shared consumer connected)
-            if (subscriptionType == SubscriptionType.Exclusive || subscriptionType == SubscriptionType.Failover)
-                storageHubService.RequestUnacknowledgedMessagesConsumer(consumerToRegister);
-
-            if (subscriptionType == SubscriptionType.Shared)
+            // if consumer is not persistent, do not store the message, just allow streaming
+            if (isPersistent == true)
             {
-                if (consumerConencted == null)
+                // Sent not acknoledged messages to this consumer (for exclusive and for the first shared consumer connected)
+                if (subscriptionType == SubscriptionType.Exclusive || subscriptionType == SubscriptionType.Failover)
                     storageHubService.RequestUnacknowledgedMessagesConsumer(consumerToRegister);
+
+                if (subscriptionType == SubscriptionType.Shared)
+                {
+                    if (consumerConencted == null)
+                        storageHubService.RequestUnacknowledgedMessagesConsumer(consumerToRegister);
+                }
             }
 
             logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|{subscriptionType}|{consumerToRegister.Id}|CONNECTED");
@@ -180,8 +184,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         }
         public async Task AcknowledgeMessage(MessageAcknowledgedDetails message)
         {
-            await storageHubService.AcknowledgeMessage(message.Tenant, message.Product, message.Component, message.Topic, message.Consumer, message.IsAcknowledged, message.MessageId);
-            //await consumerHubService.TransmitMessage(messageDetails);
+            // is a check to ignore if the topic is not persistent.
+            if (tenantRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic).TopicSettings.IsPersistent == true)
+                await storageHubService.AcknowledgeMessage(message.Tenant, message.Product, message.Component, message.Topic, message.Consumer, message.IsAcknowledged, message.MessageId);
         }
     }
 }

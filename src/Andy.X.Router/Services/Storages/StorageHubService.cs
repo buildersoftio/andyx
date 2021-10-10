@@ -327,7 +327,8 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                         Component = consumer.Component,
                         Topic = consumer.Topic,
                         ConsumerName = consumer.ConsumerName,
-                        SubscriptionType = consumer.SubscriptionType
+                        SubscriptionType = consumer.SubscriptionType,
+                        InitialPosition = consumer.ConsumerSettings.InitialPosition
                     });
                 }
             }
