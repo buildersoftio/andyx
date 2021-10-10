@@ -174,7 +174,8 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                         Schema = topic.Schema,
                         Tenant = tenant,
                         Product = product,
-                        Component = component
+                        Component = component,
+                        TopicSettings = topic.TopicSettings
                     });
                 }
             }
@@ -193,7 +194,8 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                         Schema = topic.Schema,
                         Tenant = tenant,
                         Product = product,
-                        Component = component
+                        Component = component,
+                        TopicSettings = topic.TopicSettings
                     });
                 }
             }
@@ -338,7 +340,8 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                         Component = consumer.Component,
                         Topic = consumer.Topic,
                         ConsumerName = consumer.ConsumerName,
-                        SubscriptionType = consumer.SubscriptionType
+                        SubscriptionType = consumer.SubscriptionType,
+                        InitialPosition = consumer.ConsumerSettings.InitialPosition
                     });
                 }
             }

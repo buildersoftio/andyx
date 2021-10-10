@@ -1,4 +1,5 @@
-﻿using Buildersoft.Andy.X.Model.App.Components;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages;
+using Buildersoft.Andy.X.Model.App.Components;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
@@ -32,5 +33,6 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Storages
 
         Task StoreMessage(Message message);
         Task AcknowledgeMessage(string tenant, string product, string component, string topic, string consumerName, bool isAcknowledged, Guid messageId);
+
     }
 }

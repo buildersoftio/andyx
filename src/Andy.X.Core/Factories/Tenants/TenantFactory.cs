@@ -33,5 +33,10 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
         {
             return new Topic() { Id = Guid.NewGuid(), Name = topicName };
         }
+
+        public Topic CreateTopic(string topicName, bool isPersistent)
+        {
+            return new Topic() { Id = Guid.NewGuid(), Name = topicName, TopicSettings = new TopicSettings() { IsPersistent = isPersistent } };
+        }
     }
 }
