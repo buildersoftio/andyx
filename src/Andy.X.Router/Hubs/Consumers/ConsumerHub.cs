@@ -53,12 +53,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             SubscriptionType subscriptionType = (SubscriptionType)Enum.Parse(typeof(SubscriptionType), headers["x-andyx-consumer-type"].ToString());
             InitialPosition initialPosition = (InitialPosition)Enum.Parse(typeof(InitialPosition), headers["x-andyx-consumer-initial-position"].ToString());
 
-            logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|{subscriptionType}|ASKED_TO_CONNECT");
+            logger.LogInformation($"Consumer '{consumerName}' and subscription type '{subscriptionType}' at {tenant}/{product}/{component}/{topic} asked to connect");
+
 
             // check if the consumer is already connected
             if (tenantRepository.GetTenant(tenant) == null)
             {
-                logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|TENANT_DOES_NOT_EXISTS");
+                logger.LogInformation($"Consumer '{consumerName}' failed to connect, tenant '{tenant}' does not exists");
+
                 return OnDisconnectedAsync(new Exception($"There is no tenant registered with this name '{tenant}'"));
             }
 
@@ -104,7 +106,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             {
                 if (subscriptionType == SubscriptionType.Exclusive)
                 {
-                    logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|CONSUMER_EXCLUSIVE_ALREADY_CONNECTED");
+                    logger.LogWarning($"Consumer '{consumerName}' and subscription type '{subscriptionType}' at {tenant}/{product}/{component}/{topic} is already connected");
                     return OnDisconnectedAsync(new Exception($"There is a consumer with name '{consumerName}' and with type 'EXCLUSIVE' is connected to this node"));
                 }
 
@@ -112,7 +114,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 {
                     if (consumerConencted.Connections.Count >= 2)
                     {
-                        logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|CONSUMER_FAILOVER_ALREADY_CONNECTED_2_INSTANCES");
+                        logger.LogWarning($"Consumer '{consumerName}' and subscription type '{subscriptionType}' at {tenant}/{product}/{component}/{topic} is already connected with 2 instances");
+
                         return OnDisconnectedAsync(new Exception($"There are two consumers with name '{consumerName}' and with type 'Failover' are connected to this node"));
                     }
                 }
@@ -149,8 +152,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                         storageHubService.RequestUnacknowledgedMessagesConsumer(consumerToRegister);
                 }
             }
-
-            logger.LogInformation($"ANDYX#CONSUMERS|{tenant}|{product}|{component}|{topic}|{consumerName}|{subscriptionType}|{consumerToRegister.Id}|CONNECTED");
+            logger.LogInformation($"Consumer '{consumerName}' and subscription type '{subscriptionType}' at {tenant}/{product}/{component}/{topic} is connected");
 
             return base.OnConnectedAsync();
         }
@@ -168,7 +170,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 consumerHubRepository.RemoveConsumerConnection(consumerToRemove.ConsumerName, clientConnectionId);
                 consumerHubRepository.RemoveConsumer(consumerToRemove.ConsumerName);
 
-                logger.LogInformation($"ANDYX#CONSUMERS|{consumerToRemove.Tenant}|{consumerToRemove.Product}|{consumerToRemove.Component}|{consumerToRemove.Topic}|{consumerToRemove.ConsumerName}|{consumerToRemove.SubscriptionType}|{consumerToRemove.Id}|DISCONNECTED");
+                logger.LogInformation($"Consumer '{consumerToRemove.ConsumerName}' and subscription type '{consumerToRemove.SubscriptionType}' at {consumerToRemove.Tenant}/{consumerToRemove.Product}/{consumerToRemove.Component}/{consumerToRemove.Topic} is disconnected");
 
                 Clients.Caller.ConsumerDisconnected(new Model.Consumers.Events.ConsumerDisconnectedDetails()
                 {

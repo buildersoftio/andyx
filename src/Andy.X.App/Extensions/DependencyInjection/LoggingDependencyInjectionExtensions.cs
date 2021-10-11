@@ -11,6 +11,11 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
+
+            //Log.Logger = new LoggerConfiguration()
+            //    .WriteTo.Console(outputTemplate:
+            //        "[{Timestamp:HH:mm:ss} {Level:u15}] {Message:lj}{NewLine}{Exception}")
+            //    .CreateLogger();
         }
     }
 }

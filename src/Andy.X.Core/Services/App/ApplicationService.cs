@@ -27,8 +27,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
             Console.WriteLine("                   Starting Buildersoft Andy X Node...");
             Console.WriteLine("\n");
-            logger.LogInformation("ANDYX#READY");
-
+            logger.LogInformation("Andy X Node is ready");
         }
     }
 }

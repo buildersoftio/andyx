@@ -56,13 +56,13 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
             string producerName = headers["x-andyx-producer"].ToString();
 
-            logger.LogInformation($"ANDYX#PRODUCERS|{tenant}|{product}|{component}|{topic}|{producerName}|ASKED_TO_CONNECT");
+            logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} asked to connect");
 
             //check if the producer is already connected
 
             if (tenantRepository.GetTenant(tenant) == null)
             {
-                logger.LogInformation($"ANDYX#PRODUCERS|{tenant}|{product}|{component}|{topic}|{producerName}|TENANT_DOES_NOT_EXISTS");
+                logger.LogInformation($"Producer '{producerName}' failed to connect, tenant '{tenant}' does not exists");
                 return OnDisconnectedAsync(new Exception($"There is no tenant registered with this name '{tenant}'"));
             }
 
@@ -108,8 +108,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
             if (producerHubRepository.GetProducerByProducerName(tenant, product, component, topic, producerName).Equals(default(KeyValuePair<string, Producer>)) != true)
             {
-                logger.LogInformation($"ANDYX#PRODUCERS|{tenant}|{product}|{component}|{topic}|{producerName}|PRODUCER_ALREADY_CONNECTED");
-                return OnDisconnectedAsync(new Exception($"There is a producer with name '{producerName}' connected to this node"));
+                logger.LogWarning($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} is already connected");
+                return OnDisconnectedAsync(new Exception($"There is a producer with name '{producerName}' at {tenant}/{product}/{component}/{topic} connected to this node"));
             }
 
             producerToRegister = producerFactory.CreateProducer(tenant, product, component, topic, producerName);
@@ -125,7 +125,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
                 Topic = topic,
                 ProducerName = producerName
             });
-            logger.LogInformation($"ANDYX#PRODUCERS|{tenant}|{product}|{component}|{topic}|{producerName}|{producerToRegister.Id}|CONNECTED");
+            logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} is connected");
 
             return base.OnConnectedAsync();
         }
@@ -139,10 +139,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             if (producerToRemove != null)
             {
                 storageHubService.DisconnectProducerAsync(producerToRemove);
-
                 producerHubRepository.RemoveProducer(clientConnectionId);
 
-                logger.LogInformation($"ANDYX#PRODUCERS|{producerToRemove.Tenant}|{producerToRemove.Product}|{producerToRemove.Component}|{producerToRemove.Topic}|{producerToRemove.ProducerName}|{producerToRemove.Id}|DISCONNECTED");
+                logger.LogInformation($"Producer '{producerToRemove.ProducerName}' at {producerToRemove.Tenant}/{producerToRemove.Product}/{producerToRemove.Component}/{producerToRemove.Topic} is disconnected");
 
                 Clients.Caller.ProducerDisconnected(new Model.Producers.Events.ProducerDisconnectedDetails()
                 {
