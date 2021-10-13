@@ -53,7 +53,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             SubscriptionType subscriptionType = (SubscriptionType)Enum.Parse(typeof(SubscriptionType), headers["x-andyx-consumer-type"].ToString());
             InitialPosition initialPosition = (InitialPosition)Enum.Parse(typeof(InitialPosition), headers["x-andyx-consumer-initial-position"].ToString());
 
-            logger.LogInformation($"Consumer '{consumerName}' and subscription type '{subscriptionType}' at {tenant}/{product}/{component}/{topic} asked to connect");
+            logger.LogInformation($"Consumer '{consumerName}' and subscription type '{subscriptionType}' at {tenant}/{product}/{component}/{topic} requested connection");
 
 
             // check if the consumer is already connected

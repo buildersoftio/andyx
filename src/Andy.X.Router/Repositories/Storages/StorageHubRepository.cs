@@ -38,13 +38,13 @@ namespace Buildersoft.Andy.X.Router.Repositories.Storages
         {
             if (_storages.ContainsKey(storageName) != true)
             {
-                _logger.LogError($"ANDYX#STORAGE|REPOSITORY|Storage with name {storageName} doesn't exists");
+                _logger.LogError($"Storage Repository - Storage '{storageName}' doesn't exists");
                 return null;
             }
 
             if (_storages[storageName].Agents.ContainsKey(connectionId) != true)
             {
-                _logger.LogError($"ANDYX#STORAGE|REPOSITORY|Agent with id '{connectionId}' in storage with name {storageName} doesn't exists");
+                _logger.LogError($"Storage Repository - Storage Agent '{connectionId}' on this storage '{storageName}' doesn't exists");
                 return null;
             }
 
@@ -66,7 +66,8 @@ namespace Buildersoft.Andy.X.Router.Repositories.Storages
         {
             if (_storages.ContainsKey(storageName) != true)
             {
-                _logger.LogError($"ANDYX#STORAGE|REPOSITORY|Storage with name {storageName} doesn't exists");
+                _logger.LogError($"Storage Repository - Storage '{storageName}' doesn't exists");
+
                 return null;
             }
 
@@ -92,13 +93,14 @@ namespace Buildersoft.Andy.X.Router.Repositories.Storages
         {
             if (_storages.ContainsKey(storageName) != true)
             {
-                _logger.LogError($"ANDYX#STORAGE|REPOSITORY|Storage with name {storageName} doesn't exists");
+                _logger.LogError($"Storage Repository - Storage '{storageName}' doesn't exists");
                 return false;
             }
 
             if (_storages[storageName].Agents.ContainsKey(connectionId) != true)
             {
-                _logger.LogError($"ANDYX#STORAGE|REPOSITORY|Agent with id '{connectionId}' in storage with name {storageName} doesn't exists");
+                _logger.LogError($"Storage Repository - Storage Agent '{connectionId}' on this storage '{storageName}' doesn't exists");
+
                 return false;
             }
 
@@ -122,7 +124,8 @@ namespace Buildersoft.Andy.X.Router.Repositories.Storages
         {
             if (_storages.ContainsKey(storageName) != true)
             {
-                _logger.LogError($"ANDYX#STORAGE|REPOSITORY|Storage with name {storageName} doesn't exists");
+                _logger.LogError($"Storage Repository - Storage '{storageName}' doesn't exists");
+
                 return false;
             }
 

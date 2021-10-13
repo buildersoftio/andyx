@@ -56,7 +56,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
             string producerName = headers["x-andyx-producer"].ToString();
 
-            logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} asked to connect");
+            logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} requested connection");
 
             //check if the producer is already connected
 
