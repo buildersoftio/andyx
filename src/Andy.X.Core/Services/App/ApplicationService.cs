@@ -16,7 +16,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             Console.Write("  ###"); Console.ForegroundColor = generalColor; Console.WriteLine("      ###");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write("    ###"); Console.ForegroundColor = generalColor; Console.Write("  ###");
-            Console.WriteLine("       Andy X 2.0.3-preview. Copyright (C) 2021 Buildersoft LLC");
+            Console.WriteLine("       Andy X 2.0.4-rc. Copyright (C) 2021 Buildersoft LLC");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write("      ####         "); Console.ForegroundColor = generalColor; Console.WriteLine("Licensed under the Apache License 2.0.  See https://bit.ly/3DqVQbx");
             Console.ForegroundColor = ConsoleColor.Red;
@@ -27,8 +27,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
             Console.WriteLine("                   Starting Buildersoft Andy X Node...");
             Console.WriteLine("\n");
-            logger.LogInformation("ANDYX#READY");
-
+            logger.LogInformation("Andy X Node is ready");
         }
     }
 }

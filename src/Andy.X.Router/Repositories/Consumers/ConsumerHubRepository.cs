@@ -11,6 +11,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
     {
         private readonly ILogger<ConsumerHubRepository> _logger;
         private ConcurrentDictionary<string, Consumer> _consumers;
+
         public ConsumerHubRepository(ILogger<ConsumerHubRepository> logger)
         {
             _logger = logger;
@@ -51,9 +52,9 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
             try
             {
                 return _consumers.Where(x => x.Value.Tenant == tenant
-            && x.Value.Product == product
-            && x.Value.Component == component
-            && x.Value.Topic == topic)
+                    && x.Value.Product == product
+                    && x.Value.Component == component
+                    && x.Value.Topic == topic)
             .ToDictionary(x => x.Key, x => x.Value);
             }
 

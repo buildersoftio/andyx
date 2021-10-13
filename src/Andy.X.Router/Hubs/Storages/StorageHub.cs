@@ -46,7 +46,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             string storageName = headers["x-andyx-storage-name"].ToString();
             string agentId = headers["x-andyx-storage-agent-id"].ToString();
 
-            logger.LogInformation($"ANDYX#STORAGE|{agentId}|ASKED_TO_CONNECT");
+            logger.LogInformation($"Storage '{storageName}' with agent id '{agentId}' requested connection");
 
             if (storageHubRepository.GetStorageByName(storageName) == null)
             {
@@ -82,7 +82,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
                 Tenants = tenantMemoryRepository.GetTenants()
             });
 
-            logger.LogInformation($"ANDYX#STORAGE|{agentId}|CONNECTED");
+            logger.LogInformation($"Storage '{storageName}' with agent id '{agentId}' is connected");
 
             return base.OnConnectedAsync();
         }
@@ -92,7 +92,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             string clientConnectionId = Context.ConnectionId;
             Agent agentToRemove = storageHubRepository.GetAgentById(clientConnectionId);
             storageHubRepository.RemoveAgent(clientConnectionId);
-            logger.LogInformation($"ANDYX#STORAGE|{agentToRemove.AgentId}|DISCONNECTED");
+            logger.LogInformation($"Storage {agentToRemove.AgentName} with agent id '{agentToRemove.AgentId}' is disconnected");
 
             Clients.Caller.StorageDisconnected(new Model.Storages.Events.Agents.AgentDisconnectedDetails()
             {
