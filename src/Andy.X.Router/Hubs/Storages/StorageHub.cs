@@ -92,7 +92,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             string clientConnectionId = Context.ConnectionId;
             Agent agentToRemove = storageHubRepository.GetAgentById(clientConnectionId);
             storageHubRepository.RemoveAgent(clientConnectionId);
-            logger.LogInformation($"Storage {agentToRemove.AgentName} with agent id '{agentToRemove.AgentId}' is disconnected");
+            logger.LogInformation($"Storage '{agentToRemove.AgentName}' with agent id '{agentToRemove.AgentId}' is disconnected");
 
             Clients.Caller.StorageDisconnected(new Model.Storages.Events.Agents.AgentDisconnectedDetails()
             {
