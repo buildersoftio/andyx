@@ -9,9 +9,13 @@
     <Description>Buildersoft Andy X is a distributed messaging system. This system will empower developers to move into Event Driven Systems. Andy X is a multi-tenant system.</Description>
     <Copyright>Copyright © Buildersoft 2021</Copyright>
     <RootNamespace>Buildersoft.Andy.X</RootNamespace>
+    <UserSecretsId>acbefa1b-f798-400c-8352-e0f54e8ee47c</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
@@ -22,7 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Andy.X.Cli\Andy.X.Cli.csproj" />
     <ProjectReference Include="..\Andy.X.Router\Andy.X.Router.csproj" />
+    <ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj" />
   </ItemGroup>
 
 </Project>
