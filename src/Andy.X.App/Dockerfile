@@ -1,11 +1,11 @@
 # Buildersoft Andy X Docker File
 
-FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 COPY ["src/Andy.X.App/Andy.X.App.csproj", "src/Andy.X.App/"]
 COPY ["src/Andy.X.Cli/Andy.X.Cli.csproj", "Andy.X.Cli/"]
