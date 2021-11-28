@@ -1,0 +1,29 @@
+# ------------------------------------------------------------------------------------------------
+# Andy X Docker-Compose File
+# Image is on DockerHub
+# ------------------------------------------------------------------------------------------------
+  version: '3'
+
+  services:
+# ------------------------------------------------------------------------------------------------
+    andyx:
+      container_name: andyxnode
+      # - Check the latest version from dockerhub at https://hub.docker.com/r/buildersoftdev/andyx/tags
+      image: buildersoftdev/andyx:2.0.1-preview
+      ports:
+        - 9001:443
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Development
+        - ASPNETCORE_URLS=https://+:443
+        - ASPNETCORE_Kestrel__Certificates__Default__Password=123456789
+        - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/buildersoft_private_key.pfx
+      volumes:
+        - ~/.aspnet/https:/https:ro
+# ------------------------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------------------------
+# ---- To run this docker compose open the Powershell, Cmd (Windows), Terminal (Linux and Mac) to this folder and execute command
+# ---- 'docker-compose up -d' -> start in background
+# ---- 'docker-compose up' -> start
+# ---- 'docker-compose down' -> stop
+# ------------------------------------------------------------------------------------------------
