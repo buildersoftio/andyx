@@ -64,7 +64,8 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     Product = message.Product,
                     Component = message.Component,
                     Topic = message.Topic,
-                    MessageRaw = message.MessageRaw
+                    MessageRaw = message.MessageRaw,
+                    SentDate = message.SentDate
                 });
 
                 consumer.Value.CurrentConnectionIndex++;
@@ -100,7 +101,9 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     Product = consumerMessage.Message.Product,
                     Component = consumerMessage.Message.Component,
                     Topic = consumerMessage.Message.Topic,
-                    MessageRaw = consumerMessage.Message.MessageRaw
+                    MessageRaw = consumerMessage.Message.MessageRaw,
+
+                    SentDate = consumerMessage.Message.SentDate
                 });
 
                 consumer.CurrentConnectionIndex++;

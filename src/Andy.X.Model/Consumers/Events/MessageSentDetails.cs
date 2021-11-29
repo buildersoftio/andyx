@@ -11,5 +11,7 @@ namespace Buildersoft.Andy.X.Model.Consumers.Events
 
         public Guid Id { get; set; }
         public object MessageRaw { get; set; }
+
+        public DateTime SentDate { get; set; }
     }
 }
