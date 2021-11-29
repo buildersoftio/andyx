@@ -267,7 +267,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                             Topic = message.Topic,
                             ConsumersCurrentTransmitted = message.ConsumersCurrentTransmitted,
                             MessageRaw = message.MessageRaw,
-                            SentDate = DateTime.Now
+                            SentDate = message.SentDate
                         });
                     }
                     //storage.Value.ActiveAgentIndex++;
@@ -299,7 +299,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                             Topic = message.Topic,
                             ConsumersCurrentTransmitted = message.ConsumersCurrentTransmitted,
                             MessageRaw = message.MessageRaw,
-                            SentDate = DateTime.Now
+                            SentDate = message.SentDate
                         });
                     }
                     //storage.Value.ActiveAgentIndex++;

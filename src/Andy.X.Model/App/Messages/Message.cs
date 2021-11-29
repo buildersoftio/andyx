@@ -13,5 +13,13 @@ namespace Buildersoft.Andy.X.Model.App.Messages
 
         public Guid Id { get; set; }
         public object MessageRaw { get; set; }
+
+        public DateTime SentDate { get; set; }
+
+        public Message()
+        {
+            // if this property is not coming from Andy X Client
+            SentDate = DateTime.UtcNow;
+        }
     }
 }
