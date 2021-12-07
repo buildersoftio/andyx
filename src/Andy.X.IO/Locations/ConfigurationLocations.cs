@@ -17,7 +17,7 @@ namespace Buildersoft.Andy.X.IO.Locations
 
         public static string GetTenantsConfigurationFile()
         {
-            return Path.Combine(ConfigDirectory(), "tenants_config.json");
+            return Path.Combine(ConfigDirectory(), "tenants.json");
         }
 
         public static string GetUsersConfigurationFile()

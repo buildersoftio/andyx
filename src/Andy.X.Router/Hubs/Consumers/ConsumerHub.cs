@@ -57,16 +57,22 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
 
             // check if the consumer is already connected
-            if (tenantRepository.GetTenant(tenant) == null)
+            var connectedTenant = tenantRepository.GetTenant(tenant);
+            if (connectedTenant == null)
             {
                 logger.LogInformation($"Consumer '{consumerName}' failed to connect, tenant '{tenant}' does not exists");
-
                 return OnDisconnectedAsync(new Exception($"There is no tenant registered with this name '{tenant}'"));
             }
 
             var connectedProduct = tenantRepository.GetProduct(tenant, product);
             if (connectedProduct == null)
             {
+                if (connectedTenant.IsProductAutoCreate != true)
+                {
+                    logger.LogInformation($"Consumer '{consumerName}' failed to connect, tenant '{tenant}' does not allow to create new product");
+                    return OnDisconnectedAsync(new Exception($"There is no product registered with this name '{product}'. Tenant '{tenant}' does not allow to create new product"));
+                }
+
                 var productDetails = tenantFactory.CreateProduct(product);
                 tenantRepository.AddProduct(tenant, product, productDetails);
                 storageHubService.CreateProductAsync(tenant, productDetails);
@@ -91,6 +97,13 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             var connectedTopic = tenantRepository.GetTopic(tenant, product, component, topic);
             if (connectedTopic == null)
             {
+                connectedComponent = tenantRepository.GetComponent(tenant, product, component);
+                if (connectedComponent.AllowTopicCreation != true)
+                {
+                    logger.LogInformation($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component.");
+                    return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component."));
+                }
+
                 var topicDetails = tenantFactory.CreateTopic(topic, isPersistent);
                 tenantRepository.AddTopic(tenant, product, component, topic, topicDetails);
                 storageHubService.CreateTopicAsync(tenant, product, component, topicDetails);

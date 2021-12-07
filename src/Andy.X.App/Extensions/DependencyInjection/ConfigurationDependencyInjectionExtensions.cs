@@ -1,7 +1,10 @@
-﻿using Buildersoft.Andy.X.Model.Configurations;
+﻿using Buildersoft.Andy.X.IO.Locations;
+using Buildersoft.Andy.X.Model.Configurations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Buildersoft.Andy.X.Extensions.DependencyInjection
 {
@@ -15,7 +18,7 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
         private static void BindTenantsConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
             var nodeConfiguration = new List<TenantConfiguration>();
-            configuration.Bind("Tenants", nodeConfiguration);
+            nodeConfiguration = JsonConvert.DeserializeObject<List<TenantConfiguration>>(File.ReadAllText(ConfigurationLocations.GetTenantsConfigurationFile()));
             services.AddSingleton(nodeConfiguration);
         }
     }

@@ -1,0 +1,54 @@
+﻿[
+  {
+    "Name": "default",
+    "Settings": {
+      "AllowProductCreation": true,
+      "DigitalSignature": "KWDjwhAndyjp360qwetM2DFS43BuilderSoft"
+    }
+  },
+  {
+    "Name": "public",
+    "Settings": {
+      "AllowProductCreation": true,
+      "DigitalSignature": "KWDjwhAndyjp360qwetM2DFS43BuilderSoft"
+    }
+  },
+  {
+    "Name": "system",
+    "Settings": {
+      "AllowProductCreation": true,
+      "DigitalSignature": "KWDjwhAndyjp360qwetM2DFS43BuilderSoft"
+    },
+    "Products": [
+      {
+        "Name": "logging",
+        "Components": [
+          {
+            "Name": "andyx-nodes",
+            "Settings": {
+              "AllowTopicCreation": false,
+              "AllowSchemaValidation": false
+            }
+          },
+          {
+            "Name": "andyx-storages",
+            "Settings": {
+              "AllowTopicCreation": false,
+              "AllowSchemaValidation": false
+            }
+          },
+          {
+            "Name": "andyx-connects",
+            "Settings": {
+              "AllowTopicCreation": false,
+              "AllowSchemaValidation": false
+            }
+          }
+        ]
+      },
+      {
+        "Name": "connections"
+      }
+    ]
+  }
+]
