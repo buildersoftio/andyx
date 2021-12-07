@@ -11,4 +11,14 @@
     <RootNamespace>Buildersoft.Andy.X.IO</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="config\tenants.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="config\tenants.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

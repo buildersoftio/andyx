@@ -26,15 +26,41 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
             AddTenantsFromConfiguration(tenantConfigurations);
         }
 
-
         private void AddTenantsFromConfiguration(List<TenantConfiguration> tenantConfigurations)
         {
             foreach (var tenantConfig in tenantConfigurations)
             {
-                AddTenant(tenantConfig.Name, tenantFactory.CreateTenant(tenantConfig.Name, tenantConfig.DigitalSignature));
+                AddTenant(tenantConfig.Name, tenantFactory
+                    .CreateTenant(tenantConfig.Name,
+                        tenantConfig.Settings.DigitalSignature,
+                        tenantConfig.Settings.EnableEncryption,
+                        tenantConfig.Settings.AllowProductCreation));
+
+                // add products
+                tenantConfig.Products.ForEach(product =>
+                {
+                    AddProduct(tenantConfig.Name, product.Name, tenantFactory.CreateProduct(product.Name));
+
+                    // add components of product
+                    product.Components.ForEach(component =>
+                    {
+                        AddComponent(tenantConfig.Name,
+                            product.Name,
+                            component.Name,
+                            tenantFactory.CreateComponent(component.Name,
+                                component.Settings.AllowSchemaValidation,
+                                component.Settings.AllowTopicCreation));
+
+                        // Add topics from configuration
+
+                        component.Topics.ForEach(topic =>
+                        {
+                            AddTopic(tenantConfig.Name, product.Name, component.Name, topic.Name, tenantFactory.CreateTopic(topic.Name));
+                        });
+                    });
+                });
             }
         }
-
 
         public bool AddTopic(string tenant, string product, string component, string topicName, Topic topic)
         {
@@ -86,8 +112,6 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
             return null;
         }
-
-
 
         public Product GetProduct(string tenant, string product)
         {
