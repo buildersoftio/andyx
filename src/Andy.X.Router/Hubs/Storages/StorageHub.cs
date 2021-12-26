@@ -4,6 +4,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
 using Buildersoft.Andy.X.Model.App.Messages;
+using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Storages;
 using Buildersoft.Andy.X.Model.Storages.Agents;
 using Microsoft.AspNetCore.SignalR;
@@ -16,6 +17,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
     public class StorageHub : Hub<IStorageHub>
     {
         private readonly ILogger<StorageHub> logger;
+        private readonly CredentialsConfiguration credentialsConfiguration;
         private readonly IStorageHubRepository storageHubRepository;
         private readonly ITenantRepository tenantMemoryRepository;
         private readonly IStorageFactory storageFactory;
@@ -23,12 +25,15 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
         private readonly IConsumerHubService consumerHubService;
 
         public StorageHub(ILogger<StorageHub> logger,
+            CredentialsConfiguration credentialsConfiguration,
             IStorageHubRepository storageHubRepository,
             ITenantRepository tenantMemoryRepository,
             IStorageFactory storageFactory,
-            IAgentFactory agentFactory, IConsumerHubService consumerHubService)
+            IAgentFactory agentFactory,
+            IConsumerHubService consumerHubService)
         {
             this.logger = logger;
+            this.credentialsConfiguration = credentialsConfiguration;
             this.storageHubRepository = storageHubRepository;
             this.tenantMemoryRepository = tenantMemoryRepository;
             this.storageFactory = storageFactory;
@@ -46,7 +51,17 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             string storageName = headers["x-andyx-storage-name"].ToString();
             string agentId = headers["x-andyx-storage-agent-id"].ToString();
 
+            string username = headers["x-andyx-storage-username"].ToString();
+            string password = headers["x-andyx-storage-password"].ToString();
+
             logger.LogInformation($"Storage '{storageName}' with agent id '{agentId}' requested connection");
+
+            if (username != credentialsConfiguration.Username || password != credentialsConfiguration.Password)
+            {
+                logger.LogInformation($"Storage '{storageName}' with agent id '{agentId}' can not connect, credentials are not valid");
+                return base.OnDisconnectedAsync(new Exception($"Check username and password, can not connect to this node"));
+            }
+
 
             if (storageHubRepository.GetStorageByName(storageName) == null)
             {
