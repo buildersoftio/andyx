@@ -43,6 +43,11 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             string clientConnectionId = Context.ConnectionId;
             var headers = Context.GetHttpContext().Request.Headers;
 
+            // authorization tokens
+            // TODO: Implement tokens by using build-in .NET JWT authoization.
+            string tenantToken = headers["x-andyx-tenant-authoriziation"];
+            string componentToken = headers["x-andyx-component-authoriziation"];
+
             string tenant = headers["x-andyx-tenant"].ToString();
             string product = headers["x-andyx-product"].ToString();
             string component = headers["x-andyx-component"].ToString();

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Buildersoft.Andy.X.Model.App.Components;
+using Buildersoft.Andy.X.Model.App.Tenants;
+using System;
 using System.Collections.Generic;
 
 namespace Buildersoft.Andy.X.Model.Configurations
@@ -35,15 +37,6 @@ namespace Buildersoft.Andy.X.Model.Configurations
             EnableAuthorization = false;
             Tokens = new List<TenantToken>();
         }
-    }
-
-    public class TenantToken
-    {
-        public string Token { get; set; }
-        public bool IsActive { get; set; }
-        public DateTime ExpireDate { get; set; }
-        public string IssuedFor { get; set; }
-        public DateTime IssuedDate { get; set; }
     }
 
     public class ProductConfiguration
@@ -89,18 +82,6 @@ namespace Buildersoft.Andy.X.Model.Configurations
         }
     }
 
-    public class ComponentToken
-    {
-        public string Token { get; set; }
-        public bool IsActive { get; set; }
-
-        public bool CanConsume { get; set; }
-        public bool CanProduce { get; set; }
-
-        public DateTime ExpireDate { get; set; }
-        public string IssuedFor { get; set; }
-        public DateTime IssuedDate { get; set; }
-    }
 
     public class TopicConfiguration
     {

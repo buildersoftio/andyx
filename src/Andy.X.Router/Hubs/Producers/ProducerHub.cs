@@ -48,18 +48,23 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             string clientConnectionId = Context.ConnectionId;
             var headers = Context.GetHttpContext().Request.Headers;
 
+            // authorization tokens
+            // TODO: Implement tokens by using build-in .NET JWT authoization.
+            string tenantToken = headers["x-andyx-tenant-authoriziation"];
+            string componentToken = headers["x-andyx-component-authoriziation"];
+
             string tenant = headers["x-andyx-tenant"].ToString();
             string product = headers["x-andyx-product"].ToString();
             string component = headers["x-andyx-component"].ToString();
             string topic = headers["x-andyx-topic"].ToString();
             bool isPersistent = Boolean.Parse(headers["x-andyx-topic-is-persistent"]);
 
+
             string producerName = headers["x-andyx-producer"].ToString();
 
             logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} requested connection");
 
             //check if the producer is already connected
-
             var connectedTenant = tenantRepository.GetTenant(tenant);
             if (connectedTenant == null)
             {
