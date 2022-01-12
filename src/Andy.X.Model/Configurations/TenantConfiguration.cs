@@ -21,6 +21,8 @@ namespace Buildersoft.Andy.X.Model.Configurations
         public bool AllowProductCreation { get; set; }
         public string DigitalSignature { get; set; }
         public bool EnableEncryption { get; set; }
+        public bool EnableGeoReplication { get; set; }
+        public TenantLogging Logging { get; set; }
 
         public bool EnableAuthorization { get; set; }
         public List<TenantToken> Tokens { get; set; }
@@ -44,6 +46,17 @@ namespace Buildersoft.Andy.X.Model.Configurations
         public DateTime ExpireDate { get; set; }
         public string IssuedFor { get; set; }
         public DateTime IssuedDate { get; set; }
+            EnableGeoReplication = false;
+            Logging = TenantLogging.ERROR_ONLY;
+        }
+    }
+
+    public enum TenantLogging
+    {
+        ALL,
+        INFORMATION_ONLY,
+        WARNING_ONLY,
+        ERROR_ONLY,
     }
 
     public class ProductConfiguration

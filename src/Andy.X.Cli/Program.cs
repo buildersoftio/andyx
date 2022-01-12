@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Andy.X.Cli.App;
+using System;
 
 namespace Andy.X.Cli
 {
@@ -8,7 +9,7 @@ namespace Andy.X.Cli
         {
             if (args.Length == 0)
             {
-                App.Help.ShowHelpContent();
+                Help.ShowHelpContent();
                 return;
             }
             switch (args[0])
@@ -31,17 +32,17 @@ namespace Andy.X.Cli
                 // ------------------------------------------
 
                 case "-tenant":
-                    Console.WriteLine("Tenant goes here.");
+                    Tenants.AnalyseTenant(args);
                     break;
                 // ------------------------------------------
 
                 case "-product":
-                    Console.WriteLine("Product goes here.");
+                    Products.AnalyseProduct(args);
                     break;
                 // ------------------------------------------
 
                 case "-component":
-                    Console.WriteLine("Component goes here.");
+                    Components.AnalyseComponent(args);
                     break;
                 // ------------------------------------------
 
@@ -69,7 +70,7 @@ namespace Andy.X.Cli
     // examples how andyx-cli will look like from dev point of view
     // TBD: if there are different ides
 
-    // andyx-cli -auth -add -tenant=default -digitalsignature={string_optional}
+    // andyx-cli -auth -get -tenant=default -digitalsignature={string_optional}
     // andyx-cli -tenant -add -name="tenantName" -digitalSignature="string_optional"
     // andyx-cli -topic -add/-edit/-view -details="tenant/product/component/{topic_name}" -persistent/nonpersistent
     // andyx-cli -consumer -tenant=default -product=default -component=default -topic={topic_name} -name={consumerName} -type=exclusive
