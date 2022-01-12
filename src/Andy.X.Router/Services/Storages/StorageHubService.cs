@@ -173,7 +173,6 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                     {
                         Id = topic.Id,
                         Name = topic.Name,
-                        Schema = topic.Schema,
                         Tenant = tenant,
                         Product = product,
                         Component = component,
@@ -194,7 +193,6 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                     {
                         Id = topic.Id,
                         Name = topic.Name,
-                        Schema = topic.Schema,
                         Tenant = tenant,
                         Product = product,
                         Component = component,
