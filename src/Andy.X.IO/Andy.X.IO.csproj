@@ -12,14 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="andyx-cli" />
     <None Remove="config\tenants.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="andyx-cli">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
 
   <ItemGroup>
