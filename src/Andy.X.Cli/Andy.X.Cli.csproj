@@ -11,16 +11,18 @@
 	  <PackageId>andyx-cli</PackageId>
 	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 	  <AssemblyName>andyx-cli</AssemblyName>
+
+	  <PackAsTool>true</PackAsTool>
+	  <ToolCommandName>andyx</ToolCommandName>
+	  <PackageOutputPath>./package</PackageOutputPath>
+	  <Nullable>enable</Nullable>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <Version>0.1.0-beta</Version>
+	  
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ConsoleTables" Version="2.4.2" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Andy.X.IO\Andy.X.IO.csproj" />
-    <ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
-    <ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj" />
   </ItemGroup>
 
 </Project>

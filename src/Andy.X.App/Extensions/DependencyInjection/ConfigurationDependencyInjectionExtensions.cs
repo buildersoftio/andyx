@@ -13,6 +13,7 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
         public static void AddConfigurations(this IServiceCollection services, IConfiguration configuration)
         {
             services.BindTenantsConfiguration(configuration);
+            services.BindCredentialsConfiguration(configuration);
         }
 
         private static void BindTenantsConfiguration(this IServiceCollection services, IConfiguration configuration)
@@ -20,6 +21,13 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
             var nodeConfiguration = new List<TenantConfiguration>();
             nodeConfiguration = JsonConvert.DeserializeObject<List<TenantConfiguration>>(File.ReadAllText(ConfigurationLocations.GetTenantsConfigurationFile()));
             services.AddSingleton(nodeConfiguration);
+        }
+
+        private static void BindCredentialsConfiguration(this IServiceCollection services, IConfiguration configuration)
+        {
+            var credentialsConfiguration = new CredentialsConfiguration();
+            configuration.Bind("Credentials", credentialsConfiguration);
+            services.AddSingleton(credentialsConfiguration);
         }
     }
 }

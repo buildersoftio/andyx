@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Buildersoft.Andy.X.Model.Configurations
 {
@@ -23,6 +24,9 @@ namespace Buildersoft.Andy.X.Model.Configurations
         public bool EnableGeoReplication { get; set; }
         public TenantLogging Logging { get; set; }
 
+        public bool EnableAuthorization { get; set; }
+        public List<TenantToken> Tokens { get; set; }
+
         // Split tenants by certificates will not be possible with version two
         public string CertificatePath { get; set; }
 
@@ -30,6 +34,18 @@ namespace Buildersoft.Andy.X.Model.Configurations
         {
             AllowProductCreation = true;
             EnableEncryption = false;
+            EnableAuthorization = false;
+            Tokens = new List<TenantToken>();
+        }
+    }
+
+    public class TenantToken
+    {
+        public string Token { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime ExpireDate { get; set; }
+        public string IssuedFor { get; set; }
+        public DateTime IssuedDate { get; set; }
             EnableGeoReplication = false;
             Logging = TenantLogging.ERROR_ONLY;
         }
@@ -72,11 +88,31 @@ namespace Buildersoft.Andy.X.Model.Configurations
         public bool AllowSchemaValidation { get; set; }
         public bool AllowTopicCreation { get; set; }
 
+        public bool EnableAuthorization { get; set; }
+        public List<ComponentToken> Tokens { get; set; }
+
+
         public ComponentSettings()
         {
             AllowSchemaValidation = false;
             AllowTopicCreation = true;
+            EnableAuthorization = false;
+
+            Tokens = new List<ComponentToken>();
         }
+    }
+
+    public class ComponentToken
+    {
+        public string Token { get; set; }
+        public bool IsActive { get; set; }
+
+        public bool CanConsume { get; set; }
+        public bool CanProduce { get; set; }
+
+        public DateTime ExpireDate { get; set; }
+        public string IssuedFor { get; set; }
+        public DateTime IssuedDate { get; set; }
     }
 
     public class TopicConfiguration
