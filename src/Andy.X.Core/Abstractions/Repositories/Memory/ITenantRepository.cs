@@ -3,7 +3,6 @@ using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
 using System.Collections.Concurrent;
-using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory
 {
@@ -19,6 +18,8 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory
         Component GetComponent(string tenant, string product, string component);
         Topic GetTopic(string tenant, string product, string component, string topic);
 
+        TenantToken GetTenantToken(string tenant, string token);
+        ComponentToken GetComponentToken(string tenant, string product, string component, string componentToken);
 
         ConcurrentDictionary<string, Tenant> GetTenants();
         ConcurrentDictionary<string, Product> GetProducts(string tenant);

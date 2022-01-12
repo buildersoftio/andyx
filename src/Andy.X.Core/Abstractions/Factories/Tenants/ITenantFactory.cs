@@ -2,6 +2,8 @@
 using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
+using Buildersoft.Andy.X.Model.Configurations;
+using System.Collections.Generic;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants
 {
@@ -9,11 +11,11 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants
     {
         Tenant CreateTenant();
         Tenant CreateTenant(string name, string digitalSignature);
-        Tenant CreateTenant(string name, string digitalSignature, bool enableEncryption, bool IsProductAutoCreate);
+        Tenant CreateTenant(string name, string digitalSignature, bool enableEncryption, bool isProductAutoCreate, bool enableAuthorization, List<TenantToken> tenantTokens, TenantLogging tenantLogging, bool enableGeoReplication);
 
         Product CreateProduct(string productName);
         Component CreateComponent(string componentName);
-        Component CreateComponent(string componentName, bool allowSchemaValidation, bool allowTopicCreation);
+        Component CreateComponent(string componentName, bool allowSchemaValidation, bool allowTopicCreation, bool enableAuthorization, List<ComponentToken> tokens);
         Topic CreateTopic(string topicName);
         Topic CreateTopic(string topicName, bool isPersistent);
     }

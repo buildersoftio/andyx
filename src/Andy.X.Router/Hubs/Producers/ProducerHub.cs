@@ -5,6 +5,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
+using Buildersoft.Andy.X.Core.Extensions.Authorization;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Producers;
 using Microsoft.AspNetCore.SignalR;
@@ -49,7 +50,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             var headers = Context.GetHttpContext().Request.Headers;
 
             // authorization tokens
-            // TODO: Implement tokens by using build-in .NET JWT authoization.
+            // TODO: Implement token validation
             string tenantToken = headers["x-andyx-tenant-authoriziation"];
             string componentToken = headers["x-andyx-component-authoriziation"];
 
@@ -72,10 +73,18 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
                 return OnDisconnectedAsync(new Exception($"There is no tenant registered with this name '{tenant}'"));
             }
 
+            // check tenant token validation
+            bool isTenantTokenValidated = tenantRepository.ValidateTenantToken(tenant, tenantToken);
+            if (isTenantTokenValidated != true)
+            {
+                logger.LogInformation($"Producer '{producerName}' failed to connect, access is forbidden. Not authorized");
+                return OnDisconnectedAsync(new Exception($"Producer '{producerName}' failed to connect, access is forbidden"));
+            }
+
             var connectedProduct = tenantRepository.GetProduct(tenant, product);
             if (connectedProduct == null)
             {
-                if (connectedTenant.IsProductAutoCreate != true)
+                if (connectedTenant.Settings.AllowProductCreation != true)
                 {
                     logger.LogInformation($"Producer '{producerName}' failed to connect, tenant '{tenant}' does not allow to create new product");
                     return OnDisconnectedAsync(new Exception($"There is no product registered with this name '{product}'. Tenant '{tenant}' does not allow to create new product"));
@@ -100,6 +109,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             }
             else
             {
+                // check component token validation
+                bool isComponentTokenValidated = tenantRepository.ValidateComponentToken(tenant, product, component, componentToken, producerName, false);
+                if (isComponentTokenValidated != true)
+                {
+                    logger.LogInformation($"Producer '{producerName}' failed to connect, access is forbidden. Not authorized, check component token");
+                    return OnDisconnectedAsync(new Exception($"Producer '{producerName}' failed to connect, access is forbidden, check component token"));
+                }
+
                 storageHubService.UpdateComponentAsync(tenant, product, connectedComponent);
             }
 
@@ -109,7 +126,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             {
                 // Check if the component allows to create a new topic.
                 connectedComponent = tenantRepository.GetComponent(tenant, product, component);
-                if (connectedComponent.AllowTopicCreation != true)
+                if (connectedComponent.Settings.AllowTopicCreation != true)
                 {
                     logger.LogInformation($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component.");
                     return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component."));

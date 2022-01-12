@@ -17,16 +17,6 @@ namespace Buildersoft.Andy.X.Model.App.Topics
         }
     }
 
-    public class TopicSettings
-    {
-        public bool IsPersistent { get; set; }
-
-        public TopicSettings()
-        {
-            IsPersistent = true;
-        }
-    }
-
     public class Schema
     {
         public string Name { get; set; }

@@ -79,6 +79,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                     {
                         Id = component.Id,
                         Name = component.Name,
+                        Settings = component.Settings,
 
                         Tenant = tenant,
                         Product = product
@@ -97,6 +98,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                     {
                         Id = component.Id,
                         Name = component.Name,
+                        Settings =  component.Settings,
 
                         Tenant = tenant,
                         Product = product
@@ -153,7 +155,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                     {
                         Id = tenant.Id,
                         Name = tenant.Name,
-                        DigitalSignature = tenant.DigitalSignature
+                        Settings = tenant.Settings
                     });
                 }
             }
@@ -175,6 +177,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                         Tenant = tenant,
                         Product = product,
                         Component = component,
+
                         TopicSettings = topic.TopicSettings
                     });
                 }

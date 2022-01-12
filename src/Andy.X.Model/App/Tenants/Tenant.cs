@@ -9,16 +9,12 @@ namespace Buildersoft.Andy.X.Model.App.Tenants
         public Guid Id { get; set; }
         public string Name { get; set; }
         public ConcurrentDictionary<string, Product> Products { get; set; }
-        public string DigitalSignature { get; set; }
-
-        public bool EnableEncryption { get; set; }
-
-        public bool IsProductAutoCreate { get; set; }
-        public bool IsSchemaValidatorEnable { get; set; }
+        public TenantSettings Settings{ get; set; }
 
         public Tenant()
         {
             Products = new ConcurrentDictionary<string, Product>();
+            Settings = new TenantSettings();
         }
     }
 }
