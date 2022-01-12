@@ -1,28 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-	  <Company>Buildersoft</Company>
-	  <Product>Buildersoft Andy</Product>
-	  <Authors>Buildersoft</Authors>
-	  <Description>Buildersoft Andy X is a distributed messaging system. This system will empower developers to move into Event Driven Systems. Andy X is a multi-tenant system.</Description>
-	  <Copyright>Copyright © Buildersoft 2021</Copyright>
-	  <PackageId>andyx-cli</PackageId>
-	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-	  <AssemblyName>andyx-cli</AssemblyName>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+		<Company>Buildersoft</Company>
+		<Product>Buildersoft Andy</Product>
+		<Authors>Buildersoft</Authors>
+		<Description>Buildersoft Andy X is a distributed messaging system. This system will empower developers to move into Event Driven Systems. Andy X is a multi-tenant system.</Description>
+		<Copyright>Copyright © Buildersoft 2021</Copyright>
+		<PackageId>andyx-cli</PackageId>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+		<AssemblyName>andyx-cli</AssemblyName>
 
-	  <PackAsTool>true</PackAsTool>
-	  <ToolCommandName>andyx</ToolCommandName>
-	  <PackageOutputPath>./package</PackageOutputPath>
-	  <Nullable>enable</Nullable>
-	  <ImplicitUsings>enable</ImplicitUsings>
-	  <Version>0.1.0-beta</Version>
-	  
-  </PropertyGroup>
+		<!--andyx as tool parameters-->
+		<PackAsTool>true</PackAsTool>
+		<ToolCommandName>andyx</ToolCommandName>
+		<PackageOutputPath>./package</PackageOutputPath>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Version>0.1.0-beta</Version>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Andy.X.IO\Andy.X.IO.csproj" />
-  </ItemGroup>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Andy.X.IO\Andy.X.IO.csproj" />
+		<ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
+		<ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ConsoleTables" Version="2.4.2" />
+	</ItemGroup>
 
 </Project>

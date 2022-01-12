@@ -2,10 +2,6 @@
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Utility.Extensions.Json;
 using ConsoleTables;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 namespace Andy.X.Cli.App
 {
@@ -20,6 +16,9 @@ namespace Andy.X.Cli.App
                 case "-ls":
                     var table = new ConsoleTable("ID", "TENANT", "NAME", "COMPONENTS");
                     int k = 1;
+                    if (args[2] == null)
+                        return;
+
                     tenants.Where(x => x.Name == args[2]).FirstOrDefault().Products.ForEach(p =>
                        {
                            table.AddRow(k.ToString(), args[2], $"{p.Name}", p.Components.Count);
