@@ -20,6 +20,8 @@ namespace Buildersoft.Andy.X.Model.Configurations
         public bool AllowProductCreation { get; set; }
         public string DigitalSignature { get; set; }
         public bool EnableEncryption { get; set; }
+        public bool EnableGeoReplication { get; set; }
+        public TenantLogging Logging { get; set; }
 
         // Split tenants by certificates will not be possible with version two
         public string CertificatePath { get; set; }
@@ -28,7 +30,17 @@ namespace Buildersoft.Andy.X.Model.Configurations
         {
             AllowProductCreation = true;
             EnableEncryption = false;
+            EnableGeoReplication = false;
+            Logging = TenantLogging.ERROR_ONLY;
         }
+    }
+
+    public enum TenantLogging
+    {
+        ALL,
+        INFORMATION_ONLY,
+        WARNING_ONLY,
+        ERROR_ONLY,
     }
 
     public class ProductConfiguration

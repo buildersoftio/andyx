@@ -1,12 +1,26 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
+	  <Company>Buildersoft</Company>
+	  <Product>Buildersoft Andy</Product>
+	  <Authors>Buildersoft</Authors>
+	  <Description>Buildersoft Andy X is a distributed messaging system. This system will empower developers to move into Event Driven Systems. Andy X is a multi-tenant system.</Description>
+	  <Copyright>Copyright © Buildersoft 2021</Copyright>
+	  <PackageId>andyx-cli</PackageId>
+	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+	  <AssemblyName>andyx-cli</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ConsoleTables" Version="2.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Andy.X.IO\Andy.X.IO.csproj" />
+    <ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
+    <ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj" />
   </ItemGroup>
 
 </Project>
