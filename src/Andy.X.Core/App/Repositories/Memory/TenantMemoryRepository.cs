@@ -2,11 +2,13 @@
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Model.App.Components;
 using Buildersoft.Andy.X.Model.App.Products;
+using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Configurations;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 {
@@ -34,7 +36,11 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                     .CreateTenant(tenantConfig.Name,
                         tenantConfig.Settings.DigitalSignature,
                         tenantConfig.Settings.EnableEncryption,
-                        tenantConfig.Settings.AllowProductCreation));
+                        tenantConfig.Settings.AllowProductCreation,
+                        tenantConfig.Settings.EnableAuthorization,
+                        tenantConfig.Settings.Tokens,
+                        tenantConfig.Settings.Logging,
+                        tenantConfig.Settings.EnableGeoReplication));
 
                 // add products
                 tenantConfig.Products.ForEach(product =>
@@ -49,7 +55,9 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                             component.Name,
                             tenantFactory.CreateComponent(component.Name,
                                 component.Settings.AllowSchemaValidation,
-                                component.Settings.AllowTopicCreation));
+                                component.Settings.AllowTopicCreation,
+                                component.Settings.EnableAuthorization,
+                                component.Settings.Tokens));
 
                         // Add topics from configuration
 
@@ -163,6 +171,27 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                 if (_tenants[tenant].Products.ContainsKey(product))
                     if (_tenants[tenant].Products[product].Components.ContainsKey(component))
                         return _tenants[tenant].Products[product].Components[component].Topics;
+
+            return null;
+        }
+
+        public TenantToken GetTenantToken(string tenant, string token)
+        {
+            if (_tenants.ContainsKey(tenant))
+                return _tenants[tenant].Settings.Tokens.Where(t => t.Token == token).FirstOrDefault();
+
+            return null;
+        }
+
+        public ComponentToken GetComponentToken(string tenant, string product, string component, string componentToken)
+        {
+            if (_tenants.ContainsKey(tenant))
+                if (_tenants[tenant].Products.ContainsKey(product))
+                    if (_tenants[tenant].Products[product].Components.ContainsKey(component))
+                        return _tenants[tenant].Products[product].Components[component]
+                            .Settings
+                            .Tokens
+                            .Where(t => t.Token == componentToken).FirstOrDefault();
 
             return null;
         }

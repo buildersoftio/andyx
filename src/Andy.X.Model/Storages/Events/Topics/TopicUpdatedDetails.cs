@@ -13,7 +13,5 @@ namespace Buildersoft.Andy.X.Model.Storages.Events.Topics
         public string Name { get; set; }
 
         public TopicSettings TopicSettings { get; set; }
-
-        public Schema Schema { get; set; }
     }
 }

@@ -7,7 +7,7 @@
     <Product>Buildersoft Andy</Product>
     <Authors>Buildersoft</Authors>
     <Description>Buildersoft Andy X is a distributed messaging system. This system will empower developers to move into Event Driven Systems. Andy X is a multi-tenant system.</Description>
-    <Copyright>Copyright © Buildersoft 2021</Copyright>
+    <Copyright>Copyright © Buildersoft 2022</Copyright>
     <RootNamespace>Buildersoft.Andy.X</RootNamespace>
     <UserSecretsId>acbefa1b-f798-400c-8352-e0f54e8ee47c</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
@@ -26,7 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Andy.X.Cli\Andy.X.Cli.csproj" />
     <ProjectReference Include="..\Andy.X.IO\Andy.X.IO.csproj" />
     <ProjectReference Include="..\Andy.X.Router\Andy.X.Router.csproj" />
     <ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj" />

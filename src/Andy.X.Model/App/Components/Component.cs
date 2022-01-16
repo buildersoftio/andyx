@@ -11,14 +11,13 @@ namespace Buildersoft.Andy.X.Model.App.Components
 
         public ConcurrentDictionary<string, Topic> Topics { get; set; }
 
-        public bool AllowSchemaValidation { get; set; }
-        public bool AllowTopicCreation { get; set; }
+        public ComponentSettings Settings { get; set; }
+
 
         public Component()
         {
             Topics = new ConcurrentDictionary<string, Topic>();
-            AllowSchemaValidation = false;
-            AllowTopicCreation = true;
+            Settings = new ComponentSettings();
         }
     }
 }

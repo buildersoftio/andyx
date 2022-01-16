@@ -15,17 +15,17 @@ namespace Andy.X.App
                 .CreateLogger();
 
             // SETTING environment variables for Env, Cert and default asp_net
-            if (Environment.GetEnvironmentVariable("ANDYX_ENVIRONMENT") != "")
+            if (Environment.GetEnvironmentVariable("ANDYX_ENVIRONMENT") != null)
                 Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", Environment.GetEnvironmentVariable("ANDYX_ENVIRONMENT"));
 
-            if (Environment.GetEnvironmentVariable("ANDYX_CERTIFICATE_DEFAULT_PASSWORD") != "")
+            if (Environment.GetEnvironmentVariable("ANDYX_CERTIFICATE_DEFAULT_PASSWORD") != null)
                 Environment.SetEnvironmentVariable("ASPNETCORE_Kestrel__Certificates__Default__Password", Environment.GetEnvironmentVariable("ANDYX_CERTIFICATE_DEFAULT_PASSWORD"));
 
-            if (Environment.GetEnvironmentVariable("ANDYX_CERTIFICATE_DEFAULT_PATH") != "")
+            if (Environment.GetEnvironmentVariable("ANDYX_CERTIFICATE_DEFAULT_PATH") != null)
                 Environment.SetEnvironmentVariable("ASPNETCORE_Kestrel__Certificates__Default__Path", Environment.GetEnvironmentVariable("ANDYX_CERTIFICATE_DEFAULT_PATH"));
 
             if (Environment.GetEnvironmentVariable("ASPNETCORE_URLS") == "")
-                Environment.SetEnvironmentVariable("ASPNETCORE_URLS", "https://+:443");
+                Environment.SetEnvironmentVariable("ASPNETCORE_URLS", "https://+:6541;http://+:6540");
 
             try
             {
