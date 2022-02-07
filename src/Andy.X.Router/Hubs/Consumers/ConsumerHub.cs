@@ -134,8 +134,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 storageHubService.UpdateTopicAsync(tenant, product, component, connectedTopic);
             }
 
-
-            var consumerConencted = consumerHubRepository.GetConsumerByName(consumerName);
+            string consumerIdOnRepo = $"{tenant}{product}{component}{topic}|{consumerName}";
+            var consumerConencted = consumerHubRepository.GetConsumerById(consumerIdOnRepo);
             if (consumerConencted != null)
             {
                 if (subscriptionType == SubscriptionType.Exclusive)
@@ -156,8 +156,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             }
 
             consumerToRegister = consumerFactory.CreateConsumer(tenant, product, component, topic, consumerName, subscriptionType, initialPosition);
-            consumerHubRepository.AddConsumer(consumerName, consumerToRegister);
-            consumerHubRepository.AddConsumerConnection(consumerName, clientConnectionId);
+            consumerHubRepository.AddConsumer(consumerIdOnRepo, consumerToRegister);
+            consumerHubRepository.AddConsumerConnection(consumerIdOnRepo, clientConnectionId);
 
             storageHubService.ConnectConsumerAsync(consumerToRegister);
 
