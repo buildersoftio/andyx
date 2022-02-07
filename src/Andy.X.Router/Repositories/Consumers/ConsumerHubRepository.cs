@@ -39,7 +39,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
             return _consumers.Values.Where(x => x.Connections.Contains(connectionId)).FirstOrDefault();
         }
 
-        public Consumer GetConsumerByName(string consumerName)
+        public Consumer GetConsumerById(string consumerName)
         {
             if (_consumers.ContainsKey(consumerName))
                 return _consumers[consumerName];

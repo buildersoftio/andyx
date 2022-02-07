@@ -10,7 +10,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers
         bool RemoveConsumer(string consumerName);
         bool RemoveConsumerConnection(string consumerName, string connectionId);
 
-        Consumer GetConsumerByName(string consumerName);
+        Consumer GetConsumerById(string consumerName);
         Consumer GetConsumerByConnectionId(string connectionId);
         Dictionary<string, Consumer> GetConsumersByTopic(string tenant, string product, string component, string topic);
     }
