@@ -34,6 +34,11 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
             return false;
         }
 
+        public List<string> GetAllConsumerNames()
+        {
+            return _consumers.Keys.ToList();
+        }
+
         public Consumer GetConsumerByConnectionId(string connectionId)
         {
             return _consumers.Values.Where(x => x.Connections.Contains(connectionId)).FirstOrDefault();

@@ -1,5 +1,4 @@
 ﻿using Buildersoft.Andy.X.Model.Producers;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers
@@ -12,5 +11,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers
         Producer GetProducerById(string connectionId);
         KeyValuePair<string, Producer> GetProducerByProducerName(string tenant, string product, string component, string topic, string producerName);
         Dictionary<string, Producer> GetProducersByTenantName(string tenantName);
+
+        List<string> GetAllProducers();
     }
 }
