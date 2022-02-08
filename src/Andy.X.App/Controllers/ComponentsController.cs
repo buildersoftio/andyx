@@ -43,7 +43,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("components/{componentName}")]
-        public ActionResult<string> GetComponent(string tenantName, string productName, string componentName)
+        public ActionResult<Component> GetComponent(string tenantName, string productName, string componentName)
         {
             var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
             if (isFromCli != "")
@@ -56,6 +56,43 @@ namespace Buildersoft.Andy.X.Controllers
                 return NotFound();
 
             return Ok(component);
+        }
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [HttpPost("components/{componentName}/tokens")]
+        public ActionResult<Component> PostComponentToken(string tenantName, string productName, string componentName, [FromBody] ComponentToken componentToken)
+        {
+            var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
+            if (isFromCli != "")
+                _logger.LogInformation($"{isFromCli} POST '{HttpContext.Request.Path}' is called");
+            else
+                _logger.LogInformation($"POST '{HttpContext.Request.Path}' is called");
+
+            var token = _componentService.AddComponentToken(tenantName, productName, componentName, componentToken);
+            if (token == null)
+                return BadRequest("Something went wrong, try to create Token one more time");
+
+            return Ok($"Token '{token}' has been created for component '{componentName}'");
+        }
+
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("components/{componentName}/tokens")]
+        public ActionResult<List<ComponentToken>> GetTenantTokens(string tenantName, string productName, string componentName)
+        {
+            tenantName = tenantName.ToLower().Replace(" ", string.Empty);
+
+            var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
+            if (isFromCli != "")
+                _logger.LogInformation($"{isFromCli} GET '{HttpContext.Request.Path}' is called");
+            else
+                _logger.LogInformation($"GET '{HttpContext.Request.Path}' is called");
+            var tokens = _componentService.GetComponentTokens(tenantName, productName, componentName);
+            if (tokens != null)
+                return Ok(tokens);
+
+            return NotFound($"There is no component with name '{componentName}' at tenant '{tenantName}'");
         }
     }
 }

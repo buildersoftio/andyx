@@ -27,7 +27,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("products")]
-        public ActionResult<List<Product>> GetTenants(string tenantName)
+        public ActionResult<List<Product>> GetProducts(string tenantName)
         {
             var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
             if (isFromCli != "")
@@ -43,7 +43,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("products/{productName}")]
-        public ActionResult<string> GetProduct(string tenantName, string productName)
+        public ActionResult<Product> GetProduct(string tenantName, string productName)
         {
             var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
             if (isFromCli != "")

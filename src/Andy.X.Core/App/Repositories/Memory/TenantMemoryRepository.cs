@@ -32,42 +32,48 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
         {
             foreach (var tenantConfig in tenantConfigurations)
             {
-                AddTenant(tenantConfig.Name, tenantFactory
-                    .CreateTenant(tenantConfig.Name,
-                        tenantConfig.Settings.DigitalSignature,
-                        tenantConfig.Settings.EnableEncryption,
-                        tenantConfig.Settings.AllowProductCreation,
-                        tenantConfig.Settings.EnableAuthorization,
-                        tenantConfig.Settings.Tokens,
-                        tenantConfig.Settings.Logging,
-                        tenantConfig.Settings.EnableGeoReplication));
+                AddTenantFromApi(tenantConfig);
+            }
+        }
 
-                // add products
-                tenantConfig.Products.ForEach(product =>
+        public void AddTenantFromApi(TenantConfiguration tenantConfig)
+        {
+            AddTenant(tenantConfig.Name, tenantFactory
+                   .CreateTenant(tenantConfig.Name,
+                       tenantConfig.Settings.DigitalSignature,
+                       tenantConfig.Settings.EnableEncryption,
+                       tenantConfig.Settings.AllowProductCreation,
+                       tenantConfig.Settings.EnableAuthorization,
+                       tenantConfig.Settings.Tokens,
+                       tenantConfig.Settings.Logging,
+                       tenantConfig.Settings.EnableGeoReplication,
+                       tenantConfig.Settings.CertificatePath));
+
+            // add products
+            tenantConfig.Products.ForEach(product =>
+            {
+                AddProduct(tenantConfig.Name, product.Name, tenantFactory.CreateProduct(product.Name));
+
+                // add components of product
+                product.Components.ForEach(component =>
                 {
-                    AddProduct(tenantConfig.Name, product.Name, tenantFactory.CreateProduct(product.Name));
+                    AddComponent(tenantConfig.Name,
+                        product.Name,
+                        component.Name,
+                        tenantFactory.CreateComponent(component.Name,
+                            component.Settings.AllowSchemaValidation,
+                            component.Settings.AllowTopicCreation,
+                            component.Settings.EnableAuthorization,
+                            component.Settings.Tokens));
 
-                    // add components of product
-                    product.Components.ForEach(component =>
+                    // Add topics from configuration
+
+                    component.Topics.ForEach(topic =>
                     {
-                        AddComponent(tenantConfig.Name,
-                            product.Name,
-                            component.Name,
-                            tenantFactory.CreateComponent(component.Name,
-                                component.Settings.AllowSchemaValidation,
-                                component.Settings.AllowTopicCreation,
-                                component.Settings.EnableAuthorization,
-                                component.Settings.Tokens));
-
-                        // Add topics from configuration
-
-                        component.Topics.ForEach(topic =>
-                        {
-                            AddTopic(tenantConfig.Name, product.Name, component.Name, topic.Name, tenantFactory.CreateTopic(topic.Name));
-                        });
+                        AddTopic(tenantConfig.Name, product.Name, component.Name, topic.Name, tenantFactory.CreateTopic(topic.Name));
                     });
                 });
-            }
+            });
         }
 
         public bool AddTopic(string tenant, string product, string component, string topicName, Topic topic)
@@ -140,7 +146,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
 
 
-        public Model.App.Tenants.Tenant GetTenant(string tenant)
+        public Tenant GetTenant(string tenant)
         {
             if (_tenants.ContainsKey(tenant))
                 return _tenants[tenant];
@@ -194,6 +200,35 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                             .Where(t => t.Token == componentToken).FirstOrDefault();
 
             return null;
+        }
+
+        public bool AddTenantToken(string tenant, TenantToken token)
+        {
+            var tenantDetails = GetTenant(tenant);
+            if (tenantDetails == null)
+                return false;
+
+            tenantDetails.Settings.Tokens.Add(token);
+            return true;
+        }
+
+        public bool AddComponentToken(string tenant, string product, string component, ComponentToken componentToken)
+        {
+            var componentDetail = GetComponent(tenant, product, component);
+            if (componentDetail == null)
+                return false;
+
+            componentDetail.Settings.Tokens.Add(componentToken);
+            return true;
+        }
+
+        public List<ComponentToken> GetComponentTokens(string tenant, string product, string component)
+        {
+            var componentDetail = GetComponent(tenant, product, component);
+            if (componentDetail == null)
+                return new List<ComponentToken>();
+
+            return componentDetail.Settings.Tokens;
         }
     }
 }

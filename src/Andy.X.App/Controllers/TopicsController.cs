@@ -43,7 +43,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("topics/{topicName}")]
-        public ActionResult<string> GetComponent(string tenantName, string productName, string componentName, string topicName)
+        public ActionResult<Topic> GetComponent(string tenantName, string productName, string componentName, string topicName)
         {
             var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
             if (isFromCli != "")

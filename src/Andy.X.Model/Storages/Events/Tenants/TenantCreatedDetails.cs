@@ -8,6 +8,7 @@ namespace Buildersoft.Andy.X.Model.Storages.Events.Tenants
         public Guid Id { get; set; }
         public string Name { get; set; }
         public TenantSettings Settings { get; set; }
+
         public TenantCreatedDetails()
         {
             Settings = new TenantSettings();
