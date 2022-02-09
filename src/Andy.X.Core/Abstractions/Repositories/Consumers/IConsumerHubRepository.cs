@@ -13,5 +13,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers
         Consumer GetConsumerById(string consumerName);
         Consumer GetConsumerByConnectionId(string connectionId);
         Dictionary<string, Consumer> GetConsumersByTopic(string tenant, string product, string component, string topic);
+
+        List<string> GetAllConsumerNames();
     }
 }

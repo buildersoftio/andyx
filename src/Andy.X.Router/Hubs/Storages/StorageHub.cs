@@ -82,8 +82,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             }
 
             storageToRegister = storageHubRepository.GetStorageByName(headers["x-andyx-storage-name"].ToString());
-            if (storageToRegister.Agents.Count - 1 == storageToRegister.AgnetMaxNumber)
-                return base.OnDisconnectedAsync(new Exception($"There are '{storageToRegister.AgnetMaxNumber}' agents connected, connection refused"));
+            if (storageToRegister.Agents.Count - 1 == storageToRegister.AgentMaxNumber)
+                return base.OnDisconnectedAsync(new Exception($"There are '{storageToRegister.AgentMaxNumber}' agents connected, connection refused"));
 
             Agent agentToRegister = agentFactory.CreateAgent(agentId, clientConnectionId, $"{storageName}-{Guid.NewGuid()}");
             storageHubRepository.AddAgent(storageName, clientConnectionId, agentToRegister);

@@ -24,21 +24,21 @@
         "Name": "logging",
         "Components": [
           {
-            "Name": "andyx-nodes",
+            "Name": "storage",
             "Settings": {
               "AllowTopicCreation": false,
               "AllowSchemaValidation": false
             }
           },
           {
-            "Name": "andyx-storages",
+            "Name": "producer",
             "Settings": {
               "AllowTopicCreation": false,
               "AllowSchemaValidation": false
             }
           },
           {
-            "Name": "andyx-connects",
+            "Name": "consumer",
             "Settings": {
               "AllowTopicCreation": false,
               "AllowSchemaValidation": false
@@ -47,7 +47,30 @@
         ]
       },
       {
-        "Name": "connections"
+        "Name": "connections",
+        "Components": [
+          {
+            "Name": "storage",
+            "Settings": {
+              "AllowTopicCreation": false,
+              "AllowSchemaValidation": false
+            }
+          },
+          {
+            "Name": "producer",
+            "Settings": {
+              "AllowTopicCreation": false,
+              "AllowSchemaValidation": false
+            }
+          },
+          {
+            "Name": "consumer",
+            "Settings": {
+              "AllowTopicCreation": false,
+              "AllowSchemaValidation": false
+            }
+          }
+        ]
       }
     ]
   }

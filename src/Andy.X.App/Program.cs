@@ -29,6 +29,9 @@ namespace Andy.X.App
             else
                 Environment.SetEnvironmentVariable("ASPNETCORE_URLS", "https://+:6541;http://+:6540");
 
+            if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS") == null)
+                Environment.SetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS", "true");
+
             try
             {
                 CreateHostBuilder(args).Build().Run();

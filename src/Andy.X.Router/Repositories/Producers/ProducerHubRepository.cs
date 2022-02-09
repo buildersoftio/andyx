@@ -23,6 +23,11 @@ namespace Buildersoft.Andy.X.Router.Repositories.Producers
             return _producers.TryAdd(connectionId, producer);
         }
 
+        public List<string> GetAllProducers()
+        {
+            return _producers.Keys.ToList();
+        }
+
         public Producer GetProducerById(string connectionId)
         {
             if (_producers.ContainsKey(connectionId))

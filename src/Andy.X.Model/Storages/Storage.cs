@@ -16,8 +16,8 @@ namespace Buildersoft.Andy.X.Model.Storages
         public bool IsLoadBalanced { get; set; }
 
         // If IsLoadBalanced is false AgentMaxNumber will be default number of data storage agents connected to node.
-        public int AgnetMaxNumber { get; set; }
-        public int AgnetMinNumber { get; set; }
+        public int AgentMaxNumber { get; set; }
+        public int AgentMinNumber { get; set; }
 
 
         public Storage()
