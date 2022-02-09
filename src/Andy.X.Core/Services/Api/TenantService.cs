@@ -6,6 +6,7 @@ using Buildersoft.Andy.X.IO.Readers;
 using Buildersoft.Andy.X.IO.Writers;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Utility.Generators;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -36,10 +37,7 @@ namespace Buildersoft.Andy.X.Core.Services.Api
             if (tenant == null)
                 return null;
 
-            var key = new byte[32];
-            using (var generator = RandomNumberGenerator.Create())
-                generator.GetBytes(key);
-            string apiKey = Convert.ToBase64String(key);
+            string apiKey = KeyGenerators.GenerateApiKey();
 
             var tenantToken = new TenantToken()
             {

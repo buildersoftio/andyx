@@ -94,5 +94,42 @@ namespace Buildersoft.Andy.X.Controllers
 
             return NotFound($"There is no component with name '{componentName}' at tenant '{tenantName}'");
         }
+
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [HttpPost("components/{componentName}/retention")]
+        public ActionResult<Component> PostComponentRetentionPolicy(string tenantName, string productName, string componentName, [FromBody] ComponentRetention retention)
+        {
+            var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
+            if (isFromCli != "")
+                _logger.LogInformation($"{isFromCli} POST '{HttpContext.Request.Path}' is called");
+            else
+                _logger.LogInformation($"POST '{HttpContext.Request.Path}' is called");
+
+            var retentionName = _componentService.AddRetentionPolicy(tenantName, productName, componentName, retention);
+            if (retentionName == null)
+                return BadRequest("Something went wrong, try to create Token one more time");
+
+            return Ok($"Retention Policy '{retentionName}' has been modified for component '{componentName}'");
+        }
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("components/{componentName}/retention")]
+        public ActionResult<ComponentRetention> GetTenantRetention(string tenantName, string productName, string componentName)
+        {
+            tenantName = tenantName.ToLower().Replace(" ", string.Empty);
+
+            var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
+            if (isFromCli != "")
+                _logger.LogInformation($"{isFromCli} GET '{HttpContext.Request.Path}' is called");
+            else
+                _logger.LogInformation($"GET '{HttpContext.Request.Path}' is called");
+            var tokens = _componentService.GetRetentionPolicy(tenantName, productName, componentName);
+            if (tokens != null)
+                return Ok(tokens);
+
+            return NotFound($"There is no retention policy created with name at component '{componentName}'");
+        }
     }
 }

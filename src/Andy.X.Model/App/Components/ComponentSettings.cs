@@ -10,6 +10,8 @@ namespace Buildersoft.Andy.X.Model.App.Components
         public bool EnableAuthorization { get; set; }
         public List<ComponentToken> Tokens { get; set; }
 
+        public ComponentRetention RetentionPolicy { get; set; }
+
 
         public ComponentSettings()
         {
@@ -18,6 +20,7 @@ namespace Buildersoft.Andy.X.Model.App.Components
             EnableAuthorization = false;
 
             Tokens = new List<ComponentToken>();
+            RetentionPolicy = new ComponentRetention();
         }
     }
 }

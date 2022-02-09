@@ -31,6 +31,8 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory
 
         bool AddTenantToken(string tenant, TenantToken token);
         bool AddComponentToken(string tenant, string product, string component, ComponentToken componentToken);
+        bool AddComponentRetention(string tenant, string product, string component, ComponentRetention componentRetention);
+        ComponentRetention GetComponentRetention(string tenant, string product, string component);
 
 
         void AddTenantFromApi(TenantConfiguration tenantConfig);
