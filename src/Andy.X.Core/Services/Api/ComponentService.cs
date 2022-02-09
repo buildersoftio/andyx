@@ -4,6 +4,7 @@ using Buildersoft.Andy.X.IO.Readers;
 using Buildersoft.Andy.X.IO.Writers;
 using Buildersoft.Andy.X.Model.App.Components;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Utility.Generators;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -37,10 +38,7 @@ namespace Buildersoft.Andy.X.Core.Services.Api
             if (component == null)
                 return null;
 
-            var key = new byte[32];
-            using (var generator = RandomNumberGenerator.Create())
-                generator.GetBytes(key);
-            string apiKey = Convert.ToBase64String(key);
+            string apiKey = KeyGenerators.GenerateApiKey();
             componentToken.Token = apiKey;
             component.Settings.Tokens.Add(componentToken);
 
@@ -50,6 +48,33 @@ namespace Buildersoft.Andy.X.Core.Services.Api
             // Write into file
             if (TenantIOWriter.WriteTenantsConfiguration(tenants) == true)
                 return apiKey;
+
+            return null;
+        }
+
+        public string AddRetentionPolicy(string tenantName, string productName, string componentName, ComponentRetention retention)
+        {
+            List<TenantConfiguration> tenants = TenantIOReader.ReadTenantsFromConfigFile();
+            var tenant = tenants.Find(x => x.Name == tenantName);
+            if (tenant == null)
+                return null;
+
+            var product = tenant.Products.Find(x => x.Name == productName);
+            if (product == null)
+                return null;
+
+            var component = product.Components.Find(x => x.Name == componentName);
+            if (component == null)
+                return null;
+
+
+            component.Settings.RetentionPolicy = retention;
+            // store token in memory!
+            _tenantRepository.AddComponentRetention(tenantName, productName, componentName, retention);
+
+            // Write into file
+            if (TenantIOWriter.WriteTenantsConfiguration(tenants) == true)
+                return retention.Name;
 
             return null;
         }
@@ -88,6 +113,11 @@ namespace Buildersoft.Andy.X.Core.Services.Api
         public List<ComponentToken> GetComponentTokens(string tenantName, string productName, string componentName)
         {
             return _tenantRepository.GetComponentTokens(tenantName, productName, componentName);
+        }
+
+        public ComponentRetention GetRetentionPolicy(string tenantName, string productName, string componentName)
+        {
+            return _tenantRepository.GetComponentRetention(tenantName, productName, componentName);
         }
     }
 }

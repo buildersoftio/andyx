@@ -9,6 +9,8 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Api
         List<Component> GetComponents(string tenantName, string productName);
 
         string AddComponentToken(string tenantName, string productName, string componentName, ComponentToken componentToken);
+        string AddRetentionPolicy(string tenantName, string productName, string componentName, ComponentRetention retention);
+        ComponentRetention GetRetentionPolicy(string tenantName, string productName, string componentName);
 
         List<ComponentToken> GetComponentTokens(string tenantName, string productName, string componentName);
     }

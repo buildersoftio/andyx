@@ -230,5 +230,24 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
             return componentDetail.Settings.Tokens;
         }
+
+        public bool AddComponentRetention(string tenant, string product, string component, ComponentRetention componentRetention)
+        {
+            var componentDetail = GetComponent(tenant, product, component);
+            if (componentDetail == null)
+                return false;
+
+            componentDetail.Settings.RetentionPolicy = componentRetention;
+            return true;
+        }
+
+        public ComponentRetention GetComponentRetention(string tenant, string product, string component)
+        {
+            var componentDetail = GetComponent(tenant, product, component);
+            if (componentDetail == null)
+                return null;
+
+            return componentDetail.Settings.RetentionPolicy;
+        }
     }
 }
