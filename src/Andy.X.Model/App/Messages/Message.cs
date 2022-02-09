@@ -12,6 +12,8 @@ namespace Buildersoft.Andy.X.Model.App.Messages
         public List<string> ConsumersCurrentTransmitted { get; set; }
 
         public Guid Id { get; set; }
+
+        public Dictionary<string, object> Headers { get; set; }
         public object MessageRaw { get; set; }
 
         public DateTime SentDate { get; set; }
@@ -20,6 +22,7 @@ namespace Buildersoft.Andy.X.Model.App.Messages
         {
             // if this property is not coming from Andy X Client
             SentDate = DateTime.UtcNow;
+            Headers = new Dictionary<string, object>();
         }
     }
 }

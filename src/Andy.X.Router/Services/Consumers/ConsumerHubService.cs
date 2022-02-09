@@ -65,6 +65,7 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     Component = message.Component,
                     Topic = message.Topic,
                     MessageRaw = message.MessageRaw,
+                    Headers = message.Headers,
                     SentDate = message.SentDate
                 });
 
@@ -102,6 +103,7 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     Component = consumerMessage.Message.Component,
                     Topic = consumerMessage.Message.Topic,
                     MessageRaw = consumerMessage.Message.MessageRaw,
+                    Headers = consumerMessage.Message.Headers,
 
                     SentDate = consumerMessage.Message.SentDate
                 });
