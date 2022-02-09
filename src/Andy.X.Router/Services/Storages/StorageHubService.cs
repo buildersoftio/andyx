@@ -98,7 +98,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                     {
                         Id = component.Id,
                         Name = component.Name,
-                        Settings =  component.Settings,
+                        Settings = component.Settings,
 
                         Tenant = tenant,
                         Product = product
@@ -268,6 +268,7 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                             Topic = message.Topic,
                             ConsumersCurrentTransmitted = message.ConsumersCurrentTransmitted,
                             MessageRaw = message.MessageRaw,
+                            Headers = message.Headers,
                             SentDate = message.SentDate
                         });
                     }
@@ -300,7 +301,8 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                             Topic = message.Topic,
                             ConsumersCurrentTransmitted = message.ConsumersCurrentTransmitted,
                             MessageRaw = message.MessageRaw,
-                            SentDate = message.SentDate
+                            Headers = message.Headers,
+                            SentDate = message.SentDate,
                         });
                     }
                     //storage.Value.ActiveAgentIndex++;

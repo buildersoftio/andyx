@@ -53,7 +53,7 @@ namespace Buildersoft.Andy.X.Controllers
                 _logger.LogInformation($"GET '{HttpContext.Request.Path}' is called");
 
 
-            var consumer = _consumerHubRepository.GetConsumerByName(consumerName);
+            var consumer = _consumerHubRepository.GetConsumerById(consumerName);
             if (consumer == null)
                 return NotFound();
 

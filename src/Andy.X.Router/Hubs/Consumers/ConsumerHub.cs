@@ -53,7 +53,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             string product = headers["x-andyx-product"].ToString();
             string component = headers["x-andyx-component"].ToString();
             string topic = headers["x-andyx-topic"].ToString();
-            bool isPersistent = Boolean.Parse(headers["x-andyx-topic-is-persistent"]);
+            bool isPersistent = bool.Parse(headers["x-andyx-topic-is-persistent"]);
             string consumerName = headers["x-andyx-consumer"].ToString();
 
             SubscriptionType subscriptionType = (SubscriptionType)Enum.Parse(typeof(SubscriptionType), headers["x-andyx-consumer-type"].ToString());
