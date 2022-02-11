@@ -1,10 +1,13 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Api;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Consumers;
+using Buildersoft.Andy.X.Model.Storages.Requests.Components;
+using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -15,23 +18,31 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
 {
     public class ConsumerHubService : IConsumerHubService
     {
-        private readonly ILogger<ConsumerHubService> logger;
-        private readonly IHubContext<ConsumerHub, IConsumerHub> hub;
-        private readonly IConsumerHubRepository consumerHubRepository;
-        private readonly IStorageHubService storageHubService;
-        private readonly ITenantRepository tenantRepository;
+        private readonly ILogger<ConsumerHubService> _logger;
+        private readonly IHubContext<ConsumerHub, IConsumerHub> _hub;
+        private readonly IConsumerHubRepository _consumerHubRepository;
+        private readonly IStorageHubService _storageHubService;
+        private readonly ITenantRepository _tenantRepository;
+
+        private readonly ITenantService _tenantApiService;
+        private readonly IComponentService _componentApiService;
+
 
         public ConsumerHubService(ILogger<ConsumerHubService> logger,
             IHubContext<ConsumerHub, IConsumerHub> hub,
             IConsumerHubRepository consumerHubRepository,
             IStorageHubService storageHubService,
-            ITenantRepository tenantRepository)
+            ITenantRepository tenantRepository,
+            ITenantService tenantApiService,
+            IComponentService componentApiService)
         {
-            this.logger = logger;
-            this.hub = hub;
-            this.consumerHubRepository = consumerHubRepository;
-            this.storageHubService = storageHubService;
-            this.tenantRepository = tenantRepository;
+            _logger = logger;
+            _hub = hub;
+            _consumerHubRepository = consumerHubRepository;
+            _storageHubService = storageHubService;
+            _tenantRepository = tenantRepository;
+            _tenantApiService = tenantApiService;
+            _componentApiService = componentApiService;
         }
 
         public async Task TransmitMessage(Message message, bool isStoredAlready = false)
@@ -39,7 +50,7 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
             if (isStoredAlready == false)
                 message.ConsumersCurrentTransmitted = new List<string>();
 
-            foreach (var consumer in consumerHubRepository.GetConsumersByTopic(message.Tenant, message.Product, message.Component, message.Topic))
+            foreach (var consumer in _consumerHubRepository.GetConsumersByTopic(message.Tenant, message.Product, message.Component, message.Topic))
             {
                 if (isStoredAlready == true)
                 {
@@ -57,7 +68,7 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     consumer.Value.CurrentConnectionIndex = 0;
                 }
 
-                await hub.Clients.Client(consumer.Value.Connections[consumer.Value.CurrentConnectionIndex]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
+                await _hub.Clients.Client(consumer.Value.Connections[consumer.Value.CurrentConnectionIndex]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
                 {
                     Id = message.Id,
                     Tenant = message.Tenant,
@@ -76,15 +87,14 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
             }
 
             // If 'Message is Persistent', store it!
-            var topicDetails = tenantRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic);
+            var topicDetails = _tenantRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic);
             if (topicDetails.TopicSettings.IsPersistent == true)
                 if (isStoredAlready != true)
-                    await storageHubService.StoreMessage(message);
+                    await _storageHubService.StoreMessage(message);
         }
-
         public async Task TransmitMessageToConsumer(ConsumerMessage consumerMessage)
         {
-            var consumer = consumerHubRepository.GetConsumerById(consumerMessage.Consumer);
+            var consumer = _consumerHubRepository.GetConsumerById(consumerMessage.Consumer);
             if (consumer != null)
             {
                 if (consumer.CurrentConnectionIndex >= consumer.Connections.Count)
@@ -95,7 +105,7 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     consumer.CurrentConnectionIndex = 0;
                 }
 
-                await hub.Clients.Client(consumer.Connections[consumer.CurrentConnectionIndex]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
+                await _hub.Clients.Client(consumer.Connections[consumer.CurrentConnectionIndex]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
                 {
                     Id = consumerMessage.Message.Id,
                     Tenant = consumerMessage.Message.Tenant,
@@ -110,6 +120,47 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
 
                 consumer.CurrentConnectionIndex++;
             }
+        }
+
+        public Task CreateComponentTokenToThisNode(CreateComponentTokenDetails createComponentTokenDetails)
+        {
+            if (_tenantRepository.GetComponentToken(createComponentTokenDetails.Tenant, createComponentTokenDetails.Product, createComponentTokenDetails.Component, createComponentTokenDetails.Token.Token) == null)
+                _componentApiService.AddComponentToken(createComponentTokenDetails.Tenant, createComponentTokenDetails.Product, createComponentTokenDetails.Component, createComponentTokenDetails.Token, false);
+
+            // send to other nodes....
+            _storageHubService.SendCreateComponentTokenStorage(createComponentTokenDetails);
+
+            return Task.CompletedTask;
+        }
+        public Task CreateTenantTokenToThisNode(CreateTenantTokenDetails createTenantTokenDetails)
+        {
+            if (_tenantRepository.GetTenantToken(createTenantTokenDetails.Tenant, createTenantTokenDetails.Token.Token) == null)
+                _tenantApiService.AddToken(createTenantTokenDetails.Tenant, createTenantTokenDetails.Token);
+
+            // send to other nodes....
+            _storageHubService.SendCreateTenantTokenStorage(createTenantTokenDetails);
+
+            return Task.CompletedTask;
+        }
+        public Task RevokeComponentTokenToThisNode(RevokeComponentTokenDetails revokeComponentTokenDetails)
+        {
+            if (_tenantRepository.GetComponentToken(revokeComponentTokenDetails.Tenant, revokeComponentTokenDetails.Product, revokeComponentTokenDetails.Component, revokeComponentTokenDetails.Token) != null)
+                _componentApiService.RevokeComponentToken(revokeComponentTokenDetails.Tenant, revokeComponentTokenDetails.Product, revokeComponentTokenDetails.Component, revokeComponentTokenDetails.Token);
+
+            // send to other nodes....
+            _storageHubService.SendRevokeComponentTokenStorage(revokeComponentTokenDetails);
+
+            return Task.CompletedTask;
+        }
+        public Task RevokeTenantTokenToThisNode(RevokeTenantTokenDetails revokeTenantTokenDetails)
+        {
+            if (_tenantRepository.GetTenantToken(revokeTenantTokenDetails.Tenant, revokeTenantTokenDetails.Token) != null)
+                _tenantApiService.RevokeToken(revokeTenantTokenDetails.Tenant, revokeTenantTokenDetails.Token);
+
+            // send to other nodes....
+            _storageHubService.SendRevokeTenantTokenStorage(revokeTenantTokenDetails);
+
+            return Task.CompletedTask;
         }
     }
 }

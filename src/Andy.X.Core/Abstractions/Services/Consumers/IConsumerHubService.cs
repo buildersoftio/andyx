@@ -1,4 +1,6 @@
 ﻿using Buildersoft.Andy.X.Model.App.Messages;
+using Buildersoft.Andy.X.Model.Storages.Requests.Components;
+using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Services.Consumers
@@ -7,5 +9,11 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Consumers
     {
         Task TransmitMessage(Message message, bool isStoredAlready = false);
         Task TransmitMessageToConsumer(ConsumerMessage consumerMessage);
+
+        Task CreateTenantTokenToThisNode(CreateTenantTokenDetails createTenantTokenDetails);
+        Task RevokeTenantTokenToThisNode(RevokeTenantTokenDetails revokeTenantTokenDetails);
+
+        Task CreateComponentTokenToThisNode(CreateComponentTokenDetails createComponentTokenDetails);
+        Task RevokeComponentTokenToThisNode(RevokeComponentTokenDetails revokeComponentTokenDetails);
     }
 }

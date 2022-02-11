@@ -13,6 +13,9 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Api
         TenantConfiguration UpdateTenantSettings(string tenantName, TenantSettings tenantSettings);
 
         string AddToken(string tenantName, DateTime expireDate);
+        string AddToken(string tenantName, TenantToken tenantToken);
+        bool RevokeToken(string tenantName, string token);
+
         List<TenantToken> GetTokens(string tenantName);
     }
 }

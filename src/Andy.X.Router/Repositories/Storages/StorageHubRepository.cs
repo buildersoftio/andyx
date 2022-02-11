@@ -26,7 +26,6 @@ namespace Buildersoft.Andy.X.Router.Repositories.Storages
             }
 
             return _storages[storageName].Agents.TryAdd(connectionId, agent);
-
         }
 
         public bool AddStorage(string storageName, Storage storage)

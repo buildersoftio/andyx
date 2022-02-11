@@ -3,10 +3,13 @@ using Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Storages;
 using Buildersoft.Andy.X.Model.Storages.Agents;
+using Buildersoft.Andy.X.Model.Storages.Requests.Components;
+using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
@@ -129,6 +132,24 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
         public async Task TransmitMessagesToConsumer(ConsumerMessage message)
         {
             await consumerHubService.TransmitMessageToConsumer(message);
+        }
+
+        public async Task CreateTenantToken(CreateTenantTokenDetails createTenantDetails)
+        {
+            await consumerHubService.CreateTenantTokenToThisNode(createTenantDetails);
+        }
+        public async Task RevokeTenantToken(RevokeTenantTokenDetails revokeTenantDetails)
+        {
+            await consumerHubService.RevokeTenantTokenToThisNode(revokeTenantDetails);
+        }
+
+        public async Task CreateComponentToken(CreateComponentTokenDetails createComponentTokenDetails)
+        {
+            await consumerHubService.CreateComponentTokenToThisNode(createComponentTokenDetails);
+        }
+        public async Task RevokeComponentToken(RevokeComponentTokenDetails revokeComponentTokenDetails)
+        {
+            await consumerHubService.RevokeComponentTokenToThisNode(revokeComponentTokenDetails);
         }
     }
 }

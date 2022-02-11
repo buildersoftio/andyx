@@ -1,5 +1,6 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Api;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.IO.Readers;
 using Buildersoft.Andy.X.IO.Writers;
 using Buildersoft.Andy.X.Model.App.Components;
@@ -8,7 +9,6 @@ using Buildersoft.Andy.X.Utility.Generators;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 
 namespace Buildersoft.Andy.X.Core.Services.Api
 {
@@ -16,14 +16,16 @@ namespace Buildersoft.Andy.X.Core.Services.Api
     {
         private readonly ILogger<ComponentService> _logger;
         private readonly ITenantRepository _tenantRepository;
+        private readonly IStorageHubService _storageHubService;
 
-        public ComponentService(ILogger<ComponentService> logger, ITenantRepository tenantRepository)
+        public ComponentService(ILogger<ComponentService> logger, ITenantRepository tenantRepository, IStorageHubService storageHubService)
         {
             _logger = logger;
             _tenantRepository = tenantRepository;
+            _storageHubService = storageHubService;
         }
 
-        public string AddComponentToken(string tenantName, string productName, string componentName, ComponentToken componentToken)
+        public string AddComponentToken(string tenantName, string productName, string componentName, ComponentToken componentToken, bool shoudGenerateToken = true)
         {
             List<TenantConfiguration> tenants = TenantIOReader.ReadTenantsFromConfigFile();
             var tenant = tenants.Find(x => x.Name == tenantName);
@@ -38,8 +40,12 @@ namespace Buildersoft.Andy.X.Core.Services.Api
             if (component == null)
                 return null;
 
-            string apiKey = KeyGenerators.GenerateApiKey();
-            componentToken.Token = apiKey;
+            if (shoudGenerateToken == true)
+            {
+                string apiKey = KeyGenerators.GenerateApiKey();
+                componentToken.Token = apiKey;
+            }
+
             component.Settings.Tokens.Add(componentToken);
 
             // store token in memory!
@@ -47,7 +53,22 @@ namespace Buildersoft.Andy.X.Core.Services.Api
 
             // Write into file
             if (TenantIOWriter.WriteTenantsConfiguration(tenants) == true)
-                return apiKey;
+            {
+                if (shoudGenerateToken == true)
+                {
+                    // Send to the Cluster
+                    _storageHubService.SendCreateComponentTokenStorage(new Model.Storages.Requests.Components.CreateComponentTokenDetails()
+                    {
+                        Tenant = tenantName,
+                        Product = productName,
+                        Component = componentName,
+                        Token = componentToken,
+
+                        StoragesAlreadySent = new List<string>()
+                    });
+                }
+                return componentToken.Token;
+            }
 
             return null;
         }
@@ -118,6 +139,52 @@ namespace Buildersoft.Andy.X.Core.Services.Api
         public ComponentRetention GetRetentionPolicy(string tenantName, string productName, string componentName)
         {
             return _tenantRepository.GetComponentRetention(tenantName, productName, componentName);
+        }
+
+        public bool RevokeComponentToken(string tenantName, string productName, string componentName, string token)
+        {
+            // Remove from the memory
+            _tenantRepository.RemoveComponentToken(tenantName, productName, componentName, token);
+            // remove from config file
+
+            List<TenantConfiguration> tenants = TenantIOReader.ReadTenantsFromConfigFile();
+            var tenant = tenants.Find(x => x.Name == tenantName);
+            if (tenant == null)
+                return false;
+
+            var product = tenant.Products.Find(x => x.Name == productName);
+            if (product == null)
+                return false;
+
+            var component = product.Components.Find(x => x.Name == componentName);
+            if (component == null)
+                return false;
+
+
+            var componentToken = component.Settings.Tokens.Find(x => x.Token == token);
+            if (componentToken == null)
+                return true;
+
+            component.Settings.Tokens.Remove(componentToken);
+
+            // write into file
+            if (TenantIOWriter.WriteTenantsConfiguration(tenants) == true)
+            {
+                // Send to the Cluster
+                _storageHubService.SendRevokeComponentTokenStorage(new Model.Storages.Requests.Components.RevokeComponentTokenDetails()
+                {
+                    Tenant = tenantName,
+                    Product = productName,
+                    Component = componentName,
+                    Token = token,
+
+                    StoragesAlreadySent = new List<string>()
+                });
+
+                return true;
+            }
+
+            return false;
         }
     }
 }
