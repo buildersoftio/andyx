@@ -30,7 +30,10 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory
         ConcurrentDictionary<string, Topic> GetTopics(string tenant, string product, string component);
 
         bool AddTenantToken(string tenant, TenantToken token);
+        bool RemoveTenantToken(string tenant, string token);
         bool AddComponentToken(string tenant, string product, string component, ComponentToken componentToken);
+        bool RemoveComponentToken(string tenant, string product, string component, string token);
+
         bool AddComponentRetention(string tenant, string product, string component, ComponentRetention componentRetention);
         ComponentRetention GetComponentRetention(string tenant, string product, string component);
 

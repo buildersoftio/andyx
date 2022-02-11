@@ -249,5 +249,30 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
             return componentDetail.Settings.RetentionPolicy;
         }
+
+        public bool RemoveTenantToken(string tenant, string token)
+        {
+            var tenantDetails = GetTenant(tenant);
+            if (tenantDetails == null)
+                return false;
+
+            var tenantToken = tenantDetails.Settings.Tokens.Find(x => x.Token == token);
+            if (tenantToken == null)
+                return true;
+
+            return tenantDetails.Settings.Tokens.Remove(tenantToken);
+        }
+
+        public bool RemoveComponentToken(string tenant, string product, string component, string token)
+        {
+            var componentDetail = GetComponent(tenant, product, component);
+            if (componentDetail == null)
+                return false;
+            var componentToken = componentDetail.Settings.Tokens.Find(x => x.Token == token);
+            if (componentToken == null)
+                return true;
+
+            return componentDetail.Settings.Tokens.Remove(componentToken);
+        }
     }
 }

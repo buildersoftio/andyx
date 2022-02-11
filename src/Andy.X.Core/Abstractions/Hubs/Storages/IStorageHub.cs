@@ -27,6 +27,10 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages
         Task TenantUpdated(TenantUpdatedDetails tenant);
         Task TenantDeleted(TenantDeletedDetails tenant);
 
+        Task TenantTokenCreated(TenantTokenCreatedDetails tenantTokenCreated);
+        Task TenantTokenRevoked(TenantTokenRevokedDetails tenantTokenRevoked);
+
+
         Task ProductCreated(ProductCreatedDetails product);
         Task ProductUpdated(ProductUpdatedDetails product);
         Task ProductDeleted(ProductDeletedDetails product);
@@ -34,6 +38,9 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages
         Task ComponentCreated(ComponentCreatedDetails component);
         Task ComponentUpdated(ComponentUpdatedDetails component);
         Task ComponentDeleted(ComponentDeletedDetails component);
+
+        Task ComponentTokenCreated(ComponentTokenCreatedDetails componentTokenCreated);
+        Task ComponentTokenRevoked(ComponentTokenRevokedDetails componentTokenRevoked);
 
         Task TopicCreated(TopicCreatedDetails topic);
         Task TopicUpdated(TopicUpdatedDetails topic);
