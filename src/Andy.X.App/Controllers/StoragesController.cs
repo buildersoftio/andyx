@@ -1,4 +1,5 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages;
+﻿using Buildersoft.Andy.X.Attributes;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages;
 using Buildersoft.Andy.X.Model.Storages;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,7 @@ namespace Buildersoft.Andy.X.Controllers
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ApiController]
+    [BasicAuthorize]
     public class StoragesController : ControllerBase
     {
         private readonly ILogger<StoragesController> _logger;

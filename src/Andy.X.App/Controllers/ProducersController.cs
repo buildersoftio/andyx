@@ -1,4 +1,5 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
+﻿using Buildersoft.Andy.X.Attributes;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
 using Buildersoft.Andy.X.Model.Producers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +14,7 @@ namespace Buildersoft.Andy.X.Controllers
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ApiController]
+    [BasicAuthorize]
     public class ProducersController : ControllerBase
     {
         private readonly ILogger<ProducersController> _logger;

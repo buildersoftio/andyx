@@ -1,4 +1,5 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
+﻿using Buildersoft.Andy.X.Attributes;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Model.Consumers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,7 @@ namespace Buildersoft.Andy.X.Controllers
 
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ApiController]
+    [BasicAuthorize]
     public class ConsumersController : ControllerBase
     {
         private readonly ILogger<ConsumersController> _logger;
