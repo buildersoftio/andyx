@@ -96,16 +96,16 @@ namespace Buildersoft.Andy.X.Core.Services.Api
             if (TenantIOWriter.WriteTenantsConfiguration(tenants) == true)
             {
                 _tenantRepository.AddTenantFromApi(tenantConfiguration);
-                //_storageHubService.CreateTenantAsync(_tenantFactory
-                //   .CreateTenant(tenantConfiguration.Name,
-                //       tenantConfiguration.Settings.DigitalSignature,
-                //       tenantConfiguration.Settings.EnableEncryption,
-                //       tenantConfiguration.Settings.AllowProductCreation,
-                //       tenantConfiguration.Settings.EnableAuthorization,
-                //       tenantConfiguration.Settings.Tokens,
-                //       tenantConfiguration.Settings.Logging,
-                //       tenantConfiguration.Settings.EnableGeoReplication,
-                //       tenantConfiguration.Settings.CertificatePath));
+                _storageHubService.CreateTenantAsync(_tenantFactory
+                   .CreateTenant(tenantConfiguration.Name,
+                       tenantConfiguration.Settings.DigitalSignature,
+                       tenantConfiguration.Settings.EnableEncryption,
+                       tenantConfiguration.Settings.AllowProductCreation,
+                       tenantConfiguration.Settings.EnableAuthorization,
+                       tenantConfiguration.Settings.Tokens,
+                       tenantConfiguration.Settings.Logging,
+                       tenantConfiguration.Settings.EnableGeoReplication,
+                       tenantConfiguration.Settings.CertificatePath));
                 return true;
             }
 
