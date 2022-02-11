@@ -1,6 +1,7 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Services.Api;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.Configurations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,7 @@ namespace Buildersoft.Andy.X.Controllers
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ApiController]
+    [Authorize]
     public class TenantsController : ControllerBase
     {
         private readonly ILogger<TenantsController> _logger;

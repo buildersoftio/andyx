@@ -1,8 +1,10 @@
 using Buildersoft.Andy.X.Core.Services.App;
 using Buildersoft.Andy.X.Extensions.DependencyInjection;
+using Buildersoft.Andy.X.Handlers;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Buildersoft.Andy.X.Router.Hubs.Producers;
 using Buildersoft.Andy.X.Router.Hubs.Storages;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -53,7 +55,32 @@ namespace Andy.X.App
                     Description = "Andy X is an open-source distributed streaming platform designed to deliver the best performance possible for high-performance data pipelines, streaming analytics, streaming between microservices and data integration.",
                     License = new OpenApiLicense() { Name = "Licensed under the Apache License 2.0", Url = new Uri("https://bit.ly/3DqVQbx") }
                 });
+                c.AddSecurityDefinition("Basic", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "basic",
+                    In = ParameterLocation.Header,
+                    Description = "Basic Authorization header using the Bearer scheme."
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                          new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "basic"
+                                }
+                            },
+                            new string[] {}
+                    }
+                });
             });
+
+            services.AddAuthentication("UserAuthentication")
+                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("UserAuthentication", null);
 
             services.AddSerilogLoggingConfiguration(Configuration);
             services.AddSingleton<ApplicationService>();
@@ -95,6 +122,7 @@ namespace Andy.X.App
 
             app.UseHttpsRedirection();
             app.UseRouting();
+            app.UseAuthentication();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
