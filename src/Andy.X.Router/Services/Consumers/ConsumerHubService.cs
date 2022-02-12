@@ -159,9 +159,15 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
         {
             _logger.LogInformation($"Request to create tenant '{createTenantDetails.Name}' from other nodes");
             if (_tenantRepository.GetTenant(createTenantDetails.Name) == null)
+            {
                 _tenantApiService.CreateTenant(createTenantDetails.Name, createTenantDetails.TenantSettings);
+                _logger.LogInformation($"Tenant' {createTenantDetails.Name}' has been created and linked, informing other nodes");
+            }
+            else
+            {
+                _logger.LogInformation($"Tenant' {createTenantDetails.Name}' already exists, ignoring the request");
+            }
 
-            _logger.LogInformation($"Tenant'{createTenantDetails.Name}' has been created and linked, informing other nodes");
             // send to other nodes....
             await _storageHubService.SendCreateTenantStorage(createTenantDetails);
         }
