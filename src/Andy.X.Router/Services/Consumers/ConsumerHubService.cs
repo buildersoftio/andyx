@@ -122,45 +122,48 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
             }
         }
 
-        public Task CreateComponentTokenToThisNode(CreateComponentTokenDetails createComponentTokenDetails)
+        public async Task CreateComponentTokenToThisNode(CreateComponentTokenDetails createComponentTokenDetails)
         {
             if (_tenantRepository.GetComponentToken(createComponentTokenDetails.Tenant, createComponentTokenDetails.Product, createComponentTokenDetails.Component, createComponentTokenDetails.Token.Token) == null)
                 _componentApiService.AddComponentToken(createComponentTokenDetails.Tenant, createComponentTokenDetails.Product, createComponentTokenDetails.Component, createComponentTokenDetails.Token, false);
 
             // send to other nodes....
-            _storageHubService.SendCreateComponentTokenStorage(createComponentTokenDetails);
-
-            return Task.CompletedTask;
+            await _storageHubService.SendCreateComponentTokenStorage(createComponentTokenDetails);
         }
-        public Task CreateTenantTokenToThisNode(CreateTenantTokenDetails createTenantTokenDetails)
+        public async Task CreateTenantTokenToThisNode(CreateTenantTokenDetails createTenantTokenDetails)
         {
             if (_tenantRepository.GetTenantToken(createTenantTokenDetails.Tenant, createTenantTokenDetails.Token.Token) == null)
                 _tenantApiService.AddToken(createTenantTokenDetails.Tenant, createTenantTokenDetails.Token);
 
             // send to other nodes....
-            _storageHubService.SendCreateTenantTokenStorage(createTenantTokenDetails);
-
-            return Task.CompletedTask;
+            await _storageHubService.SendCreateTenantTokenStorage(createTenantTokenDetails);
         }
-        public Task RevokeComponentTokenToThisNode(RevokeComponentTokenDetails revokeComponentTokenDetails)
+        public async Task RevokeComponentTokenToThisNode(RevokeComponentTokenDetails revokeComponentTokenDetails)
         {
             if (_tenantRepository.GetComponentToken(revokeComponentTokenDetails.Tenant, revokeComponentTokenDetails.Product, revokeComponentTokenDetails.Component, revokeComponentTokenDetails.Token) != null)
                 _componentApiService.RevokeComponentToken(revokeComponentTokenDetails.Tenant, revokeComponentTokenDetails.Product, revokeComponentTokenDetails.Component, revokeComponentTokenDetails.Token);
 
             // send to other nodes....
-            _storageHubService.SendRevokeComponentTokenStorage(revokeComponentTokenDetails);
+            await _storageHubService.SendRevokeComponentTokenStorage(revokeComponentTokenDetails);
 
-            return Task.CompletedTask;
         }
-        public Task RevokeTenantTokenToThisNode(RevokeTenantTokenDetails revokeTenantTokenDetails)
+        public async Task RevokeTenantTokenToThisNode(RevokeTenantTokenDetails revokeTenantTokenDetails)
         {
             if (_tenantRepository.GetTenantToken(revokeTenantTokenDetails.Tenant, revokeTenantTokenDetails.Token) != null)
                 _tenantApiService.RevokeToken(revokeTenantTokenDetails.Tenant, revokeTenantTokenDetails.Token);
 
             // send to other nodes....
-            _storageHubService.SendRevokeTenantTokenStorage(revokeTenantTokenDetails);
+            await _storageHubService.SendRevokeTenantTokenStorage(revokeTenantTokenDetails);
+        }
+        public async Task CreateTenantToThisNode(CreateTenantDetails createTenantDetails)
+        {
+            _logger.LogInformation($"Request to create tenant '{createTenantDetails.Name}' from other nodes");
+            if (_tenantRepository.GetTenant(createTenantDetails.Name) == null)
+                _tenantApiService.CreateTenant(createTenantDetails.Name, createTenantDetails.TenantSettings);
 
-            return Task.CompletedTask;
+            _logger.LogInformation($"Tenant'{createTenantDetails.Name}' has been created and linked, informing other nodes");
+            // send to other nodes....
+            await _storageHubService.SendCreateTenantStorage(createTenantDetails);
         }
     }
 }

@@ -429,5 +429,24 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
+
+        public async Task SendCreateTenantStorage(CreateTenantDetails createTenantDetails)
+        {
+            foreach (var storage in _storageHubRepository.GetStorages())
+            {
+                if (createTenantDetails.StoragesAlreadySent.Contains(storage.Key) != true)
+                {
+                    createTenantDetails.StoragesAlreadySent.Add(storage.Key);
+                    // send to this storage
+                    await _hub.Clients.Client(storage.Value.Agents.First().Key).TenantCreated(new Model.Storages.Events.Tenants.TenantCreatedDetails()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = createTenantDetails.Name,
+                        Settings = createTenantDetails.TenantSettings,
+                        StoragesAlreadySent = createTenantDetails.StoragesAlreadySent,
+                    });
+                }
+            }
+        }
     }
 }

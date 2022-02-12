@@ -134,6 +134,12 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             await consumerHubService.TransmitMessageToConsumer(message);
         }
 
+
+        public async Task CreateTenant(CreateTenantDetails createTenantDetails)
+        {
+            await consumerHubService.CreateTenantToThisNode(createTenantDetails);
+        }
+
         public async Task CreateTenantToken(CreateTenantTokenDetails createTenantDetails)
         {
             await consumerHubService.CreateTenantTokenToThisNode(createTenantDetails);

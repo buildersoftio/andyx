@@ -39,5 +39,6 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Storages
         Task SendCreateTenantTokenStorage(CreateTenantTokenDetails createTenantTokenDetails);
         Task SendRevokeComponentTokenStorage(RevokeComponentTokenDetails revokeComponentTokenDetails);
         Task SendRevokeTenantTokenStorage(RevokeTenantTokenDetails revokeTenantTokenDetails);
+        Task SendCreateTenantStorage(CreateTenantDetails createTenantDetails);
     }
 }

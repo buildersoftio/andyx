@@ -6,6 +6,7 @@ using Buildersoft.Andy.X.Model.Storages.Events.Messages;
 using Buildersoft.Andy.X.Model.Storages.Events.Products;
 using Buildersoft.Andy.X.Model.Storages.Events.Tenants;
 using Buildersoft.Andy.X.Model.Storages.Events.Topics;
+using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages
@@ -24,6 +25,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages
 
 
         Task TenantCreated(TenantCreatedDetails tenant);
+        Task TenantCreatedToOtherNodes(CreateTenantDetails tenant);
         Task TenantUpdated(TenantUpdatedDetails tenant);
         Task TenantDeleted(TenantDeletedDetails tenant);
 

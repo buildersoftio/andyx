@@ -15,5 +15,6 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Consumers
 
         Task CreateComponentTokenToThisNode(CreateComponentTokenDetails createComponentTokenDetails);
         Task RevokeComponentTokenToThisNode(RevokeComponentTokenDetails revokeComponentTokenDetails);
+        Task CreateTenantToThisNode(CreateTenantDetails createTenantDetails);
     }
 }
