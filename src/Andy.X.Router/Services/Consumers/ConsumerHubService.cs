@@ -94,7 +94,8 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
         }
         public async Task TransmitMessageToConsumer(ConsumerMessage consumerMessage)
         {
-            var consumer = _consumerHubRepository.GetConsumerById(consumerMessage.Consumer);
+            string consumerId = $"{consumerMessage.Message.Tenant}{consumerMessage.Message.Product}{consumerMessage.Message.Component}{consumerMessage.Message.Topic}|{consumerMessage.Consumer}";
+            var consumer = _consumerHubRepository.GetConsumerById(consumerId);
             if (consumer != null)
             {
                 if (consumer.CurrentConnectionIndex >= consumer.Connections.Count)

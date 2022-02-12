@@ -2,7 +2,7 @@
 {
     public class ConsumerMessage
     {
-        public Message Message { get; set; }
         public string Consumer { get; set; }
+        public Message Message { get; set; }
     }
 }
