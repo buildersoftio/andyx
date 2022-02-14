@@ -219,7 +219,8 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                         Product = consumer.Product,
                         Component = consumer.Component,
                         Topic = consumer.Topic,
-                        ConsumerName = consumer.ConsumerName
+                        ConsumerName = consumer.ConsumerName,
+                        SubscriptionType = consumer.SubscriptionType
                     });
                 }
             }
