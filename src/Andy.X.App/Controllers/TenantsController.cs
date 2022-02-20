@@ -133,5 +133,23 @@ namespace Buildersoft.Andy.X.Controllers
 
             return NotFound($"There is no tenant with name '{tenantName}'");
         }
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpDelete("tenants/{tenantName}/tokens/{token}/revoke")]
+        public ActionResult<string> DeleteToken(string tenantName, string token)
+        {
+            tenantName = tenantName.ToLower().Replace(" ", string.Empty);
+
+            var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
+            if (isFromCli != "")
+                _logger.LogInformation($"{isFromCli} GET '{HttpContext.Request.Path}' is called");
+            else
+                _logger.LogInformation($"GET '{HttpContext.Request.Path}' is called");
+            var isTokenRevoked = _tenantService.RevokeToken(tenantName, token);
+            if (isTokenRevoked == true)
+                return Ok($"Token '{token}' has been revoked");
+
+            return BadRequest($"Token '{token}' has not been revoked, or it doesnot exists");
+        }
     }
 }
