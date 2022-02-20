@@ -97,6 +97,24 @@ namespace Buildersoft.Andy.X.Controllers
             return NotFound($"There is no component with name '{componentName}' at tenant '{tenantName}'");
         }
 
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpDelete("components/{componentName}/tokens/{token}/revoke")]
+        public ActionResult<string> DeleteToken(string tenantName, string productName, string componentName, string token)
+        {
+            tenantName = tenantName.ToLower().Replace(" ", string.Empty);
+
+            var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
+            if (isFromCli != "")
+                _logger.LogInformation($"{isFromCli} GET '{HttpContext.Request.Path}' is called");
+            else
+                _logger.LogInformation($"GET '{HttpContext.Request.Path}' is called");
+            var isTokenRevoked = _componentService.RevokeComponentToken(tenantName, productName, componentName, token);
+            if (isTokenRevoked == true)
+                return Ok($"Token '{token}' has been revoked");
+
+            return BadRequest($"Token '{token}' has not been revoked, or it doesnot exists");
+        }
+
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
