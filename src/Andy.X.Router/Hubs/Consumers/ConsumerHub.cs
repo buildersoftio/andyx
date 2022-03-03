@@ -200,9 +200,10 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             if (consumerToRemove != null)
             {
                 storageHubService.DisconnectConsumerAsync(consumerToRemove);
+                string consumerId = $"{consumerToRemove.Tenant}{consumerToRemove.Product}{consumerToRemove.Component}{consumerToRemove.Topic}|{consumerToRemove.ConsumerName}";
 
-                consumerHubRepository.RemoveConsumerConnection(consumerToRemove.ConsumerName, clientConnectionId);
-                consumerHubRepository.RemoveConsumer(consumerToRemove.ConsumerName);
+                consumerHubRepository.RemoveConsumerConnection(consumerId, clientConnectionId);
+                consumerHubRepository.RemoveConsumer(consumerId);
 
                 logger.LogInformation($"Consumer '{consumerToRemove.ConsumerName}' and subscription type '{consumerToRemove.SubscriptionType}' at {consumerToRemove.Tenant}/{consumerToRemove.Product}/{consumerToRemove.Component}/{consumerToRemove.Topic} is disconnected");
 

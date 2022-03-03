@@ -3,12 +3,14 @@ using Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
-using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Producers;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Storages;
 using Buildersoft.Andy.X.Model.Storages.Agents;
 using Buildersoft.Andy.X.Model.Storages.Requests.Components;
+using Buildersoft.Andy.X.Model.Storages.Requests.Consumer;
+using Buildersoft.Andy.X.Model.Storages.Requests.Producer;
 using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -26,6 +28,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
         private readonly IStorageFactory storageFactory;
         private readonly IAgentFactory agentFactory;
         private readonly IConsumerHubService consumerHubService;
+        private readonly IProducerHubService producerHubService;
 
         public StorageHub(ILogger<StorageHub> logger,
             CredentialsConfiguration credentialsConfiguration,
@@ -33,7 +36,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             ITenantRepository tenantMemoryRepository,
             IStorageFactory storageFactory,
             IAgentFactory agentFactory,
-            IConsumerHubService consumerHubService)
+            IConsumerHubService consumerHubService,
+            IProducerHubService producerHubService)
         {
             this.logger = logger;
             this.credentialsConfiguration = credentialsConfiguration;
@@ -156,6 +160,22 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
         public async Task RevokeComponentToken(RevokeComponentTokenDetails revokeComponentTokenDetails)
         {
             await consumerHubService.RevokeComponentTokenToThisNode(revokeComponentTokenDetails);
+        }
+
+        public async Task NotifyNodesForConsumerConnection(NotifyConsumerConnectionDetails obj)
+        {
+            if (obj.ConnectionType == ConnectionType.Connected)
+                await consumerHubService.ConnectConsumerFromOtherNode(obj);
+            else
+                await consumerHubService.DisconnectConsumerFromOtherNode(obj);
+        }
+
+        public async Task NotifyNodesForProducerConnection(NotifyProducerConnectionDetails obj)
+        {
+            if (obj.ConnectionType == ConnectionType.Connected)
+                await producerHubService.ConnectProducerFromOtherNode(obj);
+            else
+                await producerHubService.DisconnectProducerFromOtherNode(obj);
         }
     }
 }

@@ -7,10 +7,12 @@ using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Storages.Requests.Components;
+using Buildersoft.Andy.X.Model.Storages.Requests.Consumer;
 using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -171,6 +173,51 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
 
             // send to other nodes....
             await _storageHubService.SendCreateTenantStorage(createTenantDetails);
+        }
+
+        public Task ConnectConsumerFromOtherNode(NotifyConsumerConnectionDetails notifyConsumerConnectionDetails)
+        {
+            string consumerIdOnRepo = $"{notifyConsumerConnectionDetails.Tenant}{notifyConsumerConnectionDetails.Product}{notifyConsumerConnectionDetails.Component}{notifyConsumerConnectionDetails.Topic}|{notifyConsumerConnectionDetails.ConsumerName}";
+
+            var consumerInRepo = _consumerHubRepository.GetConsumerById(consumerIdOnRepo);
+            if (consumerInRepo == null)
+            {
+                consumerInRepo = new Consumer()
+                {
+                    ConsumerName = notifyConsumerConnectionDetails.ConsumerName,
+                    Tenant = notifyConsumerConnectionDetails.Tenant,
+                    Product = notifyConsumerConnectionDetails.Product,
+                    Component = notifyConsumerConnectionDetails.Component,
+                    ConsumerSettings = new ConsumerSettings() { InitialPosition = notifyConsumerConnectionDetails.InitialPosition },
+                    IsLocal = false,
+                    SubscriptionType = notifyConsumerConnectionDetails.SubscriptionType,
+                    Topic = notifyConsumerConnectionDetails.Topic
+                };
+
+                _consumerHubRepository.AddConsumer(consumerIdOnRepo, consumerInRepo);
+            }
+            _consumerHubRepository.AddExternalConsumerConnection(consumerIdOnRepo);
+
+            return Task.CompletedTask;
+        }
+
+        public Task DisconnectConsumerFromOtherNode(NotifyConsumerConnectionDetails notifyConsumerConnectionDetails)
+        {
+            string consumerIdOnRepo = $"{notifyConsumerConnectionDetails.Tenant}{notifyConsumerConnectionDetails.Product}{notifyConsumerConnectionDetails.Component}{notifyConsumerConnectionDetails.Topic}|{notifyConsumerConnectionDetails.ConsumerName}";
+
+            var externalConsumer = _consumerHubRepository.GetConsumerById(consumerIdOnRepo);
+            if (externalConsumer != null)
+            {
+                // remove external connection
+                _consumerHubRepository.RemoveExternalConsumerConnection(consumerIdOnRepo);
+
+
+                if (externalConsumer.IsLocal == false)
+                    _consumerHubRepository.RemoveConsumer(consumerIdOnRepo);
+
+            }
+
+            return Task.CompletedTask;
         }
     }
 }
