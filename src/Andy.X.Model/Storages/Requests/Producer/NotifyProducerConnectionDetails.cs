@@ -1,22 +1,18 @@
-﻿using System;
+﻿using Buildersoft.Andy.X.Model.Storages.Requests.Consumer;
+using System;
 
-namespace Buildersoft.Andy.X.Model.Producers
+namespace Buildersoft.Andy.X.Model.Storages.Requests.Producer
 {
-    public class Producer
+    public class NotifyProducerConnectionDetails
     {
         public string Tenant { get; set; }
         public string Product { get; set; }
         public string Component { get; set; }
         public string Topic { get; set; }
 
-        public bool IsLocal { get; set; }
-
         public Guid Id { get; set; }
         public string ProducerName { get; set; }
 
-        public Producer()
-        {
-            IsLocal = true;
-        }
+        public ConnectionType ConnectionType { get; set; }
     }
 }

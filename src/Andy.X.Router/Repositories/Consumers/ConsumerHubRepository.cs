@@ -1,6 +1,7 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Model.Consumers;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,6 +29,17 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
             if (_consumers.ContainsKey(consumerName))
             {
                 _consumers[consumerName].Connections.Add(connectionId);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool AddExternalConsumerConnection(string consumerId)
+        {
+            if (_consumers.ContainsKey(consumerId))
+            {
+                _consumers[consumerId].Connections.Add($"EXTERNAL-{Guid.NewGuid()}");
                 return true;
             }
 
@@ -89,6 +101,19 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
             if (_consumers.ContainsKey(consumerName))
             {
                 _consumers[consumerName].Connections.Remove(connectionId);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool RemoveExternalConsumerConnection(string consumerId)
+        {
+            if (_consumers.ContainsKey(consumerId))
+            {
+                if (_consumers[consumerId].ExternalConnections.Count > 0)
+                    _consumers[consumerId].ExternalConnections.RemoveAt(0);
+
                 return true;
             }
 
