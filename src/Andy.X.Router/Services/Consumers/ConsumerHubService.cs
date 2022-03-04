@@ -61,6 +61,10 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                         continue;
                 }
 
+                // skip external consumers
+                if (consumer.Value.Connections.Count == 0)
+                    continue;
+
                 if (consumer.Value.CurrentConnectionIndex >= consumer.Value.Connections.Count)
                     consumer.Value.CurrentConnectionIndex = 0;
 
