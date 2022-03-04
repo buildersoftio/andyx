@@ -104,6 +104,10 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
             var consumer = _consumerHubRepository.GetConsumerById(consumerId);
             if (consumer != null)
             {
+                // skip external consumers
+                if (consumer.Connections.Count == 0)
+                    return;
+
                 if (consumer.CurrentConnectionIndex >= consumer.Connections.Count)
                     consumer.CurrentConnectionIndex = 0;
 
