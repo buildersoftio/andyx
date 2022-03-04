@@ -61,6 +61,10 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                         continue;
                 }
 
+                // skip external consumers
+                if (consumer.Value.Connections.Count == 0)
+                    continue;
+
                 if (consumer.Value.CurrentConnectionIndex >= consumer.Value.Connections.Count)
                     consumer.Value.CurrentConnectionIndex = 0;
 
@@ -100,6 +104,10 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
             var consumer = _consumerHubRepository.GetConsumerById(consumerId);
             if (consumer != null)
             {
+                // skip external consumers
+                if (consumer.Connections.Count == 0)
+                    return;
+
                 if (consumer.CurrentConnectionIndex >= consumer.Connections.Count)
                     consumer.CurrentConnectionIndex = 0;
 
