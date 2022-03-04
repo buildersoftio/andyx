@@ -46,6 +46,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             this.storageFactory = storageFactory;
             this.agentFactory = agentFactory;
             this.consumerHubService = consumerHubService;
+            this.producerHubService = producerHubService;
         }
 
         public override Task OnConnectedAsync()

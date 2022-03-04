@@ -18,7 +18,7 @@ namespace Buildersoft.Andy.X.Router.Services.Producers
 
         public Task ConnectProducerFromOtherNode(NotifyProducerConnectionDetails notifyProducerConnectionDetails)
         {
-            _producerHubRepository.AddProducer($"EXTERNAL{Guid.NewGuid()}", new Model.Producers.Producer()
+            _producerHubRepository.AddProducer($"EXTERNAL-{Guid.NewGuid()}", new Model.Producers.Producer()
             {
                 IsLocal = false,
                 Component = notifyProducerConnectionDetails.Component,
