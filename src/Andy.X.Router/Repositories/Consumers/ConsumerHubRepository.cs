@@ -39,7 +39,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
         {
             if (_consumers.ContainsKey(consumerId))
             {
-                _consumers[consumerId].Connections.Add($"EXTERNAL-{Guid.NewGuid()}");
+                _consumers[consumerId].ExternalConnections.Add($"EXTERNAL-{Guid.NewGuid()}");
                 return true;
             }
 
@@ -87,7 +87,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
         {
             if (_consumers.ContainsKey(consumerName))
             {
-                if (_consumers[consumerName].Connections.Count == 0)
+                if (_consumers[consumerName].Connections.Count == 0 && _consumers[consumerName].ExternalConnections.Count == 0)
                     return _consumers.TryRemove(consumerName, out _);
 
                 return true;
