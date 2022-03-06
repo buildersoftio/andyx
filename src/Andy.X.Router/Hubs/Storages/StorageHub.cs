@@ -15,6 +15,7 @@ using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Router.Hubs.Storages
@@ -134,9 +135,12 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             await consumerHubService.TransmitMessage(messageDetails, true);
         }
 
-        public async Task TransmitMessagesToConsumer(ConsumerMessage message)
+        public async Task TransmitMessagesToConsumer(List<ConsumerMessage> messages)
         {
-            await consumerHubService.TransmitMessageToConsumer(message);
+            foreach (var message in messages)
+            {
+                await consumerHubService.TransmitMessageToConsumer(message);
+            }
         }
 
 
