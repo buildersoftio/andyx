@@ -6,29 +6,52 @@ using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
+using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Producers;
 using Buildersoft.Andy.X.Model.Storages.Requests.Components;
 using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using Buildersoft.Andy.X.Router.Hubs.Storages;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace Buildersoft.Andy.X.Router.Services.Storages
 {
     public class StorageHubService : IStorageHubService
     {
+        private readonly ILogger<StorageHubService> _logger;
         private readonly IHubContext<StorageHub, IStorageHub> _hub;
         private readonly IStorageHubRepository _storageHubRepository;
+        private readonly StorageConfiguration _storageConfiguration;
 
-        public StorageHubService(IHubContext<StorageHub, IStorageHub> hub,
-            IStorageHubRepository storageHubRepository)
+        private readonly ConcurrentQueue<Model.Storages.Events.Messages.MessageStoredDetails> _messagesBufferStore;
+
+        private readonly Timer _storeMessagesTimer;
+
+        public StorageHubService(ILogger<StorageHubService> logger, IHubContext<StorageHub, IStorageHub> hub,
+            IStorageHubRepository storageHubRepository,
+            StorageConfiguration storageConfiguration)
         {
+            _logger = logger;
             _hub = hub;
             _storageHubRepository = storageHubRepository;
+            _storageConfiguration = storageConfiguration;
+            _messagesBufferStore = new ConcurrentQueue<Model.Storages.Events.Messages.MessageStoredDetails>();
+
+            _storeMessagesTimer = new Timer();
+            _storeMessagesTimer.Interval = _storageConfiguration.TimeoutBatchMs;
+            _storeMessagesTimer.AutoReset = true;
+            _storeMessagesTimer.Elapsed += _storeMessagesTimer_Elapsed;
+            _storeMessagesTimer.Start();
         }
+
 
         public async Task ConnectConsumerAsync(Consumer consumer)
         {
@@ -246,71 +269,24 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
         }
         public async Task StoreMessage(Message message)
         {
-            // TODO: Implement Geo-Replication Settings for this cluster.
-            // Check if geo-replication is enabled, add geo-replication feature to appsettings.json soo the developer can config from env-variables.
-            // WE are simulating that Geo-Replication is off.
-
-            bool IsGeoReplicationActive = false;
-            if (IsGeoReplicationActive == true)
+            _messagesBufferStore.Enqueue(new Model.Storages.Events.Messages.MessageStoredDetails()
             {
-                // Geo-replication is on
-                foreach (var storage in _storageHubRepository.GetStorages())
-                {
-                    //if (storage.Value.ActiveAgentIndex >= storage.Value.Agents.Count)
-                    //    storage.Value.ActiveAgentIndex = 0;
+                Id = message.Id,
+                Tenant = message.Tenant,
+                Product = message.Product,
+                Component = message.Component,
+                Topic = message.Topic,
+                ConsumersCurrentTransmitted = message.ConsumersCurrentTransmitted,
+                MessageRaw = message.MessageRaw,
+                Headers = message.Headers,
+                SentDate = message.SentDate
+            });
 
-                    int index = new Random().Next(storage.Value.Agents.Count);
-
-                    if (!storage.Value.Agents.IsEmpty)
-                    {
-                        await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).MessageStored(new Model.Storages.Events.Messages.MessageStoredDetails()
-                        {
-                            Id = message.Id,
-                            Tenant = message.Tenant,
-                            Product = message.Product,
-                            Component = message.Component,
-                            Topic = message.Topic,
-                            ConsumersCurrentTransmitted = message.ConsumersCurrentTransmitted,
-                            MessageRaw = message.MessageRaw,
-                            Headers = message.Headers,
-                            SentDate = message.SentDate
-                        });
-                    }
-                    //storage.Value.ActiveAgentIndex++;
-                }
-            }
-            else
+            // check if here are 3k messages in the queue
+            if (_messagesBufferStore.Count >= _storageConfiguration.BatchSize)
             {
-                // Geo-replication is off - storages are shared
-                int indexOfStorage = new Random().Next(_storageHubRepository.GetStorages().Count);
-
-                if (!_storageHubRepository.GetStorages().IsEmpty)
-                {
-                    var storage = _storageHubRepository.GetStorages().ElementAt(indexOfStorage);
-                    int index = new Random().Next(storage.Value.Agents.Count);
-
-                    // For Storages this feature will not work for now. Why?- When more than one producer will produce at the same time, the ActiveAgnetIndex will increase
-                    // and it will fail to out of bound index.
-                    //if (storage.Value.ActiveAgentIndex >= storage.Value.Agents.Count)
-                    //    storage.Value.ActiveAgentIndex = 0;
-
-                    if (!storage.Value.Agents.IsEmpty)
-                    {
-                        await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).MessageStored(new Model.Storages.Events.Messages.MessageStoredDetails()
-                        {
-                            Id = message.Id,
-                            Tenant = message.Tenant,
-                            Product = message.Product,
-                            Component = message.Component,
-                            Topic = message.Topic,
-                            ConsumersCurrentTransmitted = message.ConsumersCurrentTransmitted,
-                            MessageRaw = message.MessageRaw,
-                            Headers = message.Headers,
-                            SentDate = message.SentDate,
-                        });
-                    }
-                    //storage.Value.ActiveAgentIndex++;
-                }
+                if (isProcessing == false)
+                    await Task.Run(() => _storeMessagesTimer_Elapsed(this, null));
             }
         }
         public async Task AcknowledgeMessage(string tenant, string product, string component, string topic, string consumerName, bool isAcknowledged, Guid messageId)
@@ -376,7 +352,6 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
-
         public async Task SendCreateTenantTokenStorage(CreateTenantTokenDetails createTenantTokenDetails)
         {
             foreach (var storage in _storageHubRepository.GetStorages())
@@ -394,7 +369,6 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
-
         public async Task SendRevokeComponentTokenStorage(RevokeComponentTokenDetails revokeComponentTokenDetails)
         {
             foreach (var storage in _storageHubRepository.GetStorages())
@@ -412,7 +386,6 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
-
         public async Task SendRevokeTenantTokenStorage(RevokeTenantTokenDetails revokeTenantTokenDetails)
         {
             foreach (var storage in _storageHubRepository.GetStorages())
@@ -430,7 +403,6 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
-
         public async Task SendCreateTenantStorage(CreateTenantDetails createTenantDetails)
         {
             foreach (var storage in _storageHubRepository.GetStorages())
@@ -449,5 +421,86 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
+
+
+
+        #region Store Batch Message to Storage
+
+        private bool isProcessing = false;
+        private async void _storeMessagesTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            isProcessing = true;
+            _storeMessagesTimer.Stop();
+            if (_messagesBufferStore.Count >= _storageConfiguration.BatchSize)
+            {
+                await PrepareMessagesToStore(_storageConfiguration.BatchSize);
+            }
+            else
+            {
+                if (_messagesBufferStore.Count > 0)
+                {
+                    await PrepareMessagesToStore(_messagesBufferStore.Count);
+                }
+            }
+            _storeMessagesTimer.Start();
+            isProcessing = false;
+        }
+
+        private async Task PrepareMessagesToStore(int count)
+        {
+            var messagesToStore = new List<Model.Storages.Events.Messages.MessageStoredDetails>();
+            for (int i = 0; i < count; i++)
+            {
+                Model.Storages.Events.Messages.MessageStoredDetails msg;
+                _messagesBufferStore.TryDequeue(out msg);
+                messagesToStore.Add(msg);
+            }
+            await SendBatchMessages(messagesToStore);
+        }
+
+        private async Task SendBatchMessages(List<Model.Storages.Events.Messages.MessageStoredDetails> messageStoreds)
+        {
+            // TODO: Implement Geo-Replication Settings for this cluster.
+            // Check if geo-replication is enabled, add geo-replication feature to appsettings.json soo the developer can config from env-variables.
+            // WE are simulating that Geo-Replication is off.
+
+            bool IsGeoReplicationActive = false;
+            if (IsGeoReplicationActive == true)
+            {
+                // Geo-replication is on
+                foreach (var storage in _storageHubRepository.GetStorages())
+                {
+                    if (storage.Value.ActiveAgentIndex >= storage.Value.Agents.Count)
+                        storage.Value.ActiveAgentIndex = 0;
+
+
+                    if (!storage.Value.Agents.IsEmpty)
+                    {
+                        await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(storage.Value.ActiveAgentIndex)).MessagesStored(messageStoreds);
+                    }
+                    storage.Value.ActiveAgentIndex++;
+                }
+            }
+            else
+            {
+                // Geo-replication is off - storages are shared
+                int indexOfStorage = new Random().Next(_storageHubRepository.GetStorages().Count);
+
+                if (!_storageHubRepository.GetStorages().IsEmpty)
+                {
+                    var storage = _storageHubRepository.GetStorages().ElementAt(indexOfStorage);
+
+                    if (storage.Value.ActiveAgentIndex >= storage.Value.Agents.Count)
+                        storage.Value.ActiveAgentIndex = 0;
+
+                    if (!storage.Value.Agents.IsEmpty)
+                    {
+                        await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(storage.Value.ActiveAgentIndex)).MessagesStored(messageStoreds);
+                    }
+                    storage.Value.ActiveAgentIndex++;
+                }
+            }
+        }
+        #endregion
     }
 }
