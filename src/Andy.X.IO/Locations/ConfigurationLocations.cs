@@ -20,6 +20,11 @@ namespace Buildersoft.Andy.X.IO.Locations
             return Path.Combine(ConfigDirectory(), "tenants.json");
         }
 
+        public static string GetStorageConfigurationFile()
+        {
+            return Path.Combine(ConfigDirectory(), "storage_config.json");
+        }
+
         public static string GetUsersConfigurationFile()
         {
             return Path.Combine(ConfigDirectory(), "users_config.json");

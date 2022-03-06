@@ -7,6 +7,7 @@ using Buildersoft.Andy.X.Model.Storages.Events.Products;
 using Buildersoft.Andy.X.Model.Storages.Events.Tenants;
 using Buildersoft.Andy.X.Model.Storages.Events.Topics;
 using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages
@@ -49,6 +50,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages
         Task TopicDeleted(TopicDeletedDetails topic);
 
         Task MessageStored(MessageStoredDetails message);
+        Task MessagesStored(List<MessageStoredDetails> messages);
         Task MessageAcknowledged(MessageAcknowledgedDetails message);
     }
 }
