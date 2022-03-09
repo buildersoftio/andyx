@@ -186,9 +186,17 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             return base.OnDisconnectedAsync(exception);
         }
 
-        public async Task TransmitMessage(Message messageDetails)
+        public async Task TransmitMessage(Message message)
         {
-            await consumerHubService.TransmitMessage(messageDetails);
+            await consumerHubService.TransmitMessage(message);
+        }
+
+        public async Task TransmitMessages(List<Message> messages)
+        {
+            foreach (var message in messages)
+            {
+                await consumerHubService.TransmitMessage(message);
+            }
         }
     }
 }
