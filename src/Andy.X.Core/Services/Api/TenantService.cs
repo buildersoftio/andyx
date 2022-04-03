@@ -119,7 +119,6 @@ namespace Buildersoft.Andy.X.Core.Services.Api
             if (tenant != null)
             {
                 tenant.Products.Clear();
-                tenant.Settings.Tokens.Clear();
             }
             return tenant;
         }
