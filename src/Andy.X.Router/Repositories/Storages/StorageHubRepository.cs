@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Model.Storages;
 using Buildersoft.Andy.X.Model.Storages.Agents;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Linq;
 
 namespace Buildersoft.Andy.X.Router.Repositories.Storages
 {
@@ -71,6 +72,11 @@ namespace Buildersoft.Andy.X.Router.Repositories.Storages
             }
 
             return _storages[storageName].Agents;
+        }
+
+        public Storage GetStorageByAgentId(string agentId)
+        {
+            return _storages.Values.Where(x => x.Agents.ContainsKey(agentId)).FirstOrDefault();
         }
 
         public Storage GetStorageByName(string storageName)
