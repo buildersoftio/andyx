@@ -19,7 +19,7 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
             if (tenantToken.IsActive != true)
                 return false;
 
-            if (tenantToken.ExpireDate > DateTime.Now)
+            if (tenantToken.ExpireDate < DateTime.Now)
                 return false;
 
             // TBD should we validate token with build-in authorization from .NET?
@@ -43,7 +43,7 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
             if (componentToken.IsActive != true)
                 return false;
 
-            if (componentToken.ExpireDate > DateTime.Now)
+            if (componentToken.ExpireDate < DateTime.Now)
                 return false;
 
             if (isConsumer == true)
