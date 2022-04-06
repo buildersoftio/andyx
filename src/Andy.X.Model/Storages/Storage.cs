@@ -19,11 +19,15 @@ namespace Buildersoft.Andy.X.Model.Storages
         public int AgentMaxNumber { get; set; }
         public int AgentMinNumber { get; set; }
 
+        public StorageMetrics StorageMetrics { get; set; }
 
         public Storage()
         {
             StorageId = Guid.NewGuid();
             Agents = new ConcurrentDictionary<string, Agent>();
+
+            StorageMetrics = new StorageMetrics();
+
             ActiveAgentIndex = 0;
         }
     }

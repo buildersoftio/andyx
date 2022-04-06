@@ -133,6 +133,17 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
         public async Task TransmitMessageToThisNodeConsumers(Message messageDetails)
         {
             await consumerHubService.TransmitMessage(messageDetails, true);
+            IncreaseOutRateMetrics();
+        }
+
+        private void IncreaseOutRateMetrics(int count = 1)
+        {
+            string clientConnectionId = Context.ConnectionId;
+            var storage = storageHubRepository.GetStorageByAgentId(clientConnectionId);
+            if (storage != null)
+            {
+                storage.StorageMetrics.OutRate = storage.StorageMetrics.OutRate + count;
+            }
         }
 
         public async Task TransmitMessagesToConsumer(List<ConsumerMessage> messages)
@@ -141,6 +152,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             {
                 await consumerHubService.TransmitMessageToConsumer(message);
             }
+
+            IncreaseOutRateMetrics(messages.Count);
         }
 
 

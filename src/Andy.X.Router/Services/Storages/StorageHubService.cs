@@ -9,6 +9,7 @@ using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Producers;
+using Buildersoft.Andy.X.Model.Storages;
 using Buildersoft.Andy.X.Model.Storages.Requests.Components;
 using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using Buildersoft.Andy.X.Router.Hubs.Storages;
@@ -18,7 +19,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Timers;
 
@@ -479,6 +479,8 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                         await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(storage.Value.ActiveAgentIndex)).MessagesStored(messageStoreds);
                     }
                     storage.Value.ActiveAgentIndex++;
+
+                    IncreaseInRateMetrics(storage.Value, messageStoreds.Count);
                 }
             }
             else
@@ -498,8 +500,16 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                         await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(storage.Value.ActiveAgentIndex)).MessagesStored(messageStoreds);
                     }
                     storage.Value.ActiveAgentIndex++;
+                    IncreaseInRateMetrics(storage.Value, messageStoreds.Count);
                 }
             }
+        }
+        #endregion
+
+        #region InRate Metrics
+        private void IncreaseInRateMetrics(Storage storage, int count = 1)
+        {
+            storage.StorageMetrics.InRate = storage.StorageMetrics.InRate + count;
         }
         #endregion
     }

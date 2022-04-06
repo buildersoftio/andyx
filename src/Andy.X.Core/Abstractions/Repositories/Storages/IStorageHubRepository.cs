@@ -11,8 +11,10 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages
         bool RemoveStorage(string storageName);
         bool RemoveAgent(string storageName, string connectionId);
         bool RemoveAgent(string connectionId);
+        
 
         Storage GetStorageByName(string storageName);
+        Storage GetStorageByAgentId(string agentId);
         Agent GetAgentById(string storageName, string connectionId);
         Agent GetAgentById(string connectionId);
         ConcurrentDictionary<string, Storage> GetStorages();
