@@ -14,9 +14,14 @@ namespace Buildersoft.Andy.X.Model.Producers
         public Guid Id { get; set; }
         public string ProducerName { get; set; }
 
+        public DateTime ConnectedDate { get; set; }
+        public long CountMessagesProducedSinceConnected { get; set; }
+
         public Producer()
         {
             IsLocal = true;
+            ConnectedDate = DateTime.Now;
+            CountMessagesProducedSinceConnected = 0;
         }
     }
 }

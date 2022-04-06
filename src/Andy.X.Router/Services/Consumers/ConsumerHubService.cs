@@ -12,7 +12,6 @@ using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -86,6 +85,7 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     SentDate = message.SentDate
                 });
 
+                consumer.Value.CountMessagesConsumedSinceConnected++;
                 consumer.Value.CurrentConnectionIndex++;
 
                 if (isStoredAlready != true)
@@ -128,6 +128,8 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
 
                     SentDate = consumerMessage.Message.SentDate
                 });
+
+                consumer.CountMessagesConsumedSinceConnected++;
 
                 consumer.CurrentConnectionIndex++;
             }

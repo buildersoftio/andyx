@@ -223,7 +223,22 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         {
             // is a check to ignore if the topic is not persistent.
             if (tenantRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic).TopicSettings.IsPersistent == true)
+            {
                 await storageHubService.AcknowledgeMessage(message.Tenant, message.Product, message.Component, message.Topic, message.Consumer, message.IsAcknowledged, message.MessageId);
+            }
+
+            IncreaseMessageAcknowledgedCount(message.IsAcknowledged);
+        }
+
+
+        private void IncreaseMessageAcknowledgedCount(bool isAcked)
+        {
+            string clientConnectionId = Context.ConnectionId;
+            Consumer consumer = consumerHubRepository.GetConsumerByConnectionId(clientConnectionId);
+            if (isAcked == true)
+                consumer.CountMessagesAcknowledgedSinceConnected++;
+            else
+                consumer.CountMessagesUnacknowledgedSinceConnected++;
         }
     }
 }
