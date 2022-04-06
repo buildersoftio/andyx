@@ -189,6 +189,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         public async Task TransmitMessage(Message message)
         {
             await consumerHubService.TransmitMessage(message);
+            IncreaseMessageProducedCount();
         }
 
         public async Task TransmitMessages(List<Message> messages)
@@ -197,6 +198,15 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             {
                 await consumerHubService.TransmitMessage(message);
             }
+
+            IncreaseMessageProducedCount(messages.Count);
+        }
+
+        private void IncreaseMessageProducedCount(int count = 1)
+        {
+            string clientConnectionId = Context.ConnectionId;
+            var producer = producerHubRepository.GetProducerById(clientConnectionId);
+            producer.CountMessagesProducedSinceConnected = producer.CountMessagesProducedSinceConnected + count;
         }
     }
 }

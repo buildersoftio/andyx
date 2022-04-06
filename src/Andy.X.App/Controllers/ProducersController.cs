@@ -45,7 +45,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{connectionId}")]
-        public ActionResult<Producer> GetConsumer(string connectionId)
+        public ActionResult<Producer> GetProducers(string connectionId)
         {
             var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
             if (isFromCli != "")

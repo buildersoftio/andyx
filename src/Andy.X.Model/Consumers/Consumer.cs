@@ -23,12 +23,20 @@ namespace Buildersoft.Andy.X.Model.Consumers
         public SubscriptionType SubscriptionType { get; set; }
         public ConsumerSettings ConsumerSettings { get; set; }
 
+        public DateTime ConnectedDate { get; set; }
+        public long CountMessagesConsumedSinceConnected { get; set; }
+        public long CountMessagesAcknowledgedSinceConnected { get; set; }
+        public long CountMessagesUnacknowledgedSinceConnected { get; set; }
+
         public Consumer()
         {
             Connections = new List<string>();
             ExternalConnections = new List<string>();
 
             ConsumerSettings = new ConsumerSettings();
+            ConnectedDate = DateTime.Now;
+            CountMessagesAcknowledgedSinceConnected = 0;
+            CountMessagesUnacknowledgedSinceConnected = 0;
 
             // is local -> flag if consumer is conencted to this node
             IsLocal = true;
