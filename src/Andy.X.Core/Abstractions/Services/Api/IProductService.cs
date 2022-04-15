@@ -7,5 +7,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Api
     {
         Product GetProduct(string tenantName, string productName);
         List<Product> GetProducts(string tenantName);
+
+        bool AddProduct(string tenant, string productName);
     }
 }

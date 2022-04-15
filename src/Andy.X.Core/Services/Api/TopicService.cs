@@ -1,4 +1,5 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Api;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Microsoft.Extensions.Logging;
@@ -11,18 +12,27 @@ namespace Buildersoft.Andy.X.Core.Services.Api
     {
         private readonly ILogger<TopicService> _logger;
         private readonly ITenantRepository _tenantRepository;
+        private readonly ITenantFactory _tenantFactory;
 
-        public TopicService(ILogger<TopicService> logger, ITenantRepository tenantRepository)
+        public TopicService(ILogger<TopicService> logger, ITenantRepository tenantRepository, ITenantFactory tenantFactory)
         {
             _logger = logger;
             _tenantRepository = tenantRepository;
+            _tenantFactory = tenantFactory;
+        }
+
+        public bool AddTopic(string tenantName, string productName, string componentName, string topicName)
+        {
+            return _tenantRepository
+                .AddTopic(tenantName, productName, componentName, topicName, _tenantFactory.CreateTopic(topicName));
         }
 
         public Topic GetTopic(string tenantName, string productName, string componentName, string topicName)
         {
             try
             {
-                return _tenantRepository.GetTopic(tenantName, productName, componentName, topicName);
+                return _tenantRepository
+                    .GetTopic(tenantName, productName, componentName, topicName);
             }
             catch (Exception)
             {
