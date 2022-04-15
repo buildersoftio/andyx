@@ -1,5 +1,7 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Services.Api;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Api.Lineage;
 using Buildersoft.Andy.X.Core.Services.Api;
+using Buildersoft.Andy.X.Core.Services.Api.Lineage;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Buildersoft.Andy.X.Extensions.DependencyInjection
@@ -12,6 +14,7 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
             services.AddSingleton<IProductService, ProductService>();
             services.AddSingleton<IComponentService, ComponentService>();
             services.AddSingleton<ITopicService, TopicService>();
+            services.AddSingleton<IStreamLineageService, StreamLineageService>();
         }
     }
 }
