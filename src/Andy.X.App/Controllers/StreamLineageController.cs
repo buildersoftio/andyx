@@ -14,7 +14,7 @@ namespace Buildersoft.Andy.X.Controllers
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ApiController]
-    // [Authorize]
+    [Authorize]
     public class StreamLineageController : ControllerBase
     {
         private readonly ILogger<StreamLineageController> _logger;
