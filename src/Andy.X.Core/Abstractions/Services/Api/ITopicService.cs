@@ -7,5 +7,6 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Api
     {
         Topic GetTopic(string tenantName, string productName, string componentName, string topicName);
         List<Topic> GetTopics(string tenantName, string productName, string componentName);
+        bool AddTopic(string tenantName, string productName, string componentName, string topicName);
     }
 }

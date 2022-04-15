@@ -1,4 +1,5 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Api;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.IO.Readers;
@@ -17,14 +18,15 @@ namespace Buildersoft.Andy.X.Core.Services.Api
         private readonly ILogger<ComponentService> _logger;
         private readonly ITenantRepository _tenantRepository;
         private readonly IStorageHubService _storageHubService;
+        private readonly ITenantFactory _tenantFactory;
 
-        public ComponentService(ILogger<ComponentService> logger, ITenantRepository tenantRepository, IStorageHubService storageHubService)
+        public ComponentService(ILogger<ComponentService> logger, ITenantRepository tenantRepository, IStorageHubService storageHubService, ITenantFactory tenantFactory)
         {
             _logger = logger;
             _tenantRepository = tenantRepository;
             _storageHubService = storageHubService;
+            _tenantFactory = tenantFactory;
         }
-
         public string AddComponentToken(string tenantName, string productName, string componentName, ComponentToken componentToken, bool shoudGenerateToken = true)
         {
             List<TenantConfiguration> tenants = TenantIOReader.ReadTenantsFromConfigFile();
@@ -185,6 +187,20 @@ namespace Buildersoft.Andy.X.Core.Services.Api
             }
 
             return false;
+        }
+
+        public bool AddComponent(string tenantName, string productName, string componentName, ComponentSettings componentSettings)
+        {
+            return _tenantRepository
+                .AddComponent(tenantName,
+                    productName,
+                    componentName,
+                    _tenantFactory
+                        .CreateComponent(componentName,
+                            componentSettings.AllowSchemaValidation,
+                            componentSettings.AllowTopicCreation,
+                            componentSettings.EnableAuthorization,
+                            tokens: new List<ComponentToken>()));
         }
     }
 }
