@@ -1,6 +1,7 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
 using Buildersoft.Andy.X.Model.Producers;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,6 +44,23 @@ namespace Buildersoft.Andy.X.Router.Repositories.Producers
                 && x.Value.Component == component
                 && x.Value.Topic == topic
                 && x.Value.ProducerName == producerName).FirstOrDefault();
+        }
+
+        public Dictionary<string, Producer> GetProducers(string tenant, string product, string component, string topic)
+        {
+            try
+            {
+                return _producers
+                .Where(x => x.Value.Tenant == tenant &&
+                       x.Value.Product == product &&
+                       x.Value.Component == component &&
+                       x.Value.Topic == topic)
+                .ToDictionary(x => x.Key, x => x.Value);
+            }
+            catch (Exception)
+            {
+                return new Dictionary<string, Producer>();
+            }
         }
 
         public Dictionary<string, Producer> GetProducersByTenantName(string tenant)

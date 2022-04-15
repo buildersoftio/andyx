@@ -72,10 +72,10 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
                     && x.Value.Product == product
                     && x.Value.Component == component
                     && x.Value.Topic == topic)
-            .ToDictionary(x => x.Key, x => x.Value);
+                        .ToDictionary(x => x.Key, x => x.Value);
             }
 
-            catch (System.Exception)
+            catch (Exception)
             {
                 // return Empty Dictionary, there is not consumer connected.
                 return new Dictionary<string, Consumer>();
