@@ -17,7 +17,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             Console.Write("  ###"); Console.ForegroundColor = generalColor; Console.WriteLine("      ###");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write("    ###"); Console.ForegroundColor = generalColor; Console.Write("  ###");
-            Console.WriteLine("       Andy X 2.1.0-preview. Copyright (C) 2022 Buildersoft LLC");
+            Console.WriteLine("       Andy X 2.1.0. Copyright (C) 2022 Buildersoft LLC");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write("      ####         "); Console.ForegroundColor = generalColor; Console.WriteLine("Licensed under the Apache License 2.0.  See https://bit.ly/3DqVQbx");
             Console.ForegroundColor = ConsoleColor.Red;
