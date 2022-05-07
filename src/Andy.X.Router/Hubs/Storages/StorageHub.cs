@@ -3,13 +3,19 @@ using Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Producers;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Storages;
 using Buildersoft.Andy.X.Model.Storages.Agents;
+using Buildersoft.Andy.X.Model.Storages.Requests.Components;
+using Buildersoft.Andy.X.Model.Storages.Requests.Consumer;
+using Buildersoft.Andy.X.Model.Storages.Requests.Producer;
+using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Router.Hubs.Storages
@@ -23,6 +29,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
         private readonly IStorageFactory storageFactory;
         private readonly IAgentFactory agentFactory;
         private readonly IConsumerHubService consumerHubService;
+        private readonly IProducerHubService producerHubService;
 
         public StorageHub(ILogger<StorageHub> logger,
             CredentialsConfiguration credentialsConfiguration,
@@ -30,7 +37,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             ITenantRepository tenantMemoryRepository,
             IStorageFactory storageFactory,
             IAgentFactory agentFactory,
-            IConsumerHubService consumerHubService)
+            IConsumerHubService consumerHubService,
+            IProducerHubService producerHubService)
         {
             this.logger = logger;
             this.credentialsConfiguration = credentialsConfiguration;
@@ -39,6 +47,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             this.storageFactory = storageFactory;
             this.agentFactory = agentFactory;
             this.consumerHubService = consumerHubService;
+            this.producerHubService = producerHubService;
         }
 
         public override Task OnConnectedAsync()
@@ -82,8 +91,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
             }
 
             storageToRegister = storageHubRepository.GetStorageByName(headers["x-andyx-storage-name"].ToString());
-            if (storageToRegister.Agents.Count - 1 == storageToRegister.AgnetMaxNumber)
-                return base.OnDisconnectedAsync(new Exception($"There are '{storageToRegister.AgnetMaxNumber}' agents connected, connection refused"));
+            if (storageToRegister.Agents.Count - 1 == storageToRegister.AgentMaxNumber)
+                return base.OnDisconnectedAsync(new Exception($"There are '{storageToRegister.AgentMaxNumber}' agents connected, connection refused"));
 
             Agent agentToRegister = agentFactory.CreateAgent(agentId, clientConnectionId, $"{storageName}-{Guid.NewGuid()}");
             storageHubRepository.AddAgent(storageName, clientConnectionId, agentToRegister);
@@ -124,11 +133,67 @@ namespace Buildersoft.Andy.X.Router.Hubs.Storages
         public async Task TransmitMessageToThisNodeConsumers(Message messageDetails)
         {
             await consumerHubService.TransmitMessage(messageDetails, true);
+            IncreaseOutRateMetrics();
         }
 
-        public async Task TransmitMessagesToConsumer(ConsumerMessage message)
+        private void IncreaseOutRateMetrics(int count = 1)
         {
-            await consumerHubService.TransmitMessageToConsumer(message);
+            string clientConnectionId = Context.ConnectionId;
+            var storage = storageHubRepository.GetStorageByAgentId(clientConnectionId);
+            if (storage != null)
+            {
+                storage.StorageMetrics.OutRate = storage.StorageMetrics.OutRate + count;
+            }
+        }
+
+        public async Task TransmitMessagesToConsumer(List<ConsumerMessage> messages)
+        {
+            foreach (var message in messages)
+            {
+                await consumerHubService.TransmitMessageToConsumer(message);
+            }
+
+            IncreaseOutRateMetrics(messages.Count);
+        }
+
+
+        public async Task CreateTenant(CreateTenantDetails createTenantDetails)
+        {
+            await consumerHubService.CreateTenantToThisNode(createTenantDetails);
+        }
+
+        public async Task CreateTenantToken(CreateTenantTokenDetails createTenantDetails)
+        {
+            await consumerHubService.CreateTenantTokenToThisNode(createTenantDetails);
+        }
+        public async Task RevokeTenantToken(RevokeTenantTokenDetails revokeTenantDetails)
+        {
+            await consumerHubService.RevokeTenantTokenToThisNode(revokeTenantDetails);
+        }
+
+        public async Task CreateComponentToken(CreateComponentTokenDetails createComponentTokenDetails)
+        {
+            await consumerHubService.CreateComponentTokenToThisNode(createComponentTokenDetails);
+        }
+        public async Task RevokeComponentToken(RevokeComponentTokenDetails revokeComponentTokenDetails)
+        {
+            await consumerHubService.RevokeComponentTokenToThisNode(revokeComponentTokenDetails);
+        }
+
+        public async Task NotifyNodesForConsumerConnection(NotifyConsumerConnectionDetails obj)
+        {
+            if (obj.ConnectionType == ConnectionType.Connected)
+                await consumerHubService.ConnectConsumerFromOtherNode(obj);
+            else
+                await consumerHubService.DisconnectConsumerFromOtherNode(obj);
+        }
+
+        public async Task NotifyNodesForProducerConnection(NotifyProducerConnectionDetails obj)
+        {
+            if (obj.ConnectionType == ConnectionType.Connected)
+                await producerHubService.ConnectProducerFromOtherNode(obj);
+            else
+                await producerHubService.DisconnectProducerFromOtherNode(obj);
         }
     }
 }

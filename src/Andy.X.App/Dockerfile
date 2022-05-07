@@ -10,6 +10,7 @@ WORKDIR /src
 COPY ["src/Andy.X.App/Andy.X.App.csproj", "src/Andy.X.App/"]
 COPY ["src/Andy.X.Utility/Andy.X.Utility.csproj", "src/Andy.X.Utility/"]
 COPY ["src/Andy.X.Router/Andy.X.Router.csproj", "src/Andy.X.Router/"]
+COPY ["src/Andy.X.IO/Andy.X.IO.csproj", "src/Andy.X.IO/"]
 COPY ["src/Andy.X.Core/Andy.X.Core.csproj", "src/Andy.X.Core/"]
 COPY ["src/Andy.X.Model/Andy.X.Model.csproj", "src/Andy.X.Model/"]
 RUN dotnet restore "src/Andy.X.App/Andy.X.App.csproj"

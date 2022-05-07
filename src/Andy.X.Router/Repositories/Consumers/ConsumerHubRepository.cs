@@ -1,6 +1,7 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Model.Consumers;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,12 +35,28 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
             return false;
         }
 
+        public bool AddExternalConsumerConnection(string consumerId)
+        {
+            if (_consumers.ContainsKey(consumerId))
+            {
+                _consumers[consumerId].ExternalConnections.Add($"EXTERNAL-{Guid.NewGuid()}");
+                return true;
+            }
+
+            return false;
+        }
+
+        public List<string> GetAllConsumerNames()
+        {
+            return _consumers.Keys.ToList();
+        }
+
         public Consumer GetConsumerByConnectionId(string connectionId)
         {
             return _consumers.Values.Where(x => x.Connections.Contains(connectionId)).FirstOrDefault();
         }
 
-        public Consumer GetConsumerByName(string consumerName)
+        public Consumer GetConsumerById(string consumerName)
         {
             if (_consumers.ContainsKey(consumerName))
                 return _consumers[consumerName];
@@ -55,10 +72,10 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
                     && x.Value.Product == product
                     && x.Value.Component == component
                     && x.Value.Topic == topic)
-            .ToDictionary(x => x.Key, x => x.Value);
+                        .ToDictionary(x => x.Key, x => x.Value);
             }
 
-            catch (System.Exception)
+            catch (Exception)
             {
                 // return Empty Dictionary, there is not consumer connected.
                 return new Dictionary<string, Consumer>();
@@ -70,7 +87,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
         {
             if (_consumers.ContainsKey(consumerName))
             {
-                if (_consumers[consumerName].Connections.Count == 0)
+                if (_consumers[consumerName].Connections.Count == 0 && _consumers[consumerName].ExternalConnections.Count == 0)
                     return _consumers.TryRemove(consumerName, out _);
 
                 return true;
@@ -84,6 +101,19 @@ namespace Buildersoft.Andy.X.Router.Repositories.Consumers
             if (_consumers.ContainsKey(consumerName))
             {
                 _consumers[consumerName].Connections.Remove(connectionId);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool RemoveExternalConsumerConnection(string consumerId)
+        {
+            if (_consumers.ContainsKey(consumerId))
+            {
+                if (_consumers[consumerId].ExternalConnections.Count > 0)
+                    _consumers[consumerId].ExternalConnections.RemoveAt(0);
+
                 return true;
             }
 

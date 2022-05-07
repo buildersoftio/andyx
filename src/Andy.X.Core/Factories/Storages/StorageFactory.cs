@@ -17,8 +17,8 @@ namespace Buildersoft.Andy.X.Core.Factories.Storages
             return new Storage()
             {
                 StorageName = storageName,
-                AgnetMaxNumber = agnetMaxNumber,
-                AgnetMinNumber = agnetMinNumber,
+                AgentMaxNumber = agnetMaxNumber,
+                AgentMinNumber = agnetMinNumber,
                 StorageStatus = storageStatus,
                 IsLoadBalanced = isLoadBalanced,
                 Agents = new System.Collections.Concurrent.ConcurrentDictionary<string, Agent>()

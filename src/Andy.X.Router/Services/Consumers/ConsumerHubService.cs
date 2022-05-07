@@ -1,10 +1,14 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Api;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Consumers;
+using Buildersoft.Andy.X.Model.Storages.Requests.Components;
+using Buildersoft.Andy.X.Model.Storages.Requests.Consumer;
+using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -15,23 +19,31 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
 {
     public class ConsumerHubService : IConsumerHubService
     {
-        private readonly ILogger<ConsumerHubService> logger;
-        private readonly IHubContext<ConsumerHub, IConsumerHub> hub;
-        private readonly IConsumerHubRepository consumerHubRepository;
-        private readonly IStorageHubService storageHubService;
-        private readonly ITenantRepository tenantRepository;
+        private readonly ILogger<ConsumerHubService> _logger;
+        private readonly IHubContext<ConsumerHub, IConsumerHub> _hub;
+        private readonly IConsumerHubRepository _consumerHubRepository;
+        private readonly IStorageHubService _storageHubService;
+        private readonly ITenantRepository _tenantRepository;
+
+        private readonly ITenantService _tenantApiService;
+        private readonly IComponentService _componentApiService;
+
 
         public ConsumerHubService(ILogger<ConsumerHubService> logger,
             IHubContext<ConsumerHub, IConsumerHub> hub,
             IConsumerHubRepository consumerHubRepository,
             IStorageHubService storageHubService,
-            ITenantRepository tenantRepository)
+            ITenantRepository tenantRepository,
+            ITenantService tenantApiService,
+            IComponentService componentApiService)
         {
-            this.logger = logger;
-            this.hub = hub;
-            this.consumerHubRepository = consumerHubRepository;
-            this.storageHubService = storageHubService;
-            this.tenantRepository = tenantRepository;
+            _logger = logger;
+            _hub = hub;
+            _consumerHubRepository = consumerHubRepository;
+            _storageHubService = storageHubService;
+            _tenantRepository = tenantRepository;
+            _tenantApiService = tenantApiService;
+            _componentApiService = componentApiService;
         }
 
         public async Task TransmitMessage(Message message, bool isStoredAlready = false)
@@ -39,7 +51,7 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
             if (isStoredAlready == false)
                 message.ConsumersCurrentTransmitted = new List<string>();
 
-            foreach (var consumer in consumerHubRepository.GetConsumersByTopic(message.Tenant, message.Product, message.Component, message.Topic))
+            foreach (var consumer in _consumerHubRepository.GetConsumersByTopic(message.Tenant, message.Product, message.Component, message.Topic))
             {
                 if (isStoredAlready == true)
                 {
@@ -47,6 +59,10 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     if (message.ConsumersCurrentTransmitted.Contains(consumer.Key))
                         continue;
                 }
+
+                // skip external consumers
+                if (consumer.Value.Connections.Count == 0)
+                    continue;
 
                 if (consumer.Value.CurrentConnectionIndex >= consumer.Value.Connections.Count)
                     consumer.Value.CurrentConnectionIndex = 0;
@@ -57,7 +73,7 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     consumer.Value.CurrentConnectionIndex = 0;
                 }
 
-                await hub.Clients.Client(consumer.Value.Connections[consumer.Value.CurrentConnectionIndex]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
+                await _hub.Clients.Client(consumer.Value.Connections[consumer.Value.CurrentConnectionIndex]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
                 {
                     Id = message.Id,
                     Tenant = message.Tenant,
@@ -65,9 +81,11 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     Component = message.Component,
                     Topic = message.Topic,
                     MessageRaw = message.MessageRaw,
+                    Headers = message.Headers,
                     SentDate = message.SentDate
                 });
 
+                consumer.Value.CountMessagesConsumedSinceConnected++;
                 consumer.Value.CurrentConnectionIndex++;
 
                 if (isStoredAlready != true)
@@ -75,17 +93,21 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
             }
 
             // If 'Message is Persistent', store it!
-            var topicDetails = tenantRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic);
+            var topicDetails = _tenantRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic);
             if (topicDetails.TopicSettings.IsPersistent == true)
                 if (isStoredAlready != true)
-                    await storageHubService.StoreMessage(message);
+                    await _storageHubService.StoreMessage(message);
         }
-
         public async Task TransmitMessageToConsumer(ConsumerMessage consumerMessage)
         {
-            var consumer = consumerHubRepository.GetConsumerByName(consumerMessage.Consumer);
+            string consumerId = $"{consumerMessage.Message.Tenant}{consumerMessage.Message.Product}{consumerMessage.Message.Component}{consumerMessage.Message.Topic}|{consumerMessage.Consumer}";
+            var consumer = _consumerHubRepository.GetConsumerById(consumerId);
             if (consumer != null)
             {
+                // skip external consumers
+                if (consumer.Connections.Count == 0)
+                    return;
+
                 if (consumer.CurrentConnectionIndex >= consumer.Connections.Count)
                     consumer.CurrentConnectionIndex = 0;
 
@@ -94,7 +116,7 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     consumer.CurrentConnectionIndex = 0;
                 }
 
-                await hub.Clients.Client(consumer.Connections[consumer.CurrentConnectionIndex]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
+                await _hub.Clients.Client(consumer.Connections[consumer.CurrentConnectionIndex]).MessageSent(new Model.Consumers.Events.MessageSentDetails()
                 {
                     Id = consumerMessage.Message.Id,
                     Tenant = consumerMessage.Message.Tenant,
@@ -102,12 +124,110 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                     Component = consumerMessage.Message.Component,
                     Topic = consumerMessage.Message.Topic,
                     MessageRaw = consumerMessage.Message.MessageRaw,
+                    Headers = consumerMessage.Message.Headers,
 
                     SentDate = consumerMessage.Message.SentDate
                 });
 
+                consumer.CountMessagesConsumedSinceConnected++;
+
                 consumer.CurrentConnectionIndex++;
             }
+        }
+
+        public async Task CreateComponentTokenToThisNode(CreateComponentTokenDetails createComponentTokenDetails)
+        {
+            if (_tenantRepository.GetComponentToken(createComponentTokenDetails.Tenant, createComponentTokenDetails.Product, createComponentTokenDetails.Component, createComponentTokenDetails.Token.Token) == null)
+                _componentApiService.AddComponentToken(createComponentTokenDetails.Tenant, createComponentTokenDetails.Product, createComponentTokenDetails.Component, createComponentTokenDetails.Token, false);
+
+            // send to other nodes....
+            await _storageHubService.SendCreateComponentTokenStorage(createComponentTokenDetails);
+        }
+        public async Task CreateTenantTokenToThisNode(CreateTenantTokenDetails createTenantTokenDetails)
+        {
+            if (_tenantRepository.GetTenantToken(createTenantTokenDetails.Tenant, createTenantTokenDetails.Token.Token) == null)
+                _tenantApiService.AddToken(createTenantTokenDetails.Tenant, createTenantTokenDetails.Token);
+
+            // send to other nodes....
+            await _storageHubService.SendCreateTenantTokenStorage(createTenantTokenDetails);
+        }
+        public async Task RevokeComponentTokenToThisNode(RevokeComponentTokenDetails revokeComponentTokenDetails)
+        {
+            if (_tenantRepository.GetComponentToken(revokeComponentTokenDetails.Tenant, revokeComponentTokenDetails.Product, revokeComponentTokenDetails.Component, revokeComponentTokenDetails.Token) != null)
+                _componentApiService.RevokeComponentToken(revokeComponentTokenDetails.Tenant, revokeComponentTokenDetails.Product, revokeComponentTokenDetails.Component, revokeComponentTokenDetails.Token);
+
+            // send to other nodes....
+            await _storageHubService.SendRevokeComponentTokenStorage(revokeComponentTokenDetails);
+
+        }
+        public async Task RevokeTenantTokenToThisNode(RevokeTenantTokenDetails revokeTenantTokenDetails)
+        {
+            if (_tenantRepository.GetTenantToken(revokeTenantTokenDetails.Tenant, revokeTenantTokenDetails.Token) != null)
+                _tenantApiService.RevokeToken(revokeTenantTokenDetails.Tenant, revokeTenantTokenDetails.Token);
+
+            // send to other nodes....
+            await _storageHubService.SendRevokeTenantTokenStorage(revokeTenantTokenDetails);
+        }
+        public async Task CreateTenantToThisNode(CreateTenantDetails createTenantDetails)
+        {
+            _logger.LogInformation($"Request to create tenant '{createTenantDetails.Name}' from other nodes");
+            if (_tenantRepository.GetTenant(createTenantDetails.Name) == null)
+            {
+                _tenantApiService.CreateTenant(createTenantDetails.Name, createTenantDetails.TenantSettings);
+                _logger.LogInformation($"Tenant' {createTenantDetails.Name}' has been created and linked, informing other nodes");
+            }
+            else
+            {
+                _logger.LogInformation($"Tenant' {createTenantDetails.Name}' already exists, ignoring the request");
+            }
+
+            // send to other nodes....
+            await _storageHubService.SendCreateTenantStorage(createTenantDetails);
+        }
+
+        public Task ConnectConsumerFromOtherNode(NotifyConsumerConnectionDetails notifyConsumerConnectionDetails)
+        {
+            string consumerIdOnRepo = $"{notifyConsumerConnectionDetails.Tenant}{notifyConsumerConnectionDetails.Product}{notifyConsumerConnectionDetails.Component}{notifyConsumerConnectionDetails.Topic}|{notifyConsumerConnectionDetails.ConsumerName}";
+
+            var consumerInRepo = _consumerHubRepository.GetConsumerById(consumerIdOnRepo);
+            if (consumerInRepo == null)
+            {
+                consumerInRepo = new Consumer()
+                {
+                    ConsumerName = notifyConsumerConnectionDetails.ConsumerName,
+                    Tenant = notifyConsumerConnectionDetails.Tenant,
+                    Product = notifyConsumerConnectionDetails.Product,
+                    Component = notifyConsumerConnectionDetails.Component,
+                    ConsumerSettings = new ConsumerSettings() { InitialPosition = notifyConsumerConnectionDetails.InitialPosition },
+                    IsLocal = false,
+                    SubscriptionType = notifyConsumerConnectionDetails.SubscriptionType,
+                    Topic = notifyConsumerConnectionDetails.Topic
+                };
+
+                _consumerHubRepository.AddConsumer(consumerIdOnRepo, consumerInRepo);
+            }
+            _consumerHubRepository.AddExternalConsumerConnection(consumerIdOnRepo);
+
+            return Task.CompletedTask;
+        }
+
+        public Task DisconnectConsumerFromOtherNode(NotifyConsumerConnectionDetails notifyConsumerConnectionDetails)
+        {
+            string consumerIdOnRepo = $"{notifyConsumerConnectionDetails.Tenant}{notifyConsumerConnectionDetails.Product}{notifyConsumerConnectionDetails.Component}{notifyConsumerConnectionDetails.Topic}|{notifyConsumerConnectionDetails.ConsumerName}";
+
+            var externalConsumer = _consumerHubRepository.GetConsumerById(consumerIdOnRepo);
+            if (externalConsumer != null)
+            {
+                // remove external connection
+                _consumerHubRepository.RemoveExternalConsumerConnection(consumerIdOnRepo);
+
+
+                if (externalConsumer.IsLocal == false)
+                    _consumerHubRepository.RemoveConsumer(consumerIdOnRepo);
+
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

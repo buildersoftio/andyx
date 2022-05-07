@@ -6,6 +6,8 @@ using Buildersoft.Andy.X.Model.Storages.Events.Messages;
 using Buildersoft.Andy.X.Model.Storages.Events.Products;
 using Buildersoft.Andy.X.Model.Storages.Events.Tenants;
 using Buildersoft.Andy.X.Model.Storages.Events.Topics;
+using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages
@@ -24,8 +26,13 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages
 
 
         Task TenantCreated(TenantCreatedDetails tenant);
+        Task TenantCreatedToOtherNodes(CreateTenantDetails tenant);
         Task TenantUpdated(TenantUpdatedDetails tenant);
         Task TenantDeleted(TenantDeletedDetails tenant);
+
+        Task TenantTokenCreated(TenantTokenCreatedDetails tenantTokenCreated);
+        Task TenantTokenRevoked(TenantTokenRevokedDetails tenantTokenRevoked);
+
 
         Task ProductCreated(ProductCreatedDetails product);
         Task ProductUpdated(ProductUpdatedDetails product);
@@ -35,11 +42,15 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Storages
         Task ComponentUpdated(ComponentUpdatedDetails component);
         Task ComponentDeleted(ComponentDeletedDetails component);
 
+        Task ComponentTokenCreated(ComponentTokenCreatedDetails componentTokenCreated);
+        Task ComponentTokenRevoked(ComponentTokenRevokedDetails componentTokenRevoked);
+
         Task TopicCreated(TopicCreatedDetails topic);
         Task TopicUpdated(TopicUpdatedDetails topic);
         Task TopicDeleted(TopicDeletedDetails topic);
 
         Task MessageStored(MessageStoredDetails message);
+        Task MessagesStored(List<MessageStoredDetails> messages);
         Task MessageAcknowledged(MessageAcknowledgedDetails message);
     }
 }

@@ -6,35 +6,61 @@ using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
+using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Producers;
+using Buildersoft.Andy.X.Model.Storages;
+using Buildersoft.Andy.X.Model.Storages.Requests.Components;
+using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using Buildersoft.Andy.X.Router.Hubs.Storages;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace Buildersoft.Andy.X.Router.Services.Storages
 {
     public class StorageHubService : IStorageHubService
     {
-        private readonly IHubContext<StorageHub, IStorageHub> hub;
-        private readonly IStorageHubRepository storageHubRepository;
+        private readonly ILogger<StorageHubService> _logger;
+        private readonly IHubContext<StorageHub, IStorageHub> _hub;
+        private readonly IStorageHubRepository _storageHubRepository;
+        private readonly StorageConfiguration _storageConfiguration;
 
-        public StorageHubService(IHubContext<StorageHub, IStorageHub> hub, IStorageHubRepository storageHubRepository)
+        private readonly ConcurrentQueue<Model.Storages.Events.Messages.MessageStoredDetails> _messagesBufferStore;
+
+        private readonly Timer _storeMessagesTimer;
+
+        public StorageHubService(ILogger<StorageHubService> logger, IHubContext<StorageHub, IStorageHub> hub,
+            IStorageHubRepository storageHubRepository,
+            StorageConfiguration storageConfiguration)
         {
-            this.hub = hub;
-            this.storageHubRepository = storageHubRepository;
+            _logger = logger;
+            _hub = hub;
+            _storageHubRepository = storageHubRepository;
+            _storageConfiguration = storageConfiguration;
+            _messagesBufferStore = new ConcurrentQueue<Model.Storages.Events.Messages.MessageStoredDetails>();
+
+            _storeMessagesTimer = new Timer();
+            _storeMessagesTimer.Interval = _storageConfiguration.TimeoutBatchMs;
+            _storeMessagesTimer.AutoReset = true;
+            _storeMessagesTimer.Elapsed += _storeMessagesTimer_Elapsed;
+            _storeMessagesTimer.Start();
         }
+
 
         public async Task ConnectConsumerAsync(Consumer consumer)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ConsumerConnected(new Model.Consumers.Events.ConsumerConnectedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ConsumerConnected(new Model.Consumers.Events.ConsumerConnectedDetails()
                     {
                         Id = consumer.Id,
                         Tenant = consumer.Tenant,
@@ -49,12 +75,12 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
         }
         public async Task ConnectProducerAsync(Producer producer)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProducerConnected(new Model.Producers.Events.ProducerConnectedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProducerConnected(new Model.Producers.Events.ProducerConnectedDetails()
                     {
                         Id = producer.Id,
                         Tenant = producer.Tenant,
@@ -70,12 +96,12 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
 
         public async Task CreateComponentAsync(string tenant, string product, Component component)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ComponentCreated(new Model.Storages.Events.Components.ComponentCreatedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ComponentCreated(new Model.Storages.Events.Components.ComponentCreatedDetails()
                     {
                         Id = component.Id,
                         Name = component.Name,
@@ -89,16 +115,16 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
         }
         public async Task UpdateComponentAsync(string tenant, string product, Component component)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ComponentUpdated(new Model.Storages.Events.Components.ComponentUpdatedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ComponentUpdated(new Model.Storages.Events.Components.ComponentUpdatedDetails()
                     {
                         Id = component.Id,
                         Name = component.Name,
-                        Settings =  component.Settings,
+                        Settings = component.Settings,
 
                         Tenant = tenant,
                         Product = product
@@ -110,12 +136,12 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
 
         public async Task CreateProductAsync(string tenant, Product product)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProductCreated(new Model.Storages.Events.Products.ProductCreatedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProductCreated(new Model.Storages.Events.Products.ProductCreatedDetails()
                     {
                         Id = product.Id,
                         Name = product.Name,
@@ -127,12 +153,12 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
         }
         public async Task UpdateProductAsync(string tenant, Product product)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProductUpdated(new Model.Storages.Events.Products.ProductUpdatedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProductUpdated(new Model.Storages.Events.Products.ProductUpdatedDetails()
                     {
                         Id = product.Id,
                         Name = product.Name,
@@ -146,12 +172,12 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
 
         public async Task CreateTenantAsync(Tenant tenant)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).TenantCreated(new Model.Storages.Events.Tenants.TenantCreatedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).TenantCreated(new Model.Storages.Events.Tenants.TenantCreatedDetails()
                     {
                         Id = tenant.Id,
                         Name = tenant.Name,
@@ -164,12 +190,12 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
 
         public async Task CreateTopicAsync(string tenant, string product, string component, Topic topic)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).TopicCreated(new Model.Storages.Events.Topics.TopicCreatedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).TopicCreated(new Model.Storages.Events.Topics.TopicCreatedDetails()
                     {
                         Id = topic.Id,
                         Name = topic.Name,
@@ -184,12 +210,12 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
         }
         public async Task UpdateTopicAsync(string tenant, string product, string component, Topic topic)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).TopicUpdated(new Model.Storages.Events.Topics.TopicUpdatedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).TopicUpdated(new Model.Storages.Events.Topics.TopicUpdatedDetails()
                     {
                         Id = topic.Id,
                         Name = topic.Name,
@@ -204,31 +230,32 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
 
         public async Task DisconnectConsumerAsync(Consumer consumer)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ConsumerDisconnected(new Model.Consumers.Events.ConsumerDisconnectedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ConsumerDisconnected(new Model.Consumers.Events.ConsumerDisconnectedDetails()
                     {
                         Id = consumer.Id,
                         Tenant = consumer.Tenant,
                         Product = consumer.Product,
                         Component = consumer.Component,
                         Topic = consumer.Topic,
-                        ConsumerName = consumer.ConsumerName
+                        ConsumerName = consumer.ConsumerName,
+                        SubscriptionType = consumer.SubscriptionType
                     });
                 }
             }
         }
         public async Task DisconnectProducerAsync(Producer producer)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProducerDisconnected(new Model.Producers.Events.ProducerDisconnectedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ProducerDisconnected(new Model.Producers.Events.ProducerDisconnectedDetails()
                     {
                         Id = producer.Id,
                         Tenant = producer.Tenant,
@@ -242,79 +269,34 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
         }
         public async Task StoreMessage(Message message)
         {
-            // TODO: Implement Geo-Replication Settings for this cluster.
-            // Check if geo-replication is enabled, add geo-replication feature to appsettings.json soo the developer can config from env-variables.
-            // WE are simulating that Geo-Replication is off.
-
-            bool IsGeoReplicationActive = false;
-            if (IsGeoReplicationActive == true)
+            _messagesBufferStore.Enqueue(new Model.Storages.Events.Messages.MessageStoredDetails()
             {
-                // Geo-replication is on
-                foreach (var storage in storageHubRepository.GetStorages())
-                {
-                    //if (storage.Value.ActiveAgentIndex >= storage.Value.Agents.Count)
-                    //    storage.Value.ActiveAgentIndex = 0;
+                Id = message.Id,
+                Tenant = message.Tenant,
+                Product = message.Product,
+                Component = message.Component,
+                Topic = message.Topic,
+                ConsumersCurrentTransmitted = message.ConsumersCurrentTransmitted,
+                MessageRaw = message.MessageRaw,
+                Headers = message.Headers,
+                SentDate = message.SentDate
+            });
 
-                    int index = new Random().Next(storage.Value.Agents.Count);
-
-                    if (!storage.Value.Agents.IsEmpty)
-                    {
-                        await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).MessageStored(new Model.Storages.Events.Messages.MessageStoredDetails()
-                        {
-                            Id = message.Id,
-                            Tenant = message.Tenant,
-                            Product = message.Product,
-                            Component = message.Component,
-                            Topic = message.Topic,
-                            ConsumersCurrentTransmitted = message.ConsumersCurrentTransmitted,
-                            MessageRaw = message.MessageRaw,
-                            SentDate = message.SentDate
-                        });
-                    }
-                    //storage.Value.ActiveAgentIndex++;
-                }
-            }
-            else
+            // check if here are 3k messages in the queue
+            if (_messagesBufferStore.Count >= _storageConfiguration.BatchSize)
             {
-                // Geo-replication is off - storages are shared
-                int indexOfStorage = new Random().Next(storageHubRepository.GetStorages().Count);
-
-                if (!storageHubRepository.GetStorages().IsEmpty)
-                {
-                    var storage = storageHubRepository.GetStorages().ElementAt(indexOfStorage);
-                    int index = new Random().Next(storage.Value.Agents.Count);
-
-                    // For Storages this feature will not work for now. Why?- When more than one producer will produce at the same time, the ActiveAgnetIndex will increase
-                    // and it will fail to out of bound index.
-                    //if (storage.Value.ActiveAgentIndex >= storage.Value.Agents.Count)
-                    //    storage.Value.ActiveAgentIndex = 0;
-
-                    if (!storage.Value.Agents.IsEmpty)
-                    {
-                        await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).MessageStored(new Model.Storages.Events.Messages.MessageStoredDetails()
-                        {
-                            Id = message.Id,
-                            Tenant = message.Tenant,
-                            Product = message.Product,
-                            Component = message.Component,
-                            Topic = message.Topic,
-                            ConsumersCurrentTransmitted = message.ConsumersCurrentTransmitted,
-                            MessageRaw = message.MessageRaw,
-                            SentDate = message.SentDate
-                        });
-                    }
-                    //storage.Value.ActiveAgentIndex++;
-                }
+                if (isProcessing == false)
+                    await Task.Run(() => _storeMessagesTimer_Elapsed(this, null));
             }
         }
         public async Task AcknowledgeMessage(string tenant, string product, string component, string topic, string consumerName, bool isAcknowledged, Guid messageId)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).MessageAcknowledged(new Model.Storages.Events.Messages.MessageAcknowledgedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).MessageAcknowledged(new Model.Storages.Events.Messages.MessageAcknowledgedDetails()
                     {
                         Tenant = tenant,
                         Product = product,
@@ -330,12 +312,12 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
 
         public async Task RequestUnacknowledgedMessagesConsumer(Consumer consumer)
         {
-            foreach (var storage in storageHubRepository.GetStorages())
+            foreach (var storage in _storageHubRepository.GetStorages())
             {
                 int index = new Random().Next(storage.Value.Agents.Count);
                 if (!storage.Value.Agents.IsEmpty)
                 {
-                    await hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ConsumerUnacknowledgedMessagesRequested(new Model.Consumers.Events.ConsumerConnectedDetails()
+                    await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(index)).ConsumerUnacknowledgedMessagesRequested(new Model.Consumers.Events.ConsumerConnectedDetails()
                     {
                         Id = consumer.Id,
                         Tenant = consumer.Tenant,
@@ -349,5 +331,186 @@ namespace Buildersoft.Andy.X.Router.Services.Storages
                 }
             }
         }
+
+        public async Task SendCreateComponentTokenStorage(CreateComponentTokenDetails createComponentTokenDetails)
+        {
+            foreach (var storage in _storageHubRepository.GetStorages())
+            {
+                if (createComponentTokenDetails.StoragesAlreadySent.Contains(storage.Key) != true)
+                {
+                    createComponentTokenDetails.StoragesAlreadySent.Add(storage.Key);
+                    // send to this storage
+                    await _hub.Clients.Client(storage.Value.Agents.First().Key).ComponentTokenCreated(new Model.Storages.Events.Components.ComponentTokenCreatedDetails()
+                    {
+                        Tenant = createComponentTokenDetails.Tenant,
+                        Product = createComponentTokenDetails.Product,
+                        Component = createComponentTokenDetails.Component,
+                        Token = createComponentTokenDetails.Token,
+
+                        StoragesAlreadySent = createComponentTokenDetails.StoragesAlreadySent,
+                    });
+                }
+            }
+        }
+        public async Task SendCreateTenantTokenStorage(CreateTenantTokenDetails createTenantTokenDetails)
+        {
+            foreach (var storage in _storageHubRepository.GetStorages())
+            {
+                if (createTenantTokenDetails.StoragesAlreadySent.Contains(storage.Key) != true)
+                {
+                    createTenantTokenDetails.StoragesAlreadySent.Add(storage.Key);
+                    // send to this storage
+                    await _hub.Clients.Client(storage.Value.Agents.First().Key).TenantTokenCreated(new Model.Storages.Events.Tenants.TenantTokenCreatedDetails()
+                    {
+                        Tenant = createTenantTokenDetails.Tenant,
+                        Token = createTenantTokenDetails.Token,
+                        StoragesAlreadySent = createTenantTokenDetails.StoragesAlreadySent,
+                    });
+                }
+            }
+        }
+        public async Task SendRevokeComponentTokenStorage(RevokeComponentTokenDetails revokeComponentTokenDetails)
+        {
+            foreach (var storage in _storageHubRepository.GetStorages())
+            {
+                if (revokeComponentTokenDetails.StoragesAlreadySent.Contains(storage.Key) != true)
+                {
+                    revokeComponentTokenDetails.StoragesAlreadySent.Add(storage.Key);
+                    // send to this storage
+                    await _hub.Clients.Client(storage.Value.Agents.First().Key).ComponentTokenRevoked(new Model.Storages.Events.Components.ComponentTokenRevokedDetails()
+                    {
+                        Tenant = revokeComponentTokenDetails.Tenant,
+                        Token = revokeComponentTokenDetails.Token,
+                        StoragesAlreadySent = revokeComponentTokenDetails.StoragesAlreadySent,
+                    });
+                }
+            }
+        }
+        public async Task SendRevokeTenantTokenStorage(RevokeTenantTokenDetails revokeTenantTokenDetails)
+        {
+            foreach (var storage in _storageHubRepository.GetStorages())
+            {
+                if (revokeTenantTokenDetails.StoragesAlreadySent.Contains(storage.Key) != true)
+                {
+                    revokeTenantTokenDetails.StoragesAlreadySent.Add(storage.Key);
+                    // send to this storage
+                    await _hub.Clients.Client(storage.Value.Agents.First().Key).TenantTokenRevoked(new Model.Storages.Events.Tenants.TenantTokenRevokedDetails()
+                    {
+                        Tenant = revokeTenantTokenDetails.Tenant,
+                        Token = revokeTenantTokenDetails.Token,
+                        StoragesAlreadySent = revokeTenantTokenDetails.StoragesAlreadySent,
+                    });
+                }
+            }
+        }
+        public async Task SendCreateTenantStorage(CreateTenantDetails createTenantDetails)
+        {
+            foreach (var storage in _storageHubRepository.GetStorages())
+            {
+                if (createTenantDetails.StoragesAlreadySent.Contains(storage.Key) != true)
+                {
+                    createTenantDetails.StoragesAlreadySent.Add(storage.Key);
+                    // send to this storage
+                    await _hub.Clients.Client(storage.Value.Agents.First().Key).TenantCreated(new Model.Storages.Events.Tenants.TenantCreatedDetails()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = createTenantDetails.Name,
+                        Settings = createTenantDetails.TenantSettings,
+                        StoragesAlreadySent = createTenantDetails.StoragesAlreadySent,
+                    });
+                }
+            }
+        }
+
+
+
+        #region Store Batch Message to Storage
+
+        private bool isProcessing = false;
+        private async void _storeMessagesTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            isProcessing = true;
+            _storeMessagesTimer.Stop();
+            if (_messagesBufferStore.Count >= _storageConfiguration.BatchSize)
+            {
+                await PrepareMessagesToStore(_storageConfiguration.BatchSize);
+            }
+            else
+            {
+                if (_messagesBufferStore.Count > 0)
+                {
+                    await PrepareMessagesToStore(_messagesBufferStore.Count);
+                }
+            }
+            _storeMessagesTimer.Start();
+            isProcessing = false;
+        }
+
+        private async Task PrepareMessagesToStore(int count)
+        {
+            var messagesToStore = new List<Model.Storages.Events.Messages.MessageStoredDetails>();
+            for (int i = 0; i < count; i++)
+            {
+                Model.Storages.Events.Messages.MessageStoredDetails msg;
+                _messagesBufferStore.TryDequeue(out msg);
+                messagesToStore.Add(msg);
+            }
+            await SendBatchMessages(messagesToStore);
+        }
+
+        private async Task SendBatchMessages(List<Model.Storages.Events.Messages.MessageStoredDetails> messageStoreds)
+        {
+            // TODO: Implement Geo-Replication Settings for this cluster.
+            // Check if geo-replication is enabled, add geo-replication feature to appsettings.json soo the developer can config from env-variables.
+            // WE are simulating that Geo-Replication is off.
+
+            bool IsGeoReplicationActive = false;
+            if (IsGeoReplicationActive == true)
+            {
+                // Geo-replication is on
+                foreach (var storage in _storageHubRepository.GetStorages())
+                {
+                    if (storage.Value.ActiveAgentIndex >= storage.Value.Agents.Count)
+                        storage.Value.ActiveAgentIndex = 0;
+
+
+                    if (!storage.Value.Agents.IsEmpty)
+                    {
+                        await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(storage.Value.ActiveAgentIndex)).MessagesStored(messageStoreds);
+                    }
+                    storage.Value.ActiveAgentIndex++;
+
+                    IncreaseInRateMetrics(storage.Value, messageStoreds.Count);
+                }
+            }
+            else
+            {
+                // Geo-replication is off - storages are shared
+                int indexOfStorage = new Random().Next(_storageHubRepository.GetStorages().Count);
+
+                if (!_storageHubRepository.GetStorages().IsEmpty)
+                {
+                    var storage = _storageHubRepository.GetStorages().ElementAt(indexOfStorage);
+
+                    if (storage.Value.ActiveAgentIndex >= storage.Value.Agents.Count)
+                        storage.Value.ActiveAgentIndex = 0;
+
+                    if (!storage.Value.Agents.IsEmpty)
+                    {
+                        await _hub.Clients.Client(storage.Value.Agents.Keys.ElementAt(storage.Value.ActiveAgentIndex)).MessagesStored(messageStoreds);
+                    }
+                    storage.Value.ActiveAgentIndex++;
+                    IncreaseInRateMetrics(storage.Value, messageStoreds.Count);
+                }
+            }
+        }
+        #endregion
+
+        #region InRate Metrics
+        private void IncreaseInRateMetrics(Storage storage, int count = 1)
+        {
+            storage.StorageMetrics.InRate = storage.StorageMetrics.InRate + count;
+        }
+        #endregion
     }
 }

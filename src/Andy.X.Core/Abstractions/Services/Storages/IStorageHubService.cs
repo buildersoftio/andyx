@@ -1,11 +1,12 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Storages;
-using Buildersoft.Andy.X.Model.App.Components;
+﻿using Buildersoft.Andy.X.Model.App.Components;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Producers;
+using Buildersoft.Andy.X.Model.Storages.Requests.Components;
+using Buildersoft.Andy.X.Model.Storages.Requests.Tenants;
 using System;
 using System.Threading.Tasks;
 
@@ -34,5 +35,10 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Storages
         Task StoreMessage(Message message);
         Task AcknowledgeMessage(string tenant, string product, string component, string topic, string consumerName, bool isAcknowledged, Guid messageId);
 
+        Task SendCreateComponentTokenStorage(CreateComponentTokenDetails createComponentTokenDetails);
+        Task SendCreateTenantTokenStorage(CreateTenantTokenDetails createTenantTokenDetails);
+        Task SendRevokeComponentTokenStorage(RevokeComponentTokenDetails revokeComponentTokenDetails);
+        Task SendRevokeTenantTokenStorage(RevokeTenantTokenDetails revokeTenantTokenDetails);
+        Task SendCreateTenantStorage(CreateTenantDetails createTenantDetails);
     }
 }

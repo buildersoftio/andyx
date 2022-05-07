@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
     <Company>Buildersoft</Company>
     <Product>Buildersoft Andy</Product>
     <Authors>Buildersoft</Authors>
@@ -12,13 +12,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="config\storage_config.json" />
     <None Remove="config\tenants.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="config\tenants.json">
+    <Content Include="config\storage_config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="settings\tenants_initial.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
+    <ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj" />
   </ItemGroup>
 
 </Project>

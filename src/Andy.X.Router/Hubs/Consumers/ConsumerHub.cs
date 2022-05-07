@@ -53,7 +53,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             string product = headers["x-andyx-product"].ToString();
             string component = headers["x-andyx-component"].ToString();
             string topic = headers["x-andyx-topic"].ToString();
-            bool isPersistent = Boolean.Parse(headers["x-andyx-topic-is-persistent"]);
+            bool isPersistent = bool.Parse(headers["x-andyx-topic-is-persistent"]);
             string consumerName = headers["x-andyx-consumer"].ToString();
 
             SubscriptionType subscriptionType = (SubscriptionType)Enum.Parse(typeof(SubscriptionType), headers["x-andyx-consumer-type"].ToString());
@@ -134,8 +134,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 storageHubService.UpdateTopicAsync(tenant, product, component, connectedTopic);
             }
 
-
-            var consumerConencted = consumerHubRepository.GetConsumerByName(consumerName);
+            string consumerIdOnRepo = $"{tenant}{product}{component}{topic}|{consumerName}";
+            var consumerConencted = consumerHubRepository.GetConsumerById(consumerIdOnRepo);
             if (consumerConencted != null)
             {
                 if (subscriptionType == SubscriptionType.Exclusive)
@@ -156,8 +156,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             }
 
             consumerToRegister = consumerFactory.CreateConsumer(tenant, product, component, topic, consumerName, subscriptionType, initialPosition);
-            consumerHubRepository.AddConsumer(consumerName, consumerToRegister);
-            consumerHubRepository.AddConsumerConnection(consumerName, clientConnectionId);
+            consumerHubRepository.AddConsumer(consumerIdOnRepo, consumerToRegister);
+            consumerHubRepository.AddConsumerConnection(consumerIdOnRepo, clientConnectionId);
 
             storageHubService.ConnectConsumerAsync(consumerToRegister);
 
@@ -200,9 +200,10 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             if (consumerToRemove != null)
             {
                 storageHubService.DisconnectConsumerAsync(consumerToRemove);
+                string consumerId = $"{consumerToRemove.Tenant}{consumerToRemove.Product}{consumerToRemove.Component}{consumerToRemove.Topic}|{consumerToRemove.ConsumerName}";
 
-                consumerHubRepository.RemoveConsumerConnection(consumerToRemove.ConsumerName, clientConnectionId);
-                consumerHubRepository.RemoveConsumer(consumerToRemove.ConsumerName);
+                consumerHubRepository.RemoveConsumerConnection(consumerId, clientConnectionId);
+                consumerHubRepository.RemoveConsumer(consumerId);
 
                 logger.LogInformation($"Consumer '{consumerToRemove.ConsumerName}' and subscription type '{consumerToRemove.SubscriptionType}' at {consumerToRemove.Tenant}/{consumerToRemove.Product}/{consumerToRemove.Component}/{consumerToRemove.Topic} is disconnected");
 
@@ -222,7 +223,22 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         {
             // is a check to ignore if the topic is not persistent.
             if (tenantRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic).TopicSettings.IsPersistent == true)
+            {
                 await storageHubService.AcknowledgeMessage(message.Tenant, message.Product, message.Component, message.Topic, message.Consumer, message.IsAcknowledged, message.MessageId);
+            }
+
+            IncreaseMessageAcknowledgedCount(message.IsAcknowledged);
+        }
+
+
+        private void IncreaseMessageAcknowledgedCount(bool isAcked)
+        {
+            string clientConnectionId = Context.ConnectionId;
+            Consumer consumer = consumerHubRepository.GetConsumerByConnectionId(clientConnectionId);
+            if (isAcked == true)
+                consumer.CountMessagesAcknowledgedSinceConnected++;
+            else
+                consumer.CountMessagesUnacknowledgedSinceConnected++;
         }
     }
 }

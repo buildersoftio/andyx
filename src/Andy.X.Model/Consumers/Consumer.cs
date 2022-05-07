@@ -11,6 +11,9 @@ namespace Buildersoft.Andy.X.Model.Consumers
         public string Topic { get; set; }
 
         public List<string> Connections { get; set; }
+        public List<string> ExternalConnections { get; set; }
+
+        public bool IsLocal { get; set; }
 
         // This property is used to send to the next shared consumer. (This property will replace the random)
         public int CurrentConnectionIndex { get; set; }
@@ -18,13 +21,25 @@ namespace Buildersoft.Andy.X.Model.Consumers
         public Guid Id { get; set; }
         public string ConsumerName { get; set; }
         public SubscriptionType SubscriptionType { get; set; }
-
         public ConsumerSettings ConsumerSettings { get; set; }
+
+        public DateTime ConnectedDate { get; set; }
+        public long CountMessagesConsumedSinceConnected { get; set; }
+        public long CountMessagesAcknowledgedSinceConnected { get; set; }
+        public long CountMessagesUnacknowledgedSinceConnected { get; set; }
 
         public Consumer()
         {
             Connections = new List<string>();
+            ExternalConnections = new List<string>();
+
             ConsumerSettings = new ConsumerSettings();
+            ConnectedDate = DateTime.Now;
+            CountMessagesAcknowledgedSinceConnected = 0;
+            CountMessagesUnacknowledgedSinceConnected = 0;
+
+            // is local -> flag if consumer is conencted to this node
+            IsLocal = true;
         }
     }
 

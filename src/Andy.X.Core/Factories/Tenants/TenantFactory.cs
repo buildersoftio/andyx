@@ -28,7 +28,7 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
             };
         }
 
-        public Tenant CreateTenant(string name, string digitalSignature, bool enableEncryption, bool isProductAutoCreate, bool enableAuthorization, List<TenantToken> tenantTokens, TenantLogging tenantLogging, bool enableGeoReplication)
+        public Tenant CreateTenant(string name, string digitalSignature, bool enableEncryption, bool isProductAutoCreate, bool enableAuthorization, List<TenantToken> tenantTokens, TenantLogging tenantLogging, bool enableGeoReplication, string certificatePath)
         {
             return new Tenant()
             {
@@ -42,7 +42,8 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
                     EnableAuthorization = enableAuthorization,
                     Logging = tenantLogging,
                     Tokens = tenantTokens,
-                    EnableGeoReplication = enableGeoReplication
+                    EnableGeoReplication = enableGeoReplication,
+                    CertificatePath = certificatePath
                 }
             };
         }
