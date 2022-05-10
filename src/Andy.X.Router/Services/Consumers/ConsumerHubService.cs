@@ -130,8 +130,8 @@ namespace Buildersoft.Andy.X.Router.Services.Consumers
                 });
 
                 consumer.CountMessagesConsumedSinceConnected++;
-
-                consumer.CurrentConnectionIndex++;
+                if (consumer.SubscriptionType == SubscriptionType.Shared)
+                    consumer.CurrentConnectionIndex++;
             }
         }
 
