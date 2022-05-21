@@ -10,6 +10,7 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
         public static void UseApplicationService(this IApplicationBuilder builder, IServiceProvider serviceProvider)
         {
             var appService = serviceProvider.GetRequiredService<ApplicationService>();
+            var clusterService = serviceProvider.GetRequiredService<ClusterService>();
         }
     }
 }

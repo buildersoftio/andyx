@@ -12,15 +12,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="config\storage_config.json" />
-    <None Remove="config\tenants.json" />
+    <None Remove="data\tenants.json" />
+    <None Remove="settings\initial_configs\cluster_initial.json" />
+    <None Remove="settings\initial_configs\storage_initial.json" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="config\storage_config.json">
+    <Content Include="settings\initial_configs\cluster_initial.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="settings\tenants_initial.json">
+    <Content Include="settings\initial_configs\storage_initial.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="settings\initial_configs\tenants_initial.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -28,6 +32,12 @@
   <ItemGroup>
     <ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
     <ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="data\active\" />
+    <Folder Include="data\temp\" />
+    <Folder Include="data\store\" />
   </ItemGroup>
 
 </Project>

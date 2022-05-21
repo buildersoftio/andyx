@@ -3,7 +3,7 @@ using Buildersoft.Andy.X.Extensions.DependencyInjection;
 using Buildersoft.Andy.X.Handlers;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Buildersoft.Andy.X.Router.Hubs.Producers;
-using Buildersoft.Andy.X.Router.Hubs.Storages;
+using MessagePack;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -41,10 +41,18 @@ namespace Andy.X.App
                 {
                     opt.MaximumReceiveMessageSize = null;
                 })
-                .AddJsonProtocol(opts =>
+                .AddMessagePackProtocol(option =>
                 {
-                    opts.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                    option.SerializerOptions = MessagePackSerializerOptions.Standard
+                        .WithCompression(MessagePackCompression.None)
+                        .WithSecurity(MessagePackSecurity.TrustedData);
                 });
+
+                // with v3 we are moving to MessagePack Serialization, and going toward Binary
+                //.AddJsonProtocol(opts =>
+                //{
+                //    opts.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                //})
 
             services.AddSwaggerGen(c =>
             {
@@ -84,7 +92,7 @@ namespace Andy.X.App
 
             services.AddSerilogLoggingConfiguration(Configuration);
             services.AddSingleton<ApplicationService>();
-            services.AddStorageFactoryMethods();
+            services.AddSingleton<ClusterService>();
             services.AddAppFactoryMethods();
             services.AddProducerFactoryMethods();
             services.AddConsumerFactoryMethods();
@@ -93,11 +101,9 @@ namespace Andy.X.App
 
             services.AddTenantMemoryRepository();
 
-            services.AddStorageRepository();
             services.AddConsumerRepository();
             services.AddProducerRepository();
 
-            services.AddStorageHubService();
             services.AddConsumerHubService();
             services.AddProducerHubService();
 
@@ -131,7 +137,6 @@ namespace Andy.X.App
                     endpoints.MapControllers();
 
                 // Mapping SignalR Hubs
-                endpoints.MapHub<StorageHub>("/realtime/v2/storage");
                 endpoints.MapHub<ProducerHub>("/realtime/v2/producer");
                 endpoints.MapHub<ConsumerHub>("/realtime/v2/consumer");
             });

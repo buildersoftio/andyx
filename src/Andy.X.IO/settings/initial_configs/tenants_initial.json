@@ -1,0 +1,92 @@
+﻿[
+  {
+    "Name": "default",
+    "Settings": {
+      "AllowProductCreation": true,
+      "DigitalSignature": "KWDjwhAndyjp360qwetM2DFS43BuilderSoft"
+    }
+  },
+  {
+    "Name": "public",
+    "Settings": {
+      "AllowProductCreation": true,
+      "DigitalSignature": "KWDjwhAndyjp360qwetM2DFS43BuilderSoft"
+    }
+  },
+  {
+    "Name": "system",
+    "Settings": {
+      "AllowProductCreation": true,
+      "DigitalSignature": "KWDjwhAndyjp360qwetM2DFS43BuilderSoft"
+    },
+    "Products": [
+      {
+        "Name": "logging",
+        "Components": [
+          {
+            "Name": "storage",
+            "Settings": {
+              "AllowTopicCreation": false,
+              "AllowSchemaValidation": false
+            }
+          },
+          {
+            "Name": "producer",
+            "Settings": {
+              "AllowTopicCreation": false,
+              "AllowSchemaValidation": false
+            }
+          },
+          {
+            "Name": "consumer",
+            "Settings": {
+              "AllowTopicCreation": false,
+              "AllowSchemaValidation": false
+            }
+          }
+        ]
+      },
+      {
+        "Name": "connections",
+        "Components": [
+          {
+            "Name": "storage",
+            "Settings": {
+              "AllowTopicCreation": false,
+              "AllowSchemaValidation": false
+            },
+            "Topics": [
+              {
+                "Name": "events"
+              }
+            ]
+          },
+          {
+            "Name": "producer",
+            "Settings": {
+              "AllowTopicCreation": false,
+              "AllowSchemaValidation": false
+            },
+            "Topics": [
+              {
+                "Name": "events"
+              }
+            ]
+          },
+          {
+            "Name": "consumer",
+            "Settings": {
+              "AllowTopicCreation": false,
+              "AllowSchemaValidation": false
+            },
+            "Topics": [
+              {
+                "Name": "events"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

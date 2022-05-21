@@ -23,5 +23,37 @@ namespace Buildersoft.Andy.X.IO.Writers
                 return false;
             }
         }
+
+        public static bool WriteStorageConfiguration(StorageConfiguration storage)
+        {
+            if (File.Exists(ConfigurationLocations.GetStorageConfigurationFile()))
+                File.Delete(ConfigurationLocations.GetStorageConfigurationFile());
+
+            try
+            {
+                File.WriteAllText(ConfigurationLocations.GetStorageConfigurationFile(), storage.ToPrettyJson());
+                return true;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+
+        public static bool WriteClusterConfiguration(ClusterConfiguration cluster)
+        {
+            if (File.Exists(ConfigurationLocations.GetClustersConfigurationFile()))
+                File.Delete(ConfigurationLocations.GetClustersConfigurationFile());
+
+            try
+            {
+                File.WriteAllText(ConfigurationLocations.GetClustersConfigurationFile(), cluster.ToPrettyJson());
+                return true;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
     }
 }

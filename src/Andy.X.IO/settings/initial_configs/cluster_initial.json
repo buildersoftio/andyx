@@ -1,0 +1,11 @@
+﻿{
+  "Name": "default_01",
+  "Nodes": [
+    {
+      "NodeId": "default_01",
+      "Host": "127.0.0.1",
+      "Post": 6540,
+      "NodeConnectionType": "NON_SSL"
+    }
+  ]
+}

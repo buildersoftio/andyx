@@ -1,7 +1,6 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Api;
-using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.IO.Readers;
 using Buildersoft.Andy.X.IO.Writers;
 using Buildersoft.Andy.X.Model.App.Tenants;
@@ -18,14 +17,12 @@ namespace Buildersoft.Andy.X.Core.Services.Api
     {
         private readonly ILogger<TenantService> _logger;
         private readonly ITenantRepository _tenantRepository;
-        private readonly IStorageHubService _storageHubService;
         private readonly ITenantFactory _tenantFactory;
 
-        public TenantService(ILogger<TenantService> logger, ITenantRepository tenantRepository, IStorageHubService storageHubService, ITenantFactory tenantFactory)
+        public TenantService(ILogger<TenantService> logger, ITenantRepository tenantRepository, ITenantFactory tenantFactory)
         {
             _logger = logger;
             _tenantRepository = tenantRepository;
-            _storageHubService = storageHubService;
             _tenantFactory = tenantFactory;
         }
 
@@ -54,12 +51,6 @@ namespace Buildersoft.Andy.X.Core.Services.Api
             if (TenantIOWriter.WriteTenantsConfiguration(tenants) == true)
             {
                 // Send to the Cluster
-                _storageHubService.SendCreateTenantTokenStorage(new Model.Storages.Requests.Tenants.CreateTenantTokenDetails()
-                {
-                    Tenant = tenantName,
-                    Token = tenantToken,
-                    StoragesAlreadySent = new List<string>()
-                });
 
                 return apiKey;
             }
@@ -96,16 +87,16 @@ namespace Buildersoft.Andy.X.Core.Services.Api
             if (TenantIOWriter.WriteTenantsConfiguration(tenants) == true)
             {
                 _tenantRepository.AddTenantFromApi(tenantConfiguration);
-                _storageHubService.CreateTenantAsync(_tenantFactory
-                   .CreateTenant(tenantConfiguration.Name,
-                       tenantConfiguration.Settings.DigitalSignature,
-                       tenantConfiguration.Settings.EnableEncryption,
-                       tenantConfiguration.Settings.AllowProductCreation,
-                       tenantConfiguration.Settings.EnableAuthorization,
-                       tenantConfiguration.Settings.Tokens,
-                       tenantConfiguration.Settings.Logging,
-                       tenantConfiguration.Settings.EnableGeoReplication,
-                       tenantConfiguration.Settings.CertificatePath));
+                //_storageHubService.CreateTenantAsync(_tenantFactory
+                //   .CreateTenant(tenantConfiguration.Name,
+                //       tenantConfiguration.Settings.DigitalSignature,
+                //       tenantConfiguration.Settings.EnableEncryption,
+                //       tenantConfiguration.Settings.AllowProductCreation,
+                //       tenantConfiguration.Settings.EnableAuthorization,
+                //       tenantConfiguration.Settings.Tokens,
+                //       tenantConfiguration.Settings.Logging,
+                //       tenantConfiguration.Settings.EnableGeoReplication,
+                //       tenantConfiguration.Settings.CertificatePath));
                 return true;
             }
 
@@ -160,13 +151,7 @@ namespace Buildersoft.Andy.X.Core.Services.Api
             // Write into file
             if (TenantIOWriter.WriteTenantsConfiguration(tenants) == true)
             {
-                // Send to the Cluster
-                _storageHubService.SendRevokeTenantTokenStorage(new Model.Storages.Requests.Tenants.RevokeTenantTokenDetails()
-                {
-                    Tenant = tenantName,
-                    Token = token,
-                    StoragesAlreadySent = new List<string>()
-                });
+
                 return true;
             }
 

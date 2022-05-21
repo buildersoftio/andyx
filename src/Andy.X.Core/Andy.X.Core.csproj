@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Abstractions\Services\Consumers\" />
+  </ItemGroup>
+
 </Project>

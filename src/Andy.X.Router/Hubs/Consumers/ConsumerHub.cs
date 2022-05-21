@@ -3,10 +3,8 @@ using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
-using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
 using Buildersoft.Andy.X.Model.Consumers;
-using Buildersoft.Andy.X.Model.Storages.Events.Messages;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
@@ -21,21 +19,19 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         private readonly ITenantRepository tenantRepository;
         private readonly ITenantFactory tenantFactory;
         private readonly IConsumerFactory consumerFactory;
-        private readonly IStorageHubService storageHubService;
 
         public ConsumerHub(ILogger<ConsumerHub> logger,
             IConsumerHubRepository consumerHubRepository,
             ITenantRepository tenantRepository,
             ITenantFactory tenantFactory,
-            IConsumerFactory consumerFactory,
-            IStorageHubService storageHubService)
+            IConsumerFactory consumerFactory
+            )
         {
             this.logger = logger;
             this.consumerHubRepository = consumerHubRepository;
             this.tenantRepository = tenantRepository;
             this.tenantFactory = tenantFactory;
             this.consumerFactory = consumerFactory;
-            this.storageHubService = storageHubService;
         }
 
         public override Task OnConnectedAsync()
@@ -88,11 +84,11 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
                 var productDetails = tenantFactory.CreateProduct(product);
                 tenantRepository.AddProduct(tenant, product, productDetails);
-                storageHubService.CreateProductAsync(tenant, productDetails);
+                //storageHubService.CreateProductAsync(tenant, productDetails);
             }
             else
             {
-                storageHubService.UpdateProductAsync(tenant, connectedProduct);
+                //storageHubService.UpdateProductAsync(tenant, connectedProduct);
             }
 
             var connectedComponent = tenantRepository.GetComponent(tenant, product, component);
@@ -100,7 +96,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             {
                 var componentDetails = tenantFactory.CreateComponent(component);
                 tenantRepository.AddComponent(tenant, product, component, componentDetails);
-                storageHubService.CreateComponentAsync(tenant, product, componentDetails);
+                //storageHubService.CreateComponentAsync(tenant, product, componentDetails);
             }
             else
             {
@@ -112,7 +108,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                     return OnDisconnectedAsync(new Exception($"Consumer '{consumerName}' failed to connect, access is forbidden, check component token"));
                 }
 
-                storageHubService.UpdateComponentAsync(tenant, product, connectedComponent);
+                //storageHubService.UpdateComponentAsync(tenant, product, connectedComponent);
             }
 
             var connectedTopic = tenantRepository.GetTopic(tenant, product, component, topic);
@@ -127,11 +123,11 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
                 var topicDetails = tenantFactory.CreateTopic(topic, isPersistent);
                 tenantRepository.AddTopic(tenant, product, component, topic, topicDetails);
-                storageHubService.CreateTopicAsync(tenant, product, component, topicDetails);
+                //storageHubService.CreateTopicAsync(tenant, product, component, topicDetails);
             }
             else
             {
-                storageHubService.UpdateTopicAsync(tenant, product, component, connectedTopic);
+                //storageHubService.UpdateTopicAsync(tenant, product, component, connectedTopic);
             }
 
             string consumerIdOnRepo = $"{tenant}{product}{component}{topic}|{consumerName}";
@@ -159,7 +155,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             consumerHubRepository.AddConsumer(consumerIdOnRepo, consumerToRegister);
             consumerHubRepository.AddConsumerConnection(consumerIdOnRepo, clientConnectionId);
 
-            storageHubService.ConnectConsumerAsync(consumerToRegister);
+            //storageHubService.ConnectConsumerAsync(consumerToRegister);
 
             Clients.Caller.ConsumerConnected(new Model.Consumers.Events.ConsumerConnectedDetails()
             {
@@ -178,12 +174,12 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             {
                 // Sent not acknoledged messages to this consumer (for exclusive and for the first shared/failover consumer connected)
                 if (subscriptionType == SubscriptionType.Exclusive)
-                    storageHubService.RequestUnacknowledgedMessagesConsumer(consumerToRegister);
+                    //storageHubService.RequestUnacknowledgedMessagesConsumer(consumerToRegister);
 
                 if (subscriptionType == SubscriptionType.Shared || subscriptionType == SubscriptionType.Failover)
                 {
-                    if (consumerConencted == null)
-                        storageHubService.RequestUnacknowledgedMessagesConsumer(consumerToRegister);
+                    //if (consumerConencted == null)
+                        //storageHubService.RequestUnacknowledgedMessagesConsumer(consumerToRegister);
                 }
             }
             logger.LogInformation($"Consumer '{consumerName}' and subscription type '{subscriptionType}' at {tenant}/{product}/{component}/{topic} is connected");
@@ -199,7 +195,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             // When the consumer as Exclusive with the same name try to connect
             if (consumerToRemove != null)
             {
-                storageHubService.DisconnectConsumerAsync(consumerToRemove);
+                //storageHubService.DisconnectConsumerAsync(consumerToRemove);
                 string consumerId = $"{consumerToRemove.Tenant}{consumerToRemove.Product}{consumerToRemove.Component}{consumerToRemove.Topic}|{consumerToRemove.ConsumerName}";
 
                 consumerHubRepository.RemoveConsumerConnection(consumerId, clientConnectionId);
@@ -219,16 +215,16 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             }
             return base.OnDisconnectedAsync(exception);
         }
-        public async Task AcknowledgeMessage(MessageAcknowledgedDetails message)
-        {
-            // is a check to ignore if the topic is not persistent.
-            if (tenantRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic).TopicSettings.IsPersistent == true)
-            {
-                await storageHubService.AcknowledgeMessage(message.Tenant, message.Product, message.Component, message.Topic, message.Consumer, message.IsAcknowledged, message.MessageId);
-            }
+        //public async Task AcknowledgeMessage(MessageAcknowledgedDetails message)
+        //{
+        //    // is a check to ignore if the topic is not persistent.
+        //    if (tenantRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic).TopicSettings.IsPersistent == true)
+        //    {
+        //        await storageHubService.AcknowledgeMessage(message.Tenant, message.Product, message.Component, message.Topic, message.Consumer, message.IsAcknowledged, message.MessageId);
+        //    }
 
-            IncreaseMessageAcknowledgedCount(message.IsAcknowledged);
-        }
+        //    IncreaseMessageAcknowledgedCount(message.IsAcknowledged);
+        //}
 
 
         private void IncreaseMessageAcknowledgedCount(bool isAcked)

@@ -11,4 +11,9 @@
     <RootNamespace>Buildersoft.Andy.X.Model</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="protobuf-net" Version="3.1.4" />
+  </ItemGroup>
+
 </Project>

@@ -1,7 +1,6 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Api;
-using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
 using Buildersoft.Andy.X.IO.Readers;
 using Buildersoft.Andy.X.IO.Writers;
 using Buildersoft.Andy.X.Model.App.Components;
@@ -17,14 +16,12 @@ namespace Buildersoft.Andy.X.Core.Services.Api
     {
         private readonly ILogger<ComponentService> _logger;
         private readonly ITenantRepository _tenantRepository;
-        private readonly IStorageHubService _storageHubService;
         private readonly ITenantFactory _tenantFactory;
 
-        public ComponentService(ILogger<ComponentService> logger, ITenantRepository tenantRepository, IStorageHubService storageHubService, ITenantFactory tenantFactory)
+        public ComponentService(ILogger<ComponentService> logger, ITenantRepository tenantRepository, ITenantFactory tenantFactory)
         {
             _logger = logger;
             _tenantRepository = tenantRepository;
-            _storageHubService = storageHubService;
             _tenantFactory = tenantFactory;
         }
         public string AddComponentToken(string tenantName, string productName, string componentName, ComponentToken componentToken, bool shoudGenerateToken = true)
@@ -56,19 +53,20 @@ namespace Buildersoft.Andy.X.Core.Services.Api
             // Write into file
             if (TenantIOWriter.WriteTenantsConfiguration(tenants) == true)
             {
-                if (shoudGenerateToken == true)
-                {
-                    // Send to the Cluster
-                    _storageHubService.SendCreateComponentTokenStorage(new Model.Storages.Requests.Components.CreateComponentTokenDetails()
-                    {
-                        Tenant = tenantName,
-                        Product = productName,
-                        Component = componentName,
-                        Token = componentToken,
+                // storage
+                //if (shoudGenerateToken == true)
+                //{
+                //    // Send to the Cluster
+                //    _storageHubService.SendCreateComponentTokenStorage(new Model.Storages.Requests.Components.CreateComponentTokenDetails()
+                //    {
+                //        Tenant = tenantName,
+                //        Product = productName,
+                //        Component = componentName,
+                //        Token = componentToken,
 
-                        StoragesAlreadySent = new List<string>()
-                    });
-                }
+                //        StoragesAlreadySent = new List<string>()
+                //    });
+                //}
                 return componentToken.Token;
             }
 
@@ -172,17 +170,6 @@ namespace Buildersoft.Andy.X.Core.Services.Api
             // write into file
             if (TenantIOWriter.WriteTenantsConfiguration(tenants) == true)
             {
-                // Send to the Cluster
-                _storageHubService.SendRevokeComponentTokenStorage(new Model.Storages.Requests.Components.RevokeComponentTokenDetails()
-                {
-                    Tenant = tenantName,
-                    Product = productName,
-                    Component = componentName,
-                    Token = token,
-
-                    StoragesAlreadySent = new List<string>()
-                });
-
                 return true;
             }
 

@@ -1,0 +1,6 @@
+﻿{
+  "BatchSize": 3000,
+  "TimeoutBatchMs": 1000,
+  "BatchSizeBytes": 1000000,
+  "Locations": [ "data/storage" ]
+}

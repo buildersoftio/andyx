@@ -1,6 +1,7 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.IO.Readers;
+using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.IO.Writers;
 using Buildersoft.Andy.X.Model.App.Components;
 using Buildersoft.Andy.X.Model.App.Products;
@@ -40,7 +41,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
         public void AddTenantFromApi(TenantConfiguration tenantConfig)
         {
-            AddTenant(tenantConfig.Name, tenantFactory
+            var tenantDetails = tenantFactory
                    .CreateTenant(tenantConfig.Name,
                        tenantConfig.Settings.DigitalSignature,
                        tenantConfig.Settings.EnableEncryption,
@@ -49,13 +50,13 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                        tenantConfig.Settings.Tokens,
                        tenantConfig.Settings.Logging,
                        tenantConfig.Settings.EnableGeoReplication,
-                       tenantConfig.Settings.CertificatePath));
+                       tenantConfig.Settings.CertificatePath);
+            AddTenant(tenantConfig.Name, tenantDetails);
 
             // add products
             tenantConfig.Products.ForEach(product =>
             {
                 AddProduct(tenantConfig.Name, product.Name, tenantFactory.CreateProduct(product.Name));
-
                 // add components of product
                 product.Components.ForEach(component =>
                 {
@@ -67,7 +68,6 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                             component.Settings.AllowTopicCreation,
                             component.Settings.EnableAuthorization,
                             component.Settings.Tokens));
-
                     // Add topics from configuration
 
                     component.Topics.ForEach(topic =>
@@ -103,7 +103,10 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
                 componentDetails.Topics.Add(new TopicConfiguration() { Name = topicName });
                 if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
+                {
+                    TenantIOService.TryCreateTopicDirectory(tenant, product, component, topicName);
                     return true;
+                }
             }
 
             return false;
@@ -130,7 +133,10 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
                 productDetail.Components.Add(new ComponentConfiguration() { Name = componentName, Settings = component.Settings, Topics = new List<TopicConfiguration>() });
                 if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
+                {
+                    TenantIOService.TryCreateComponentDirectory(tenant, product, componentName);
                     return true;
+                }
             }
 
             return false;
@@ -156,7 +162,10 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                 // register product to tenantConfiguration
                 tenantDetail.Products.Add(new ProductConfiguration() { Name = productName, Components = new List<ComponentConfiguration>() });
                 if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
+                {
+                    TenantIOService.TryCreateProductDirectory(tenant, productName);
                     return true;
+                }
             }
 
             return false;
@@ -164,6 +173,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
         public bool AddTenant(string tenantName, Tenant tenant)
         {
+            TenantIOService.TryCreateTenantDirectory(tenantName);
             return _tenants.TryAdd(tenantName, tenant);
         }
 

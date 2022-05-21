@@ -1,4 +1,5 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
+using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.Producers;
 using Microsoft.Extensions.Logging;
 using System;
@@ -21,6 +22,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Producers
 
         public bool AddProducer(string connectionId, Producer producer)
         {
+            TenantIOService.TryCreateProducerDirectory(producer.Tenant, producer.Product, producer.Component, producer.Topic, producer.ProducerName);
             return _producers.TryAdd(connectionId, producer);
         }
 

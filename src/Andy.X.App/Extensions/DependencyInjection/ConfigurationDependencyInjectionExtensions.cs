@@ -16,11 +16,33 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
             services.BindTenantsConfiguration(configuration);
             services.BindStorageConfiguration(configuration);
             services.BindCredentialsConfiguration(configuration);
+            services.BindClusterConfiguration(configuration);
+
+            services.BindThreadsConfiguration(configuration);
+
+        }
+
+        private static void TryCreateCoreDirectories()
+        {
+            if (Directory.Exists(ConfigurationLocations.GetDataDirectory()) != true)
+                Directory.CreateDirectory(ConfigurationLocations.GetDataDirectory());
+
+            if (Directory.Exists(ConfigurationLocations.ActiveConfigDirectory()) != true)
+                Directory.CreateDirectory(ConfigurationLocations.ActiveConfigDirectory());
+
+            if (Directory.Exists(ConfigurationLocations.TempDirectory()) != true)
+                Directory.CreateDirectory(ConfigurationLocations.TempDirectory());
+
+            if (Directory.Exists(ConfigurationLocations.StorageDirectory()) != true)
+                Directory.CreateDirectory(ConfigurationLocations.StorageDirectory());
         }
 
         private static void BindTenantsConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
             var nodeConfiguration = new List<TenantConfiguration>();
+
+            // check if data directory exists.
+            TryCreateCoreDirectories();
 
             // check if tenants_config file exists;
             if (File.Exists(ConfigurationLocations.GetTenantsConfigurationFile()) != true)
@@ -36,8 +58,29 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
         private static void BindStorageConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
             var storageConfiguration = new StorageConfiguration();
+
+            if (File.Exists(ConfigurationLocations.GetStorageConfigurationFile()) != true)
+            {
+                storageConfiguration = JsonConvert.DeserializeObject<StorageConfiguration>(File.ReadAllText(ConfigurationLocations.GetStorageInitialConfigurationFile()));
+                TenantIOWriter.WriteStorageConfiguration(storageConfiguration);
+            }
+
             storageConfiguration = JsonConvert.DeserializeObject<StorageConfiguration>(File.ReadAllText(ConfigurationLocations.GetStorageConfigurationFile()));
             services.AddSingleton(storageConfiguration);
+        }
+
+        private static void BindClusterConfiguration(this IServiceCollection services, IConfiguration configuration)
+        {
+            var clusterConfiguration = new ClusterConfiguration();
+
+            if (File.Exists(ConfigurationLocations.GetClustersConfigurationFile()) != true)
+            {
+                clusterConfiguration = JsonConvert.DeserializeObject<ClusterConfiguration>(File.ReadAllText(ConfigurationLocations.GetClusterInitialConfigurationFile()));
+                TenantIOWriter.WriteClusterConfiguration(clusterConfiguration);
+            }
+
+            clusterConfiguration = JsonConvert.DeserializeObject<ClusterConfiguration>(File.ReadAllText(ConfigurationLocations.GetClustersConfigurationFile()));
+            services.AddSingleton(clusterConfiguration);
         }
 
         private static void BindCredentialsConfiguration(this IServiceCollection services, IConfiguration configuration)
@@ -45,6 +88,14 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
             var credentialsConfiguration = new CredentialsConfiguration();
             configuration.Bind("Credentials", credentialsConfiguration);
             services.AddSingleton(credentialsConfiguration);
+        }
+
+
+        private static void BindThreadsConfiguration(this IServiceCollection services, IConfiguration configuration)
+        {
+            var agentConfiguration = new ThreadsConfiguration();
+            configuration.Bind("Threads", agentConfiguration);
+            services.AddSingleton(agentConfiguration);
         }
     }
 }
