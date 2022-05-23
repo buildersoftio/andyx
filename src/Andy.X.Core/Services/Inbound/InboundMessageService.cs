@@ -1,5 +1,7 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Services.Inbound.Connectors;
+using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
@@ -14,13 +16,15 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
     {
         private readonly ILogger<InboundMessageService> _logger;
         private readonly ThreadsConfiguration _threadsConfiguration;
-
+        private readonly IOrchestratorService _orchestratorService;
         private readonly ConcurrentDictionary<string, MessageTopicConnector> _topicConnectors;
 
-        public InboundMessageService(ILogger<InboundMessageService> logger, ThreadsConfiguration threadsConfiguration)
+        public InboundMessageService(ILogger<InboundMessageService> logger, ThreadsConfiguration threadsConfiguration, IOrchestratorService orchestratorService)
         {
             _logger = logger;
             _threadsConfiguration = threadsConfiguration;
+            _orchestratorService = orchestratorService;
+
             _topicConnectors = new ConcurrentDictionary<string, MessageTopicConnector>();
         }
 
@@ -32,6 +36,9 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             _topicConnectors[connectorKey].MessagesBuffer.Enqueue(message);
 
             InitializeInboundMessageProcessor(connectorKey);
+
+            // try to run storage service to store records.
+            _orchestratorService.StartTopicStorageSynchronizerProcess(connectorKey);
         }
 
         private void InitializeInboundMessageProcessor(string connectorKey)
@@ -64,20 +71,25 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             }
         }
 
-        private void InboundMessagingProcessor(string connectorKey, Guid key)
+        private void InboundMessagingProcessor(string connectorKey, Guid threadId)
         {
             while (_topicConnectors[connectorKey].MessagesBuffer.TryDequeue(out Message message))
             {
                 try
                 {
-                    // store the message.
+                    var msgId = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss_") + Guid.NewGuid();
+                    MessageIOService.TrySaveInTemp_MessageBinFile(message, msgId);
+
+
+                    // TODO: Implement Cluster Syncronization of messages.
                 }
                 catch (Exception)
                 {
-
-                    throw;
+                    // TODO: check this later;
                 }
             }
+
+            _topicConnectors[connectorKey].ThreadingPool.Threads[threadId].IsThreadWorking = false;
         }
 
         private bool TryCreateTopicConnector(string connectorKey)

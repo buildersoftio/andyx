@@ -3,7 +3,6 @@ using Buildersoft.Andy.X.Extensions.DependencyInjection;
 using Buildersoft.Andy.X.Handlers;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Buildersoft.Andy.X.Router.Hubs.Producers;
-using MessagePack;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -40,19 +39,26 @@ namespace Andy.X.App
             services.AddSignalR(opt =>
                 {
                     opt.MaximumReceiveMessageSize = null;
-                })
-                .AddMessagePackProtocol(option =>
-                {
-                    option.SerializerOptions = MessagePackSerializerOptions.Standard
-                        .WithCompression(MessagePackCompression.None)
-                        .WithSecurity(MessagePackSecurity.TrustedData);
-                });
 
-                // with v3 we are moving to MessagePack Serialization, and going toward Binary
-                //.AddJsonProtocol(opts =>
-                //{
-                //    opts.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-                //})
+                })
+                .AddJsonProtocol(opts =>
+                {
+                    opts.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                })
+                .AddMessagePackProtocol();
+
+            //.AddMessagePackProtocol(option =>
+            //{
+            //    option.SerializerOptions = MessagePackSerializerOptions.Standard
+            //        .WithCompression(MessagePackCompression.None)
+            //        .WithSecurity(MessagePackSecurity.UntrustedData);
+            //});
+
+            // with v3 we are moving to MessagePack Serialization, and going toward Binary
+            //.AddJsonProtocol(opts =>
+            //{
+            //    opts.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            //})
 
             services.AddSwaggerGen(c =>
             {
@@ -98,6 +104,9 @@ namespace Andy.X.App
             services.AddConsumerFactoryMethods();
 
             services.AddConfigurations(Configuration);
+
+            services.AddOrchestratorService();
+            services.AddInboundMessageServices();
 
             services.AddTenantMemoryRepository();
 

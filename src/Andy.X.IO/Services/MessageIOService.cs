@@ -1,6 +1,6 @@
 ﻿using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.App.Messages;
-using ProtoBuf;
+using MessagePack;
 using System.IO;
 
 namespace Buildersoft.Andy.X.IO.Services
@@ -14,7 +14,9 @@ namespace Buildersoft.Andy.X.IO.Services
                 var msgLocation = TenantLocations.GetNextMessageToStoreFile(message.Tenant, message.Product, message.Component, message.Topic, msgId);
                 using (var fs = File.Create(msgLocation))
                 {
-                    Serializer.Serialize(fs, message);
+                    // for now we will not use proto-buf, we will contine to use MessagePack
+                    //Serializer.Serialize(fs, message);
+                    MessagePackSerializer.Serialize(fs, message);
                 }
 
                 return true;

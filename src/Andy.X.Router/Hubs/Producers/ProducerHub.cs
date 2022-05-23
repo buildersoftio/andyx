@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Producers;
@@ -21,18 +22,22 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         private readonly ITenantRepository _tenantRepository;
         private readonly ITenantFactory _tenantFactory;
         private readonly IProducerFactory _producerFactory;
+        private readonly IInboundMessageService _inboundMessageService;
 
         public ProducerHub(ILogger<ProducerHub> logger,
             IProducerHubRepository producerHubRepository,
             ITenantRepository tenantRepository,
             ITenantFactory tenantFactory,
-            IProducerFactory producerFactory)
+            IProducerFactory producerFactory,
+            IInboundMessageService inboundMessageService)
         {
             _logger = logger;
             _producerHubRepository = producerHubRepository;
             _tenantRepository = tenantRepository;
             _tenantFactory = tenantFactory;
             _producerFactory = producerFactory;
+
+            _inboundMessageService = inboundMessageService;
         }
 
         public override Task OnConnectedAsync()
@@ -128,11 +133,11 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
             Clients.Caller.ProducerConnected(new Model.Producers.Events.ProducerConnectedDetails()
             {
-                Id = producerToRegister.Id,
                 Tenant = tenant,
                 Product = product,
                 Component = component,
                 Topic = topic,
+                Id = producerToRegister.Id.ToString(),
                 ProducerName = producerName
             });
             _logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} is connected");
@@ -161,17 +166,17 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             return base.OnDisconnectedAsync(exception);
         }
 
-        public async Task TransmitMessage(Message message)
+        public void TransmitMessage(Message message)
         {
-            //await consumerHubService.TransmitMessage(message);
+            _inboundMessageService.AcceptMessage(message);
             IncreaseMessageProducedCount();
         }
 
-        public async Task TransmitMessages(List<Message> messages)
+        public void TransmitMessages(List<Message> messages)
         {
             foreach (var message in messages)
             {
-                //await consumerHubService.TransmitMessage(message);
+                _inboundMessageService.AcceptMessage(message);
             }
 
             IncreaseMessageProducedCount(messages.Count);

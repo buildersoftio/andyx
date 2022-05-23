@@ -1,4 +1,5 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
+using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.IO.Readers;
 using Buildersoft.Andy.X.IO.Services;
@@ -17,14 +18,19 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 {
     public class TenantMemoryRepository : ITenantRepository
     {
-        private readonly ILogger<TenantMemoryRepository> logger;
-        private readonly ITenantFactory tenantFactory;
+        private readonly ILogger<TenantMemoryRepository> _logger;
+        private readonly ITenantFactory _tenantFactory;
+        private readonly IOrchestratorService _orchestratorService;
         private ConcurrentDictionary<string, Tenant> _tenants;
 
-        public TenantMemoryRepository(ILogger<TenantMemoryRepository> logger, List<TenantConfiguration> tenantConfigurations, ITenantFactory tenantFactory)
+        public TenantMemoryRepository(ILogger<TenantMemoryRepository> logger,
+            List<TenantConfiguration> tenantConfigurations,
+            ITenantFactory tenantFactory,
+            IOrchestratorService orchestratorService)
         {
-            this.logger = logger;
-            this.tenantFactory = tenantFactory;
+            _logger = logger;
+            _tenantFactory = tenantFactory;
+            _orchestratorService = orchestratorService;
 
             _tenants = new ConcurrentDictionary<string, Tenant>();
 
@@ -41,7 +47,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
         public void AddTenantFromApi(TenantConfiguration tenantConfig)
         {
-            var tenantDetails = tenantFactory
+            var tenantDetails = _tenantFactory
                    .CreateTenant(tenantConfig.Name,
                        tenantConfig.Settings.DigitalSignature,
                        tenantConfig.Settings.EnableEncryption,
@@ -56,14 +62,14 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
             // add products
             tenantConfig.Products.ForEach(product =>
             {
-                AddProduct(tenantConfig.Name, product.Name, tenantFactory.CreateProduct(product.Name));
+                AddProduct(tenantConfig.Name, product.Name, _tenantFactory.CreateProduct(product.Name));
                 // add components of product
                 product.Components.ForEach(component =>
                 {
                     AddComponent(tenantConfig.Name,
                         product.Name,
                         component.Name,
-                        tenantFactory.CreateComponent(component.Name,
+                        _tenantFactory.CreateComponent(component.Name,
                             component.Settings.AllowSchemaValidation,
                             component.Settings.AllowTopicCreation,
                             component.Settings.EnableAuthorization,
@@ -72,7 +78,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
                     component.Topics.ForEach(topic =>
                     {
-                        AddTopic(tenantConfig.Name, product.Name, component.Name, topic.Name, tenantFactory.CreateTopic(topic.Name));
+                        AddTopic(tenantConfig.Name, product.Name, component.Name, topic.Name, _tenantFactory.CreateTopic(topic.Name));
                     });
                 });
             });
@@ -83,7 +89,12 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
             if (_tenants.ContainsKey(tenant))
                 if (_tenants[tenant].Products.ContainsKey(product))
                     if (_tenants[tenant].Products[product].Components.ContainsKey(component))
+                    {
                         _tenants[tenant].Products[product].Components[component].Topics.TryAdd(topicName, topic);
+
+                        // Starting the storage syncronizer
+                        _orchestratorService.AddTopicStorageSynchronizer(tenant, product, component, topic);
+                    }
 
             List<TenantConfiguration> tenantsConfig = TenantIOReader.ReadTenantsFromConfigFile();
             var tenantDetail = tenantsConfig.Find(x => x.Name == tenant);

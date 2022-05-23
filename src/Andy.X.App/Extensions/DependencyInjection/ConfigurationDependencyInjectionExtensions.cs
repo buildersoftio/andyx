@@ -19,7 +19,6 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
             services.BindClusterConfiguration(configuration);
 
             services.BindThreadsConfiguration(configuration);
-
         }
 
         private static void TryCreateCoreDirectories()
