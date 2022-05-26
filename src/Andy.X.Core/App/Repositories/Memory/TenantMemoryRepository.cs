@@ -108,16 +108,15 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                 if (componentDetails == null)
                     return false;
 
+                TenantIOService.TryCreateTopicDirectory(tenant, product, component, topicName);
+
                 var topicDetails = componentDetails.Topics.Find(x => x.Name == topicName);
                 if (topicDetails != null)
                     return false;
 
                 componentDetails.Topics.Add(new TopicConfiguration() { Name = topicName });
                 if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
-                {
-                    TenantIOService.TryCreateTopicDirectory(tenant, product, component, topicName);
                     return true;
-                }
             }
 
             return false;
@@ -138,16 +137,16 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                 if (productDetail == null)
                     return false;
 
+                TenantIOService.TryCreateComponentDirectory(tenant, product, componentName);
+
                 var componentDetails = productDetail.Components.Find(x => x.Name == componentName);
                 if (componentDetails != null)
                     return true;
 
+
                 productDetail.Components.Add(new ComponentConfiguration() { Name = componentName, Settings = component.Settings, Topics = new List<TopicConfiguration>() });
                 if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
-                {
-                    TenantIOService.TryCreateComponentDirectory(tenant, product, componentName);
                     return true;
-                }
             }
 
             return false;
@@ -166,6 +165,8 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                 if (tenantDetail.Products == null)
                     tenantDetail.Products = new List<ProductConfiguration>();
 
+                TenantIOService.TryCreateProductDirectory(tenant, productName);
+
                 var productDetail = tenantDetail.Products.Find(x => x.Name == productName);
                 if (productDetail != null)
                     return true;
@@ -173,10 +174,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                 // register product to tenantConfiguration
                 tenantDetail.Products.Add(new ProductConfiguration() { Name = productName, Components = new List<ComponentConfiguration>() });
                 if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
-                {
-                    TenantIOService.TryCreateProductDirectory(tenant, productName);
                     return true;
-                }
             }
 
             return false;

@@ -71,10 +71,11 @@ namespace Buildersoft.Andy.X.Core.Synchronizers
                 SynchronizerProcess.OutputDataReceived -= SynchronizerProcess_OutputDataReceived;
                 SynchronizerProcess = null;
 
-                // check if there are any bin files
-                //var filesCount = Directory.EnumerateFiles(TenantLocations.GetTempMessageToStoreTopicRootDirectory(Tenant, Product, Component, Topic.Name), "*.bin").ToList().Count;
-                //if (filesCount == 0)
+                var filesCount = new DirectoryInfo(TenantLocations.GetTempMessageToStoreTopicRootDirectory(Tenant, Product, Component, Topic.Name)).GetFiles().Count();
+                if (filesCount == 0)
+                {
                     IsProcessRunning = false;
+                }
             }
         }
 

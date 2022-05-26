@@ -36,12 +36,12 @@ namespace Buildersoft.Andy.X.Model.App.Messages
 
         [ProtoMember(8)]
         [Key(7)]
-        public DateTime SentDate { get; set; }
+        public DateTimeOffset SentDate { get; set; }
 
         public Message()
         {
             // if this property is not coming from Andy X Client
-            SentDate = DateTime.UtcNow;
+            SentDate = DateTimeOffset.UtcNow;
             Headers = new Dictionary<string, string>();
         }
     }
