@@ -1,6 +1,7 @@
 ﻿using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.App.Messages;
 using MessagePack;
+using System;
 using System.IO;
 
 namespace Buildersoft.Andy.X.IO.Services
@@ -21,9 +22,21 @@ namespace Buildersoft.Andy.X.IO.Services
 
                 return true;
             }
-            catch (System.Exception)
+            catch (Exception)
             {
                 return false;
+            }
+        }
+
+        public static Message ReadMessage_FromBinFile(string binLocation)
+        {
+            try
+            {
+                return MessagePackSerializer.Deserialize<Message>(File.ReadAllBytes(binLocation));
+            }
+            catch (Exception)
+            {
+                return null;
             }
         }
     }

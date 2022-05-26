@@ -1,6 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Text.Json;
 
 namespace Buildersoft.Andy.X.Utility.Extensions.Json
 {
@@ -15,6 +13,11 @@ namespace Buildersoft.Andy.X.Utility.Extensions.Json
         public static string ToPrettyJson(this object obj)
         {
             return JsonConvert.SerializeObject(obj, Formatting.Indented);
+        }
+
+        public static string ToJson(this object obj)
+        {
+            return JsonConvert.SerializeObject(obj);
         }
     }
 

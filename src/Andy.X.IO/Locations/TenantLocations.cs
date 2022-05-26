@@ -73,10 +73,21 @@ namespace Buildersoft.Andy.X.IO.Locations
         {
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "logs");
         }
+
+        public static string GetTopicLedgerLogFile(string tenantName, string productName, string componentName, string topicName)
+        {
+            return Path.Combine(GetTopicLogRootDirectory(tenantName, productName, componentName, topicName), "ledger_log.andx");
+        }
+
         public static string GetMessageRootDirectory(string tenantName, string productName, string componentName, string topicName)
         {
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "messages");
         }
+        public static string GetMessageLedgerFile(string tenantName, string productName, string componentName, string topicName, long ledgerId)
+        {
+            return Path.Combine(GetMessageRootDirectory(tenantName, productName, componentName, topicName), $"msg_{ledgerId}.andx");
+        }
+
         public static string GetTempTopicRootDirectory(string tenantName, string productName, string componentName, string topicName)
         {
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "temp");

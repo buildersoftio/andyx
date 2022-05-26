@@ -16,7 +16,6 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound.Connectors
             _threadsCount = threadsCount;
             MessagesBuffer = new ConcurrentQueue<Message>();
             ThreadingPool = new ThreadPool(threadsCount);
-
         }
     }
 }

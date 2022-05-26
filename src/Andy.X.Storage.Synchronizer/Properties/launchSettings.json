@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Andy.X.Storage.Synchronizer": {
+      "commandName": "Project",
+      "commandLineArgs": "default v3-testing default events"
+    }
+  }
+}

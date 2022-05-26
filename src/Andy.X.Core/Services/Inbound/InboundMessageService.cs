@@ -90,6 +90,18 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             }
 
             _topicConnectors[connectorKey].ThreadingPool.Threads[threadId].IsThreadWorking = false;
+
+            // check release memory.
+            ReleaseMemoryMessagingProcessor(connectorKey);
+        }
+
+        private void ReleaseMemoryMessagingProcessor(string connectorKey)
+        {
+            if (_topicConnectors[connectorKey].MessagesBuffer.Count == 0)
+            {
+                GC.Collect(2, GCCollectionMode.Forced);
+                GC.WaitForPendingFinalizers();
+            }
         }
 
         private bool TryCreateTopicConnector(string connectorKey)
