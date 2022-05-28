@@ -1,5 +1,7 @@
 ﻿using Buildersoft.Andy.X.Model.App.Components;
 using Buildersoft.Andy.X.Model.App.Tenants;
+using Buildersoft.Andy.X.Model.Subscriptions;
+using System;
 using System.Collections.Generic;
 
 namespace Buildersoft.Andy.X.Model.Configurations
@@ -44,5 +46,24 @@ namespace Buildersoft.Andy.X.Model.Configurations
     public class TopicConfiguration
     {
         public string Name { get; set; }
+
+        // Key: SubscriptionName
+        public Dictionary<string, SubscriptionConfiguration> Subscriptions { get; set; }
+        public TopicConfiguration()
+        {
+            Subscriptions = new Dictionary<string, SubscriptionConfiguration>();
+        }
+    }
+
+    public class SubscriptionConfiguration
+    {
+        // Name of the Subscription is the key in Directory
+        //public string SubscriptionName { get; set; }
+
+        public SubscriptionType SubscriptionType { get; set; }
+        public SubscriptionMode SubscriptionMode { get; set; }
+        public InitialPosition InitialPosition { get; set; }
+
+        public DateTimeOffset CreatedDate { get; set; }
     }
 }

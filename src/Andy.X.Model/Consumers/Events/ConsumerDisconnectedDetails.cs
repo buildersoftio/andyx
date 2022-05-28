@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Buildersoft.Andy.X.Model.Subscriptions;
+using System;
 
 namespace Buildersoft.Andy.X.Model.Consumers.Events
 {

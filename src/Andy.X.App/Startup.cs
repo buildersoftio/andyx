@@ -107,13 +107,14 @@ namespace Andy.X.App
 
             services.AddOrchestratorService();
             services.AddInboundMessageServices();
+            services.AddOutboundMessageServices();
 
             services.AddTenantMemoryRepository();
 
             services.AddConsumerRepository();
             services.AddProducerRepository();
 
-            services.AddConsumerHubService();
+            services.AddSubscriptionHubService();
             services.AddProducerHubService();
 
             services.AddRestServices();
@@ -146,8 +147,8 @@ namespace Andy.X.App
                     endpoints.MapControllers();
 
                 // Mapping SignalR Hubs
-                endpoints.MapHub<ProducerHub>("/realtime/v2/producer");
-                endpoints.MapHub<ConsumerHub>("/realtime/v2/consumer");
+                endpoints.MapHub<ProducerHub>("/realtime/v3/producer");
+                endpoints.MapHub<ConsumerHub>("/realtime/v3/consumer");
             });
         }
     }

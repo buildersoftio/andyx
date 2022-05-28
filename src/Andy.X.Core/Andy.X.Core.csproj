@@ -11,15 +11,21 @@
 		<RootNamespace>Buildersoft.Andy.X.Core</RootNamespace>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<Compile Remove="Abstractions\Services\Consumers\**" />
+		<EmbeddedResource Remove="Abstractions\Services\Consumers\**" />
+		<None Remove="Abstractions\Services\Consumers\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Cortex.Collections" Version="1.0.0-preview11" />
+	</ItemGroup>
+
 
 	<ItemGroup>
 		<ProjectReference Include="..\Andy.X.IO\Andy.X.IO.csproj" />
 		<ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
 		<ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="Abstractions\Services\Consumers\" />
 	</ItemGroup>
 
 </Project>

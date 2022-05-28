@@ -9,7 +9,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound.Connectors
         public ThreadPool ThreadingPool { get; set; }
         public ConcurrentQueue<Message> MessagesBuffer { get; set; }
 
-        private readonly int _threadsCount;
+        private readonly int _threadsCount;         
 
         public MessageTopicConnector(int threadsCount)
         {

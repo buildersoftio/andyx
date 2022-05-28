@@ -57,7 +57,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             bool isPersistent = Boolean.Parse(headers["x-andyx-topic-is-persistent"]);
 
 
-            string producerName = headers["x-andyx-producer"].ToString();
+            string producerName = headers["x-andyx-producer-name"].ToString();
 
             _logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} requested connection");
 

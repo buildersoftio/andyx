@@ -65,10 +65,36 @@ namespace Buildersoft.Andy.X.IO.Locations
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "producers");
         }
 
-        public static string GetConsumerRootDirectory(string tenantName, string productName, string componentName, string topicName)
+        public static string GetSubscriptionRootDirectory(string tenantName, string productName, string componentName, string topicName)
         {
-            return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "consumers");
+            return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "subscriptions");
         }
+
+        public static string GetSubscriptionDirectory(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
+        {
+            return Path.Combine(GetSubscriptionRootDirectory(tenantName, productName, componentName, topicName), subscriptionName);
+        }
+
+        public static string GetSubscriptionLogsDirectory(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
+        {
+            return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "logs");
+        }
+
+        public static string GetSubscriptionPositionLogFile(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
+        {
+            return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "position_log.andx");
+        }
+
+        public static string GetSubscriptionAcknowledgementLogFile(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
+        {
+            return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "acknowledgement_log.andx");
+        }
+
+        public static string GetConsumerRootDirectory(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
+        {
+            return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "consumers");
+        }
+
         public static string GetTopicLogRootDirectory(string tenantName, string productName, string componentName, string topicName)
         {
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "logs");

@@ -1,5 +1,6 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.IO.Readers;
 using Buildersoft.Andy.X.IO.Services;
@@ -9,6 +10,8 @@ using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Model.Subscriptions;
+using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -21,16 +24,20 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
         private readonly ILogger<TenantMemoryRepository> _logger;
         private readonly ITenantFactory _tenantFactory;
         private readonly IOrchestratorService _orchestratorService;
+        private readonly ISubscriptionHubRepository _subscriptionHubRepository;
+
         private ConcurrentDictionary<string, Tenant> _tenants;
 
         public TenantMemoryRepository(ILogger<TenantMemoryRepository> logger,
             List<TenantConfiguration> tenantConfigurations,
             ITenantFactory tenantFactory,
-            IOrchestratorService orchestratorService)
+            IOrchestratorService orchestratorService,
+            ISubscriptionHubRepository subscriptionHubRepository)
         {
             _logger = logger;
             _tenantFactory = tenantFactory;
             _orchestratorService = orchestratorService;
+            _subscriptionHubRepository = subscriptionHubRepository;
 
             _tenants = new ConcurrentDictionary<string, Tenant>();
 
@@ -121,6 +128,50 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
             return false;
         }
+
+        public bool AddSubscriptionConfiguration(string tenant, string product, string component, string topicName, string subscriptionName, Subscription subscription)
+        {
+
+            List<TenantConfiguration> tenantsConfig = TenantIOReader.ReadTenantsFromConfigFile();
+            var tenantDetail = tenantsConfig.Find(x => x.Name == tenant);
+            if (tenantDetail != null)
+            {
+                var productDetail = tenantDetail.Products.Find(x => x.Name == product);
+                if (productDetail == null)
+                    return false;
+
+                var componentDetails = productDetail.Components.Find(x => x.Name == component);
+                if (componentDetails == null)
+                    return false;
+
+                var topicDetails = componentDetails.Topics.Find(x => x.Name == topicName);
+                if (topicDetails == null)
+                    return false;
+
+                TenantIOService.TryCreateSubscriptionDirectory(tenant, product, component, topicName, subscriptionName);
+
+                var subId = ConnectorHelper.GetSubcriptionId(tenant, product, component, topicName, subscriptionName);
+                _subscriptionHubRepository.AddSubscription(subId, subscription);
+
+                if (topicDetails.Subscriptions.ContainsKey(subscriptionName) != true)
+                {
+                    topicDetails.Subscriptions.Add(subscriptionName, new SubscriptionConfiguration()
+                    {
+                        SubscriptionType = subscription.SubscriptionType,
+                        SubscriptionMode = subscription.SubscriptionMode,
+                        InitialPosition = subscription.InitialPosition,
+                        CreatedDate = subscription.CreatedDate,
+                    });
+
+                    if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
+                        return true;
+                }
+
+            }
+
+            return true;
+        }
+
 
         public bool AddComponent(string tenant, string product, string componentName, Component component)
         {

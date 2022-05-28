@@ -1,4 +1,5 @@
-﻿using Buildersoft.Andy.X.Model.Entities.Storages;
+﻿using Buildersoft.Andy.X.IO.Locations;
+using Buildersoft.Andy.X.Model.Entities.Storages;
 using Microsoft.EntityFrameworkCore;
 
 namespace Buildersoft.Andy.X.Core.Contexts.Storages
@@ -11,6 +12,12 @@ namespace Buildersoft.Andy.X.Core.Contexts.Storages
         {
             _ledgerMessageLocation = ledgerMessageLocation;
         }
+
+        public StorageContext(string tenant, string product, string component, string topic, long ledgerId)
+        {
+            _ledgerMessageLocation = TenantLocations.GetMessageLedgerFile(tenant, product, component, topic, ledgerId);
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite($"Filename={_ledgerMessageLocation}");

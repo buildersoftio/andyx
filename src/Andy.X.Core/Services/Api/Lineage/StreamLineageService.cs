@@ -13,13 +13,13 @@ namespace Buildersoft.Andy.X.Core.Services.Api.Lineage
     {
         private readonly ILogger<StreamLineageService> _logger;
         private readonly ITenantRepository _tenantRepository;
-        private readonly IConsumerHubRepository _consumerHubRepository;
+        private readonly ISubscriptionHubRepository _consumerHubRepository;
         private readonly IProducerHubRepository _producerHubRepository;
 
         public StreamLineageService(
             ILogger<StreamLineageService> logger,
             ITenantRepository tenantRepository,
-            IConsumerHubRepository consumerHubRepository,
+            ISubscriptionHubRepository consumerHubRepository,
             IProducerHubRepository producerHubRepository)
         {
             _logger = logger;
@@ -85,7 +85,7 @@ namespace Buildersoft.Andy.X.Core.Services.Api.Lineage
                 Producers = _producerHubRepository.GetProducers(tenant, product, component, topic).Values.ToList(),
                 Topic = topic,
                 TopicPhysicalPath = $"{tenant}/{product}/{component}/{topic}",
-                Consumers = _consumerHubRepository.GetConsumersByTopic(tenant, product, component, topic).Values.ToList()
+                Subscriptions = _consumerHubRepository.GetSubscriptionsByTopic(tenant, product, component, topic).Values.ToList()
             };
         }
     }
