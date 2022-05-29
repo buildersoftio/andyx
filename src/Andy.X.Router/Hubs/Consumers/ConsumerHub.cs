@@ -228,7 +228,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 string subscriptionId = ConnectorHelper.GetSubcriptionId(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName);
                 Consumer consumerToRemove = _subscriptionHubRepository.GetConsumerByConnectionId(clientConnectionId);
 
-                _outboundMessageService.StoreCurrentPosition(subscriptionId);
+                _outboundMessageService.StoreCurrentPositionAsync(subscriptionId);
 
                 _subscriptionHubRepository.RemoveConsumerConnection(subscriptionId, clientConnectionId);
                 _logger.LogInformation($"Consumer '{consumerToRemove.Name}' is disconencted from subscription '{subscription.SubscriptionName}' at {subscription.Tenant}/{subscription.Product}/{subscription.Component}/{subscription.Topic}");

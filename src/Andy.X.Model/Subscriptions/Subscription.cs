@@ -17,15 +17,12 @@ namespace Buildersoft.Andy.X.Model.Subscriptions
         public SubscriptionMode SubscriptionMode { get; set; }
         public InitialPosition InitialPosition { get; set; }
 
-
         // list of connected consumers on this node
         public ConcurrentDictionary<string, Consumer> ConsumersConnected { get; set; }
         public ConcurrentDictionary<string, Consumer> ConsumerExternalConnected { get; set; }
 
         public int CurrentConnectionIndex { get; set; }
-
         public DbContext SubscriptionPositionContext { get; set; }
-
         public DateTimeOffset CreatedDate { get; set; }
 
         public Subscription()

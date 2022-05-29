@@ -12,8 +12,10 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Outbound
         Task SendNextMessage(string subscriptionId, long currentLedgerId, long currentEntryId);
         Task SendSameMessage(string subscriptionId, long currentLedgerId, long currentEntryId);
 
-        Task StoreCurrentPosition(string subscriptionId);
+        Task StoreCurrentPositionAsync(string subscriptionId);
         Task StopOutboundMessageServiceForSubscription(string subscriptionId);
         Task StartOutboundMessageServiceForSubscription(string subscriptionId);
+
+        Task TriggerSubscriptionsByProducer(string tenant, string product, string component, string topic);
     }
 }

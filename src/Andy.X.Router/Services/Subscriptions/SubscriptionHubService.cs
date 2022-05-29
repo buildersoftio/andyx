@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Subscriptions;
 using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Model.Entities.Storages;
+using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Buildersoft.Andy.X.Utility.Extensions.Json;
@@ -34,26 +35,42 @@ namespace Buildersoft.Andy.X.Router.Services.Subscriptions
         public async Task TransmitMessage(string tenant, string product, string component, string topic, string subscriptionName, Message message)
         {
             var subscription = _subscriptionHubRepository.GetSubscriptionById(ConnectorHelper.GetSubcriptionId(tenant, product, component, topic, subscriptionName));
-            if (subscription.SubscriptionType == Model.Subscriptions.SubscriptionType.Unique)
+
+            if (subscription.SubscriptionType == SubscriptionType.Unique
+                || subscription.SubscriptionType == SubscriptionType.Failover)
             {
-                await _hub.Clients.Client(subscription.ConsumersConnected.First().Key).MessageSent(new MessageSentDetails()
-                {
-                    Tenant = tenant,
-                    Product = product,
-                    Component = component,
-                    Topic = topic,
+                await SendMessage(tenant, product, component, topic, message, subscription.ConsumersConnected.First().Key);
+            }
+            else
+            {
+                // Shared subscription...
+                if (subscription.CurrentConnectionIndex >= subscription.ConsumersConnected.Count)
+                    subscription.CurrentConnectionIndex = 0;
 
-                    LedgerId = message.LedgerId,
-                    EntryId = message.Id,
+                await SendMessage(tenant, product, component, topic, message, subscription.ConsumersConnected.ElementAt(subscription.CurrentConnectionIndex).Key);
 
-                    MessageId = message.MessageId,
-                    Headers = message.Headers.JsonToObject<Dictionary<string, string>>(),
-                    Payload = message.Payload,
+                subscription.CurrentConnectionIndex++;
+            }
+        }
 
-                    SentDate = message.SentDate
-                });
-            };
+        private async Task SendMessage(string tenant, string product, string component, string topic, Message message, string consumerKey)
+        {
+            await _hub.Clients.Client(consumerKey).MessageSent(new MessageSentDetails()
+            {
+                Tenant = tenant,
+                Product = product,
+                Component = component,
+                Topic = topic,
 
+                LedgerId = message.LedgerId,
+                EntryId = message.Id,
+
+                MessageId = message.MessageId,
+                Headers = message.Headers.JsonToObject<Dictionary<string, string>>(),
+                Payload = message.Payload,
+
+                SentDate = message.SentDate
+            });
         }
     }
 }

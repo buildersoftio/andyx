@@ -1,5 +1,6 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Services.Inbound.Connectors;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Messages;
@@ -18,12 +19,17 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
         private readonly ThreadsConfiguration _threadsConfiguration;
         private readonly IOrchestratorService _orchestratorService;
         private readonly ConcurrentDictionary<string, MessageTopicConnector> _topicConnectors;
+        private readonly IOutboundMessageService _outboundMessageService;
 
-        public InboundMessageService(ILogger<InboundMessageService> logger, ThreadsConfiguration threadsConfiguration, IOrchestratorService orchestratorService)
+        public InboundMessageService(ILogger<InboundMessageService> logger, 
+            ThreadsConfiguration threadsConfiguration, 
+            IOrchestratorService orchestratorService,
+            IOutboundMessageService outboundMessageService)
         {
             _logger = logger;
             _threadsConfiguration = threadsConfiguration;
             _orchestratorService = orchestratorService;
+            _outboundMessageService = outboundMessageService;
 
             _topicConnectors = new ConcurrentDictionary<string, MessageTopicConnector>();
         }
@@ -39,6 +45,8 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
 
             // try to run storage service to store records.
             _orchestratorService.StartTopicStorageSynchronizerProcess(connectorKey);
+
+            _outboundMessageService.TriggerSubscriptionsByProducer(message.Tenant, message.Product, message.Component, message.Topic);
         }
 
         private void InitializeInboundMessageProcessor(string connectorKey)
