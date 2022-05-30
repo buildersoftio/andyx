@@ -66,6 +66,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
             {
                 IsOutboundServiceRunning = false;
                 currentPositionTimer.Stop();
+                IsConsuming = false;
                 readingMessagesTimer.Stop();
             }
         }

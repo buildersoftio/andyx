@@ -277,11 +277,13 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 {
                     case MessageAcknowledgement.Acknowledged:
                     case MessageAcknowledgement.Skipped:
-                        await _outboundMessageService.SendNextMessage(subscriptionId, message.LedgerId, message.EntryId);
+                        // Skip the message
+                        //await _outboundMessageService.SendNextMessage(subscriptionId, message.LedgerId, message.EntryId);
                         break;
                     case MessageAcknowledgement.Unacknowledged:
                         // store the unacked message in the logs, and produce when the consumer is connected.
-                        await _outboundMessageService.SendNextMessage(subscriptionId, message.LedgerId, message.EntryId);
+                        // Skip the message, log the unacked message by storing into a subscription_acked_log_db.
+                        //await _outboundMessageService.SendNextMessage(subscriptionId, message.LedgerId, message.EntryId);
                         break;
                     default:
                         break;

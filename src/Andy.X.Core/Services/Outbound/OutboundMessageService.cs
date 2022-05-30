@@ -5,7 +5,7 @@ using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.Core.Contexts.Subscriptions;
 using Buildersoft.Andy.X.Core.Services.Outbound.Connectors;
 using Buildersoft.Andy.X.Model.Configurations;
-using Buildersoft.Andy.X.Model.Entities.Storages;
+using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.Extensions.Logging;
 using System;
@@ -47,7 +47,9 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     subscriptionTopicData.CurrentPosition = subDbContext.CurrentPosition.OrderBy(x => x.SubscriptionName).FirstOrDefault();
 
                     subscriptionTopicData.LastLedgerPositionInQueue = subscriptionTopicData.CurrentPosition.ReadLedgerPosition;
-                    subscriptionTopicData.LastEntryPositionInQueue = subscriptionTopicData.CurrentPosition.ReadEntryPosition - 1;
+                    //subscriptionTopicData.LastEntryPositionInQueue = subscriptionTopicData.CurrentPosition.ReadEntryPosition - 1;
+                    // We should not change the entry position.
+                    subscriptionTopicData.LastEntryPositionInQueue = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
                 }
 
                 _subscriptionTopicData.TryAdd(subscriptionId, subscriptionTopicData);
@@ -56,16 +58,23 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             }
             subscriptionTopicData = _subscriptionTopicData[subscriptionId];
 
+            subscriptionTopicData.StartService();
+
             // if sub type is Unique.
             // load 100 rows into memory
             // In case of shared subscription, if there exists a consumer conencted
             if (subscriptionTopicData.IsConsuming != true)
             {
                 LoadNext100MessagesInMemory(subscriptionId);
-                await SendFirstMessage(subscriptionId, subscriptionTopicData.CurrentPosition.ReadLedgerPosition, subscriptionTopicData.CurrentPosition.ReadEntryPosition);
+                if (subscriptionTopicData.Subscription.SubscriptionMode == SubscriptionMode.Resilient)
+                {
+                    await SendFirstMessage(subscriptionId, subscriptionTopicData.CurrentPosition.ReadLedgerPosition, subscriptionTopicData.CurrentPosition.ReadEntryPosition);
+                }
+                else
+                {
+                    await SendAllMessages(subscriptionId);
+                }
             }
-
-            subscriptionTopicData.StartService();
 
             return;
         }
@@ -82,8 +91,11 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 subscriptionTopic.SetConsumingFlag();
 
                 var message = subscriptionTopic.TemporaryMessages[firstMessage];
-                subscriptionTopic.CurrentPosition.ReadLedgerPosition = message.LedgerId;
-                subscriptionTopic.CurrentPosition.ReadEntryPosition = message.Id;
+
+                //subscriptionTopic.CurrentPosition.ReadLedgerPosition = message.LedgerId;
+                //subscriptionTopic.CurrentPosition.ReadEntryPosition = message.Id;
+                await UpdateCurrentPosition(subscriptionId, currentLedgerId, currentEntryId);
+
 
                 await _subscriptionHubService.TransmitMessage(subscriptionTopic.Subscription.Tenant,
                     subscriptionTopic.Subscription.Product,
@@ -103,11 +115,12 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             {
                 var message = subscriptionTopic.TemporaryMessages[nextMessage];
 
-                subscriptionTopic.CurrentPosition.ReadLedgerPosition = message.LedgerId;
-                subscriptionTopic.CurrentPosition.ReadEntryPosition = message.Id;
+                //subscriptionTopic.CurrentPosition.ReadLedgerPosition = message.LedgerId;
+                //subscriptionTopic.CurrentPosition.ReadEntryPosition = message.Id;
+                await UpdateCurrentPosition(subscriptionId, message.LedgerId, message.Id);
 
                 // delete message from memory
-                subscriptionTopic.TemporaryMessages.TryRemove($"{currentLedgerId}:{currentEntryId}", out Message deletedMessage);
+                subscriptionTopic.TemporaryMessages.TryRemove($"{currentLedgerId}:{currentEntryId}", out _);
 
                 await _subscriptionHubService.TransmitMessage(subscriptionTopic.Subscription.Tenant,
                     subscriptionTopic.Subscription.Product,
@@ -123,10 +136,6 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 {
                     subscriptionTopic.CurrentPosition.ReadLedgerPosition = subscriptionTopic.CurrentPosition.ReadLedgerPosition + 1;
                     subscriptionTopic.CurrentPosition.ReadEntryPosition = 0;
-                }
-                else
-                {
-                    subscriptionTopic.CurrentPosition.ReadEntryPosition = subscriptionTopic.CurrentPosition.ReadEntryPosition + 1;
                 }
 
                 subscriptionTopic.UnsetConsumingFlag();
@@ -195,7 +204,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             return Task.CompletedTask;
         }
 
-        public async Task TriggerSubscriptionsByProducer(string tenant, string product, string component, string topic)
+        public Task TriggerSubscriptionsByProducer(string tenant, string product, string component, string topic)
         {
             var subscriptions = _subscriptionHubRepository.GetSubscriptionsByTopic(tenant, product, component, topic);
             foreach (var subscription in subscriptions)
@@ -208,10 +217,19 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 {
                     if (LoadNext100MessagesInMemory(subscription.Key) == true)
                     {
-                        await SendFirstMessage(subscription.Key, subTopic.CurrentPosition.ReadLedgerPosition, subTopic.CurrentPosition.ReadEntryPosition);
+                        if (subTopic.Subscription.SubscriptionMode == SubscriptionMode.Resilient)
+                        {
+                            Task.Run(async () => await SendFirstMessage(subscription.Key, subTopic.CurrentPosition.ReadLedgerPosition, subTopic.CurrentPosition.ReadEntryPosition));
+                        }
+                        else
+                        {
+                            Task.Run(async () => await SendAllMessages(subscription.Key));
+                        }
                     }
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         private bool LoadNext100MessagesInMemory(string subscriptionId)
@@ -263,9 +281,61 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             {
                 if (LoadNext100MessagesInMemory(subscriptionId) == true)
                 {
-                    await SendFirstMessage(subscriptionId, subscriptionTopicData.CurrentPosition.ReadLedgerPosition, subscriptionTopicData.CurrentPosition.ReadEntryPosition);
+                    if (subscriptionTopicData.Subscription.SubscriptionMode == SubscriptionMode.Resilient)
+                    {
+                        await SendFirstMessage(subscriptionId, subscriptionTopicData.CurrentPosition.ReadLedgerPosition, subscriptionTopicData.CurrentPosition.ReadEntryPosition);
+                    }
+                    else
+                    {
+                        // non_resilient mode
+                        await SendAllMessages(subscriptionId);
+                    }
                 }
             }
+        }
+
+        public Task UpdateCurrentPosition(string subscriptionId, long currentLedgerId, long currentEntryId)
+        {
+            var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
+            subscriptionTopicData.CurrentPosition.ReadLedgerPosition = currentLedgerId;
+            subscriptionTopicData.CurrentPosition.ReadEntryPosition = currentEntryId;
+
+            return Task.CompletedTask;
+        }
+
+        public async Task SendAllMessages(string subscriptionId)
+        {
+            var subscriptionTopic = _subscriptionTopicData[subscriptionId];
+            subscriptionTopic.SetConsumingFlag();
+
+            while (subscriptionTopic.TemporaryMessageQueue.TryDequeue(out string nextMessage, out DateTimeOffset priority))
+            {
+                var message = subscriptionTopic.TemporaryMessages[nextMessage];
+
+                //subscriptionTopic.CurrentPosition.ReadLedgerPosition = message.LedgerId;
+                //subscriptionTopic.CurrentPosition.ReadEntryPosition = message.Id;
+                await UpdateCurrentPosition(subscriptionId, message.LedgerId, message.Id);
+
+                await _subscriptionHubService.TransmitMessage(subscriptionTopic.Subscription.Tenant,
+                    subscriptionTopic.Subscription.Product,
+                    subscriptionTopic.Subscription.Component,
+                    subscriptionTopic.Subscription.Topic,
+                    subscriptionTopic.Subscription.SubscriptionName,
+                    message);
+
+                // delete message from memory
+                subscriptionTopic.TemporaryMessages.TryRemove($"{message.LedgerId}:{message.Id}", out _);
+
+                // reading new messages from disk
+                // check if messages are 50% in the queue.
+                if (subscriptionTopic.TemporaryMessageQueue.Count == 50)
+                    LoadNext100MessagesInMemory(subscriptionId);
+
+                if (subscriptionTopic.IsConsuming == false)
+                    break;
+            }
+
+            subscriptionTopic.UnsetConsumingFlag();
         }
     }
 }
