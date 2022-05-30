@@ -95,6 +95,16 @@ namespace Buildersoft.Andy.X.IO.Locations
             return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "consumers");
         }
 
+        public static string GetConsumerDirectory(string tenantName, string productName, string componentName, string topicName, string subscriptionName, string consumerName)
+        {
+            return Path.Combine(GetConsumerRootDirectory(tenantName, productName, componentName, topicName, subscriptionName), consumerName);
+        }
+
+        public static string GetConsumerLogsRootDirectory(string tenantName, string productName, string componentName, string topicName, string subscriptionName, string consumerName)
+        {
+            return Path.Combine(GetConsumerDirectory(tenantName, productName, componentName, topicName, subscriptionName, consumerName), "logs");
+        }
+
         public static string GetTopicLogRootDirectory(string tenantName, string productName, string componentName, string topicName)
         {
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "logs");

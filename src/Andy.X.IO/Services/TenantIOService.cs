@@ -107,14 +107,36 @@ namespace Buildersoft.Andy.X.IO.Services
             {
                 if (Directory.Exists(TenantLocations.GetSubscriptionDirectory(tenant, product, component, topic, subscription)) == true)
                 {
-                    // TODO Add logging later
-
+                    // TODO: Add logging later
                     return true;
                 }
 
                 Directory.CreateDirectory(TenantLocations.GetSubscriptionDirectory(tenant, product, component, topic, subscription));
                 Directory.CreateDirectory(TenantLocations.GetConsumerRootDirectory(tenant, product, component, topic, subscription));
                 Directory.CreateDirectory(TenantLocations.GetSubscriptionLogsDirectory(tenant, product, component, topic, subscription));
+
+                //TODO: CREATE db_log FILES HERE.
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        public static bool TryCreateConsumerDirectory(string tenant, string product, string component, string topic, string subscription, string consumer)
+        {
+            try
+            {
+                if (Directory.Exists(TenantLocations.GetConsumerDirectory(tenant, product, component, topic, subscription, consumer)) == true)
+                {
+                    // TODO: Add logging later
+                    return true;
+                }
+
+                Directory.CreateDirectory(TenantLocations.GetConsumerDirectory(tenant, product, component, topic, subscription, consumer));
+                Directory.CreateDirectory(TenantLocations.GetConsumerLogsRootDirectory(tenant, product, component, topic, subscription, consumer));
 
                 //TODO: CREATE db_log FILES HERE.
 

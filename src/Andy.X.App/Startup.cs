@@ -10,7 +10,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Andy.X.App
@@ -53,12 +55,6 @@ namespace Andy.X.App
             //        .WithCompression(MessagePackCompression.None)
             //        .WithSecurity(MessagePackSecurity.UntrustedData);
             //});
-
-            // with v3 we are moving to MessagePack Serialization, and going toward Binary
-            //.AddJsonProtocol(opts =>
-            //{
-            //    opts.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            //})
 
             services.AddSwaggerGen(c =>
             {
@@ -135,6 +131,24 @@ namespace Andy.X.App
 
             app.UseApplicationService(serviceProvider);
             app.UseTenantMemoryRepository(serviceProvider);
+
+            // This part is not needed. keep it for some time when we will add support for haproxy.
+            //app.Use(async (context, next) =>
+            //{
+            //    var host = context.Request.Headers["Host"];
+            //    var userAgent = context.Request.Headers["User-Agent"];
+            //    var realIP = context.Request.Headers["X-Real-IP"];
+            //    var forwardeds = context.Request.Headers["X-Forwarded-For"];
+            //    var connectedInfo = new Dictionary<string, string>()
+            //            {
+            //                {"Host", host},
+            //                {"UserAgent", userAgent},
+            //                {"Real-IP", realIP},
+            //                {"Forward-For", forwardeds},
+            //            };
+            //    await next.Invoke();
+            //});
+
 
             app.UseHttpsRedirection();
             app.UseRouting();

@@ -6,11 +6,14 @@ using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
+using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
@@ -69,6 +72,12 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             string topic = headers["x-andyx-topic"].ToString();
             bool isPersistent = bool.Parse(headers["x-andyx-topic-is-persistent"]);
             string consumerName = headers["x-andyx-consumer-name"].ToString();
+
+            string consumerIpAddress = Context.GetHttpContext().Connection.RemoteIpAddress.ToString();
+
+
+
+            _logger.LogInformation($"Client connected with IP {consumerIpAddress}");
 
             string subscriptionName = headers["x-andyx-subscription-name"].ToString();
             SubscriptionMode subscriptionMode = (SubscriptionMode)Enum.Parse(typeof(SubscriptionMode), headers["x-andyx-subscription-mode"].ToString());
@@ -143,19 +152,19 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             if (subscriptionConencted != null)
             {
                 // check if the consumer has different subscription configuration, if yes, do not connect
-                if(subscriptionConencted.SubscriptionMode != subscriptionMode)
+                if (subscriptionConencted.SubscriptionMode != subscriptionMode)
                 {
                     _logger.LogWarning($"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, because modes are different");
                     return OnDisconnectedAsync(new Exception($"Modes are different with subscription '{subscriptionName}'."));
                 }
 
-                if(subscriptionConencted.SubscriptionType != subscriptionType)
+                if (subscriptionConencted.SubscriptionType != subscriptionType)
                 {
                     _logger.LogWarning($"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, because types are different");
                     return OnDisconnectedAsync(new Exception($"Types are different with subscription '{subscriptionName}'."));
                 }
 
-                if(subscriptionConencted.InitialPosition != initialPosition)
+                if (subscriptionConencted.InitialPosition != initialPosition)
                 {
                     _logger.LogWarning($"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, because initial position is different");
                     return OnDisconnectedAsync(new Exception($"Initial position is different with subscription '{subscriptionName}'."));
@@ -195,6 +204,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
             var consumer = _consumerFactory.CreateConsumer(subscriptionName, consumerName);
             _subscriptionHubRepository.AddConsumer(subscriptionId, clientConnectionId, consumer);
+            TenantIOService.TryCreateConsumerDirectory(tenant, product, component, topic, subscriptionName, consumerName);
 
             Task.Run(() => _outboundMessageService.AddSubscriptionTopicData(_subscriptionFactory.CreateSubscriptionTopicData(subscriptionToRegister)));
 
