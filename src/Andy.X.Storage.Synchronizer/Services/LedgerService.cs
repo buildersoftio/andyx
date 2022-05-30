@@ -64,7 +64,7 @@ namespace Andy.X.Storage.Synchronizer.Services
         {
             var currentLedger = _ledgerContext.Ledgers.Find(currentLedgerId);
             currentLedger.Entries = entryCount;
-            
+
             if (entryCount < 50000)
             {
                 // update the entryCount to ledger_log
@@ -78,7 +78,8 @@ namespace Andy.X.Storage.Synchronizer.Services
             _ledgerContext.SaveChanges();
 
             // create new Ledger row;
-            string ledgerLocation = TenantLocations.GetMessageLedgerFile(_tenant, _product, _component, _topic, currentLedgerId + 1);
+            long newLedgerId = currentLedgerId + 1;
+            string ledgerLocation = TenantLocations.GetMessageLedgerFile(_tenant, _product, _component, _topic, newLedgerId);
 
             var newLedger = new Ledger()
             {
@@ -90,9 +91,10 @@ namespace Andy.X.Storage.Synchronizer.Services
                 Size = 0
             };
             _ledgerContext.Ledgers.Add(newLedger);
-
-
             _ledgerContext.SaveChanges();
+
+            // Create the msg_ledger...
+            var storage = new StorageService(_tenant, _product, _component, _topic, newLedgerId);
         }
     }
 }

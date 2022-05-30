@@ -54,7 +54,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                         MarkDeleteEntryPosition = -1,
 
                         ReadLedgerPosition = 1,
-                        ReadEntryPosition = 1,
+                        ReadEntryPosition = 0,
                         PendingReadOperations = 0,
                         EntriesSinceLastUnacked = 0,
                         IsConnected = false,
@@ -73,7 +73,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                             MarkDeleteEntryPosition = -1,
 
                             ReadLedgerPosition = 1,
-                            ReadEntryPosition = 1,
+                            ReadEntryPosition = 0,
                             PendingReadOperations = 0,
                             EntriesSinceLastUnacked = 0,
                             IsConnected = false,
@@ -93,7 +93,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                                 MarkDeleteEntryPosition = -1,
 
                                 ReadLedgerPosition = 1,
-                                ReadEntryPosition = 1,
+                                ReadEntryPosition = 0,
                                 PendingReadOperations = 0,
                                 EntriesSinceLastUnacked = 0,
                                 IsConnected = false,

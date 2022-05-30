@@ -47,8 +47,6 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     subscriptionTopicData.CurrentPosition = subDbContext.CurrentPosition.OrderBy(x => x.SubscriptionName).FirstOrDefault();
 
                     subscriptionTopicData.LastLedgerPositionInQueue = subscriptionTopicData.CurrentPosition.ReadLedgerPosition;
-                    //subscriptionTopicData.LastEntryPositionInQueue = subscriptionTopicData.CurrentPosition.ReadEntryPosition - 1;
-                    // We should not change the entry position.
                     subscriptionTopicData.LastEntryPositionInQueue = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
                 }
 
@@ -83,8 +81,6 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
         {
             var subscriptionTopic = _subscriptionTopicData[subscriptionId];
 
-            //TODO: try to PEEK the first message from the queue and check if the message already exists, or if is different from the currentLedger and currentEntryId
-
             var isFirstMessageDequeued = subscriptionTopic.TemporaryMessageQueue.TryDequeue(out string firstMessage, out DateTimeOffset priority);
             if (isFirstMessageDequeued == true)
             {
@@ -92,8 +88,6 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
 
                 var message = subscriptionTopic.TemporaryMessages[firstMessage];
 
-                //subscriptionTopic.CurrentPosition.ReadLedgerPosition = message.LedgerId;
-                //subscriptionTopic.CurrentPosition.ReadEntryPosition = message.Id;
                 await UpdateCurrentPosition(subscriptionId, currentLedgerId, currentEntryId);
 
 
@@ -115,8 +109,6 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             {
                 var message = subscriptionTopic.TemporaryMessages[nextMessage];
 
-                //subscriptionTopic.CurrentPosition.ReadLedgerPosition = message.LedgerId;
-                //subscriptionTopic.CurrentPosition.ReadEntryPosition = message.Id;
                 await UpdateCurrentPosition(subscriptionId, message.LedgerId, message.Id);
 
                 // delete message from memory
@@ -239,8 +231,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
 
             using (var storageContext = new StorageContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.LastLedgerPositionInQueue))
             {
-
-                var newMessages = storageContext.Messages.Where(x => x.Id > subscriptionTopicData.LastEntryPositionInQueue).Take(100);
+                var newMessages = storageContext.Messages.Where(x => x.Id > subscriptionTopicData.LastEntryPositionInQueue).OrderBy(o => o.Id).Take(100);
 
                 foreach (var msg in newMessages)
                 {
@@ -251,11 +242,11 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     subscriptionTopicData.LastEntryPositionInQueue = msg.Id;
                 }
 
-                if (newMessages.Count() > 0)
+                if (newMessages.Count() >= 0)
                 {
-                    if (newMessages.OrderBy(x => x.Id).Last().Id == _storageConfiguration.LedgerSize)
-                    {
-                        // prepare ledger change for the next
+                    if (subscriptionTopicData.LastEntryPositionInQueue == _storageConfiguration.LedgerSize)
+                    {                       
+                        // prepare ledger change for the next file
                         subscriptionTopicData.LastLedgerPositionInQueue = subscriptionTopicData.LastLedgerPositionInQueue + 1;
                         subscriptionTopicData.LastEntryPositionInQueue = 0;
                     }

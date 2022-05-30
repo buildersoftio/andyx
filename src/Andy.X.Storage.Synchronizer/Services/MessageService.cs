@@ -18,15 +18,16 @@ namespace Andy.X.Storage.Synchronizer.Services
         private readonly StorageService _storageService;
         private readonly StorageConfiguration _storageConfiguration;
         private readonly ConcurrentPriorityQueue<Message, DateTimeOffset> _messageBuffer;
-        private readonly ConcurrentQueue<string> binFilesToRemove;
+        private readonly ConcurrentQueue<string> _binFilesToRemove;
 
         public MessageService(LedgerService ledgerService, StorageService storageService, StorageConfiguration storageConfiguration)
         {
             _ledgerService = ledgerService;
             _storageService = storageService;
             _storageConfiguration = storageConfiguration;
+
             _messageBuffer = new ConcurrentPriorityQueue<Message, DateTimeOffset>();
-            binFilesToRemove = new ConcurrentQueue<string>();
+            _binFilesToRemove = new ConcurrentQueue<string>();
         }
 
         public long ReadMessages(string rootStoreTempDirectory, long entriesCount, long currentLedgerId)
@@ -48,7 +49,7 @@ namespace Andy.X.Storage.Synchronizer.Services
                     StoredDate = DateTimeOffset.Now,
                 }, msgFromBin.SentDate);
 
-                binFilesToRemove.Enqueue(file.FullName);
+                _binFilesToRemove.Enqueue(file.FullName);
 
                 entriesCount++;
                 if (entriesCount == _storageConfiguration.LedgerSize)
@@ -85,7 +86,7 @@ namespace Andy.X.Storage.Synchronizer.Services
         {
             try
             {
-                while (binFilesToRemove.TryDequeue(out string fileLocation))
+                while (_binFilesToRemove.TryDequeue(out string fileLocation))
                 {
                     File.Delete(fileLocation);
                 }
@@ -96,7 +97,6 @@ namespace Andy.X.Storage.Synchronizer.Services
             {
                 return false;
             }
-
         }
     }
 }
