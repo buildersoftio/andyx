@@ -137,9 +137,15 @@ namespace Buildersoft.Andy.X.IO.Locations
         {
             return Path.Combine(GetTempMessageToStoreTopicRootDirectory(tenantName, productName, componentName, topicName), $"{msgId}.bin");
         }
-        public static string GetTempMessageAckedTopicRootDirectory(string tenantName, string productName, string componentName, string topicName)
+        
+        public static string GetTempMessageUnAckedTopicRootDirectory(string tenantName, string productName, string componentName, string topicName)
         {
-            return Path.Combine(GetTempTopicRootDirectory(tenantName, productName, componentName, topicName), "acked");
+            return Path.Combine(GetTempTopicRootDirectory(tenantName, productName, componentName, topicName), "unacked");
+        }
+
+        public static string GetNextUnAckedMessageToStoreFile(string tenantName, string productName, string componentName, string topicName, string msgId)
+        {
+            return Path.Combine(GetTempMessageUnAckedTopicRootDirectory(tenantName, productName, componentName, topicName), $"{msgId}.bin");
         }
         #endregion
     }

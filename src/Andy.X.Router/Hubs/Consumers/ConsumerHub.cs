@@ -4,6 +4,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
 using Buildersoft.Andy.X.IO.Services;
@@ -33,6 +34,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         private readonly ISubscriptionFactory _subscriptionFactory;
 
         private readonly IOutboundMessageService _outboundMessageService;
+        private readonly IInboundMessageService _inboundMessageService;
 
         public ConsumerHub(ILogger<ConsumerHub> logger,
             ISubscriptionHubRepository subscriptionHubRepository,
@@ -40,7 +42,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             ITenantFactory tenantFactory,
             IConsumerFactory consumerFactory,
             ISubscriptionFactory subscriptionFactory,
-            IOutboundMessageService outboundMessageService
+            IOutboundMessageService outboundMessageService,
+            IInboundMessageService inboundMessageService
             )
         {
             _logger = logger;
@@ -53,6 +56,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             _subscriptionFactory = subscriptionFactory;
 
             _outboundMessageService = outboundMessageService;
+            this._inboundMessageService = inboundMessageService;
         }
 
         public override Task OnConnectedAsync()
@@ -73,11 +77,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             bool isPersistent = bool.Parse(headers["x-andyx-topic-is-persistent"]);
             string consumerName = headers["x-andyx-consumer-name"].ToString();
 
-            string consumerIpAddress = Context.GetHttpContext().Connection.RemoteIpAddress.ToString();
-
-
-
-            _logger.LogInformation($"Client connected with IP {consumerIpAddress}");
+            //TODO: Add Client Ip Address
+            //string consumerIpAddress = Context.GetHttpContext().Connection.RemoteIpAddress.ToString();
+            //_logger.LogInformation($"Client connected with IP {consumerIpAddress}");
 
             string subscriptionName = headers["x-andyx-subscription-name"].ToString();
             SubscriptionMode subscriptionMode = (SubscriptionMode)Enum.Parse(typeof(SubscriptionMode), headers["x-andyx-subscription-mode"].ToString());
@@ -288,12 +290,10 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                     case MessageAcknowledgement.Acknowledged:
                     case MessageAcknowledgement.Skipped:
                         // Skip the message
-                        //await _outboundMessageService.SendNextMessage(subscriptionId, message.LedgerId, message.EntryId);
                         break;
                     case MessageAcknowledgement.Unacknowledged:
-                        // store the unacked message in the logs, and produce when the consumer is connected.
-                        // Skip the message, log the unacked message by storing into a subscription_acked_log_db.
-                        //await _outboundMessageService.SendNextMessage(subscriptionId, message.LedgerId, message.EntryId);
+                        _inboundMessageService.AcceptUnacknowledgedMessage(_subscriptionFactory
+                            .CreateUnackAcknowledgedMessageContent(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName, message));
                         break;
                     default:
                         break;

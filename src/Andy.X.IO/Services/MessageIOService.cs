@@ -28,11 +28,42 @@ namespace Buildersoft.Andy.X.IO.Services
             }
         }
 
+        public static bool TrySaveInTemp_UnackedMessageBinFile(MessageAcknowledgementFileContent messageContent, string msgId)
+        {
+            try
+            {
+                var msgLocation = TenantLocations.GetNextUnAckedMessageToStoreFile(messageContent.Tenant, messageContent.Product, messageContent.Component, messageContent.Topic, msgId);
+                using (var fs = File.Create(msgLocation))
+                {
+                    // for now we will not use proto-buf, we will contine to use MessagePack
+                    MessagePackSerializer.Serialize(fs, messageContent);
+                }
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public static Message ReadMessage_FromBinFile(string binLocation)
         {
             try
             {
                 return MessagePackSerializer.Deserialize<Message>(File.ReadAllBytes(binLocation));
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public static MessageAcknowledgementFileContent ReadAckedMessage_FromBinFile(string binLocation)
+        {
+            try
+            {
+                return MessagePackSerializer.Deserialize<MessageAcknowledgementFileContent>(File.ReadAllBytes(binLocation));
             }
             catch (Exception)
             {

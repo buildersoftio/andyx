@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -10,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Synchronizers
 {
-    public class TopicSynchronizerProcess
+    public class SubscriptionSynchronizerProcess
     {
-        private readonly ILogger<TopicSynchronizerProcess> _logger;
+        private readonly ILogger<SubscriptionSynchronizerProcess> _logger;
 
         public string Tenant { get; set; }
         public string Product { get; set; }
@@ -22,13 +23,13 @@ namespace Buildersoft.Andy.X.Core.Synchronizers
         public Process SynchronizerProcess { get; private set; }
         public bool IsProcessRunning { get; private set; }
 
-
-        public TopicSynchronizerProcess(ILogger<TopicSynchronizerProcess> logger)
+        public SubscriptionSynchronizerProcess(ILogger<SubscriptionSynchronizerProcess> logger)
         {
-            Topic = new Topic();
-            SynchronizerProcess = new Process();
-            IsProcessRunning = false;
-            _logger = logger;
+            if (IsProcessRunning != true)
+            {
+                IsProcessRunning = true;
+                var task = Task.Run(() => RunProcess());
+            }
         }
 
         public void StartProcess()
@@ -57,7 +58,7 @@ namespace Buildersoft.Andy.X.Core.Synchronizers
                     CreateNoWindow = false,
                 };
 
-                SynchronizerProcess.StartInfo.ArgumentList.Add(Path.Join(ConfigurationLocations.GetRootDirectory(), "Andy.X.Storage.Synchronizer.dll"));
+                SynchronizerProcess.StartInfo.ArgumentList.Add(Path.Join(ConfigurationLocations.GetRootDirectory(), "Andy.X.Consumer.Synchronizer.dll"));
                 SynchronizerProcess.StartInfo.ArgumentList.Add(Tenant);
                 SynchronizerProcess.StartInfo.ArgumentList.Add(Product);
                 SynchronizerProcess.StartInfo.ArgumentList.Add(Component);
@@ -70,7 +71,7 @@ namespace Buildersoft.Andy.X.Core.Synchronizers
                 SynchronizerProcess.OutputDataReceived -= SynchronizerProcess_OutputDataReceived;
                 SynchronizerProcess = null;
 
-                var filesCount = new DirectoryInfo(TenantLocations.GetTempMessageToStoreTopicRootDirectory(Tenant, Product, Component, Topic.Name)).GetFiles().Count();
+                var filesCount = new DirectoryInfo(TenantLocations.GetTempMessageUnAckedTopicRootDirectory(Tenant, Product, Component, Topic.Name)).GetFiles().Count();
                 if (filesCount == 0)
                 {
                     IsProcessRunning = false;

@@ -1,8 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+		<Version>3.0.0</Version>
+		<Company>Buildersoft</Company>
+		<Product>Buildersoft Andy</Product>
+		<Authors>Buildersoft</Authors>
+		<Description>Buildersoft Andy X is a distributed messaging system. This system will empower developers to move into Event Driven Systems. Andy X is a multi-tenant system.</Description>
+		<Copyright>Copyright © Buildersoft 2022</Copyright>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Cortex.Collections" Version="1.0.0-preview11" />
+		<PackageReference Include="EFCore.BulkExtensions" Version="6.5.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.5" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Andy.X.Core\Andy.X.Core.csproj" />
+		<ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
+	</ItemGroup>
 
 </Project>

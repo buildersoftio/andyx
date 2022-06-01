@@ -6,7 +6,9 @@ namespace Buildersoft.Andy.X.Core.Services.App
 {
     public class ApplicationService
     {
-        public ApplicationService(ILogger<ApplicationService> logger)
+        private readonly ClusterService clusterService;
+
+        public ApplicationService(ILogger<ApplicationService> logger, ClusterService clusterService)
         {
             var generalColor = Console.ForegroundColor;
 
@@ -30,11 +32,16 @@ namespace Buildersoft.Andy.X.Core.Services.App
             ExposePorts();
 
             Console.WriteLine("");
-            Console.WriteLine("                   Starting Buildersoft Andy X Node...");
+            Console.WriteLine("                   Starting Buildersoft Andy X...");
             Console.WriteLine("\n");
-            logger.LogInformation("Andy X Node is ready");
+            logger.LogInformation("Update settings");
             if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS").ToLower() == "true")
                 logger.LogInformation("Configuration endpoints are exposed");
+
+            clusterService.InitializeCluster();
+
+            logger.LogInformation("Andy X is ready");
+            this.clusterService = clusterService;
         }
 
         private void ExposePorts()

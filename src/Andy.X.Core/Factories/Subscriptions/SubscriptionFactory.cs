@@ -1,5 +1,7 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Buildersoft.Andy.X.Core.Services.Outbound.Connectors;
+using Buildersoft.Andy.X.Model.App.Messages;
+using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using System;
 
@@ -30,6 +32,21 @@ namespace Buildersoft.Andy.X.Core.Factories.Subscriptions
             return new SubscriptionTopicData()
             {
                 Subscription = subscription
+            };
+        }
+
+        public MessageAcknowledgementFileContent CreateUnackAcknowledgedMessageContent(string tenant, string product, string component, string topic, string subscription, MessageAcknowledgedDetails message)
+        {
+            return new MessageAcknowledgementFileContent()
+            {
+                Tenant = tenant,
+                Product = product,
+                Component = component,
+                Topic = topic,
+                Subscription = subscription,
+                EntryId = message.EntryId,
+                LedgerId = message.LedgerId,
+                CreatedDate = DateTimeOffset.Now
             };
         }
     }

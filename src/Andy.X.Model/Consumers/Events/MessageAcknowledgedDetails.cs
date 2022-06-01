@@ -1,5 +1,4 @@
-﻿using Buildersoft.Andy.X.Model.App.Messages;
-using MessagePack;
+﻿using MessagePack;
 
 namespace Buildersoft.Andy.X.Model.Consumers.Events
 {

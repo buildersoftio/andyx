@@ -7,5 +7,6 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Orchestrators
         public void AddTopicStorageSynchronizer(string tenant, string product, string component, Topic topic);
 
         public void StartTopicStorageSynchronizerProcess(string topicKey);
+        public void StartSubscriptionSynchronizerProcess(string topicKey);
     }
 }

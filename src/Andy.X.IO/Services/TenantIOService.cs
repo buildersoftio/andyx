@@ -91,7 +91,7 @@ namespace Buildersoft.Andy.X.IO.Services
                 Directory.CreateDirectory(TenantLocations.GetMessageRootDirectory(tenant, product, component, topic));
                 Directory.CreateDirectory(TenantLocations.GetTempTopicRootDirectory(tenant, product, component, topic));
                 Directory.CreateDirectory(TenantLocations.GetTempMessageToStoreTopicRootDirectory(tenant, product, component, topic));
-                Directory.CreateDirectory(TenantLocations.GetTempMessageAckedTopicRootDirectory(tenant, product, component, topic));
+                Directory.CreateDirectory(TenantLocations.GetTempMessageUnAckedTopicRootDirectory(tenant, product, component, topic));
 
                 return true;
             }
