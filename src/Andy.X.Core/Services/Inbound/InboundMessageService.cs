@@ -172,6 +172,9 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
                 try
                 {
                     var msgId = $"ua_{messageAcknowledgement.Subscription}" + Guid.NewGuid();
+                    if (messageAcknowledgement.IsDeleted == true)
+                        msgId = $"del_" + Guid.NewGuid();
+
                     MessageIOService.TrySaveInTemp_UnackedMessageBinFile(messageAcknowledgement, msgId);
 
 

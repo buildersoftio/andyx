@@ -13,8 +13,6 @@ using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
@@ -56,7 +54,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             _subscriptionFactory = subscriptionFactory;
 
             _outboundMessageService = outboundMessageService;
-            this._inboundMessageService = inboundMessageService;
+            _inboundMessageService = inboundMessageService;
         }
 
         public override Task OnConnectedAsync()
@@ -219,9 +217,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 Product = product,
                 Component = component,
                 Topic = topic,
-                ConsumerName = consumerName,
-                SubscriptionType = subscriptionType,
-                InitialPosition = initialPosition
+                ConsumerName = consumerName
             });
 
             _logger.LogInformation($"Consumer '{consumerName}' is connected to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}");
@@ -289,9 +285,23 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 {
                     case MessageAcknowledgement.Acknowledged:
                     case MessageAcknowledgement.Skipped:
-                        // Skip the message
+                        if (_outboundMessageService.CheckIfUnackedMessagesExists(subscriptionId, message.LedgerId, message.EntryId) == true)
+                        {
+                            // delete unacked message.
+                            var messageAcked = _subscriptionFactory
+                                .CreateUnackAcknowledgedMessageContent(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName, message);
+                            messageAcked.IsDeleted = true;
+
+                            _inboundMessageService.AcceptUnacknowledgedMessage(messageAcked);
+                        }
+                        else
+                        {
+                            await _outboundMessageService.UpdateCurrentPosition(subscriptionId, message.LedgerId, message.EntryId);
+                        }
                         break;
                     case MessageAcknowledgement.Unacknowledged:
+                        await _outboundMessageService.UpdateCurrentPosition(subscriptionId, message.LedgerId, message.EntryId);
+
                         _inboundMessageService.AcceptUnacknowledgedMessage(_subscriptionFactory
                             .CreateUnackAcknowledgedMessageContent(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName, message));
                         break;

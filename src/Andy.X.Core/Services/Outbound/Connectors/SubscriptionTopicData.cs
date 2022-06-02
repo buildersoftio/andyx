@@ -23,8 +23,14 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
         public ConcurrentPriorityQueue<string, DateTimeOffset> TemporaryMessageQueue { get; set; }
         public ConcurrentDictionary<string, Message> TemporaryMessages { get; set; }
 
+        public ConcurrentDictionary<string, long> TemporaryUnackedMessageIds { get; set; }
+
         public long LastLedgerPositionInQueue { get; set; }
         public long LastEntryPositionInQueue { get; set; }
+
+        public long LastPositionUnackedInQueue { get; set; }
+
+        public bool DoesUnackedMessagesExists { get; set; }
 
         public bool IsConsuming { get; set; }
 
@@ -47,7 +53,12 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
             TemporaryMessageQueue = new ConcurrentPriorityQueue<string, DateTimeOffset>();
             TemporaryMessages = new ConcurrentDictionary<string, Message>();
 
+            TemporaryUnackedMessageIds = new ConcurrentDictionary<string, long>();
+
+            LastPositionUnackedInQueue = 0;
+
             IsConsuming = false;
+            DoesUnackedMessagesExists = false;
         }
 
         public void StartService()

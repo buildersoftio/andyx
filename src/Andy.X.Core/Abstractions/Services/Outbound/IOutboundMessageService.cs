@@ -6,8 +6,10 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Outbound
     public interface IOutboundMessageService
     {
         Task AddSubscriptionTopicData(SubscriptionTopicData subscriptionTopicData);
+        Task LoadSubscriptionTopicDataInMemory(SubscriptionTopicData subscriptionTopicData);
 
-        Task SendAllMessages(string subscriptionId);
+        Task SendAllMessages(string subscriptionId, bool sendUnackedMessage = false);
+        bool CheckIfUnackedMessagesExists(string subscriptionId, long ledgerId, long entryId);
 
         Task SendFirstMessage(string subscriptionId, long currentLedgerId, long currentEntryId);
 

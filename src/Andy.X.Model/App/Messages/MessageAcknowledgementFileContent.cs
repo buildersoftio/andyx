@@ -23,8 +23,11 @@ namespace Buildersoft.Andy.X.Model.App.Messages
         [Key(6)]
         public long EntryId { get; set; }
 
-
         [Key(7)]
+        public bool IsDeleted { get; set; }
+
+
+        [Key(8)]
         public DateTimeOffset CreatedDate { get; set; }
 
     }

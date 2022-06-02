@@ -1,4 +1,5 @@
-﻿using Buildersoft.Andy.X.Core.Contexts.Storages;
+﻿using Andy.X.Consumer.Synchronizer.Loggers;
+using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Cortex.Collections.Generic;
@@ -11,14 +12,14 @@ using System.Linq;
 
 namespace Andy.X.Consumer.Synchronizer.Services
 {
-    public class MessageAcknoledgmentService
+    public class MessageAcknowledgementService
     {
         private readonly ConcurrentDictionary<string, MessageAcknowledgementContext> _subscriptonContext;
         private readonly ConcurrentDictionary<string, ConcurrentPriorityQueue<MessageAcknowledgementFileContent, DateTimeOffset>> _buffersForSubscription;
 
         private readonly ConcurrentQueue<string> _binFilesToRemove;
 
-        public MessageAcknoledgmentService()
+        public MessageAcknowledgementService()
         {
             _subscriptonContext = new ConcurrentDictionary<string, MessageAcknowledgementContext>();
             _buffersForSubscription = new ConcurrentDictionary<string, ConcurrentPriorityQueue<MessageAcknowledgementFileContent, DateTimeOffset>>();
@@ -37,10 +38,10 @@ namespace Andy.X.Consumer.Synchronizer.Services
             _buffersForSubscription.TryAdd(subscription, new ConcurrentPriorityQueue<MessageAcknowledgementFileContent, DateTimeOffset>());
         }
 
-        public void ReadMessages(string tempDirLocation)
+        public void ReadMessages(string tempDirLocation, string searchPattern = "ua_*")
         {
             var storeDir = new DirectoryInfo(tempDirLocation);
-            var files = storeDir.GetFiles().ToList().OrderBy(x => x.CreationTimeUtc);
+            var files = storeDir.GetFiles(searchPattern).ToList().OrderBy(x => x.CreationTimeUtc);
             foreach (var file in files)
             {
                 var msgFromBin = MessageIOService.ReadAckedMessage_FromBinFile(file.FullName);
@@ -49,6 +50,7 @@ namespace Andy.X.Consumer.Synchronizer.Services
 
                 _binFilesToRemove.Enqueue(file.FullName);
             }
+            Logger.Log("Files to remove are : " + _binFilesToRemove.Count);
         }
 
 
@@ -85,6 +87,45 @@ namespace Andy.X.Consumer.Synchronizer.Services
             {
                 Console.WriteLine(ex.Message);
                 Console.ReadLine();
+                return false;
+            }
+        }
+
+        public bool DeleteMessages()
+        {
+            if (_buffersForSubscription.Count == 0)
+                return false;
+
+            try
+            {
+                foreach (var buffer in _buffersForSubscription)
+                {
+                    List<Buildersoft.Andy.X.Model.Entities.Storages.UnacknowledgedMessage> messageAcknowledgementFileContents = new();
+                    while (buffer.Value.TryDequeue(out MessageAcknowledgementFileContent messageAcknowledgementFileContent, out DateTimeOffset priorityDate))
+                    {
+                        messageAcknowledgementFileContents.Add(new Buildersoft.Andy.X.Model.Entities.Storages.UnacknowledgedMessage()
+                        {
+                            CreatedDate = messageAcknowledgementFileContent.CreatedDate,
+                            EntryId = messageAcknowledgementFileContent.EntryId,
+                            LedgerId = messageAcknowledgementFileContent.LedgerId,
+                            Subscription = messageAcknowledgementFileContent.Subscription
+                        });
+                    }
+
+                    var fromDb = _subscriptonContext[buffer.Key].UnacknowledgedMessages
+                        .Where(x => messageAcknowledgementFileContents.Select(s => s.LedgerId).Contains(x.LedgerId) && messageAcknowledgementFileContents.Select(s => s.EntryId).Contains(x.EntryId)).ToList();
+
+                    _subscriptonContext[buffer.Key].BulkDelete(fromDb, config =>
+                    {
+                        config.CustomDestinationTableName = "UnacknowledgedMessages";
+                    });
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex.Message);
                 return false;
             }
         }

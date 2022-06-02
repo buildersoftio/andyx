@@ -1,7 +1,9 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
+using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.IO.Readers;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.IO.Writers;
@@ -25,19 +27,25 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
         private readonly ITenantFactory _tenantFactory;
         private readonly IOrchestratorService _orchestratorService;
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
+        private readonly IOutboundMessageService _outboundMessageService;
+        private readonly ISubscriptionFactory _subscriptionFactory;
 
-        private ConcurrentDictionary<string, Tenant> _tenants;
+        private readonly ConcurrentDictionary<string, Tenant> _tenants;
 
         public TenantMemoryRepository(ILogger<TenantMemoryRepository> logger,
             List<TenantConfiguration> tenantConfigurations,
             ITenantFactory tenantFactory,
             IOrchestratorService orchestratorService,
-            ISubscriptionHubRepository subscriptionHubRepository)
+            ISubscriptionHubRepository subscriptionHubRepository,
+            IOutboundMessageService outboundMessageService,
+            ISubscriptionFactory subscriptionFactory)
         {
             _logger = logger;
             _tenantFactory = tenantFactory;
             _orchestratorService = orchestratorService;
             _subscriptionHubRepository = subscriptionHubRepository;
+            _outboundMessageService = outboundMessageService;
+            _subscriptionFactory = subscriptionFactory;
 
             _tenants = new ConcurrentDictionary<string, Tenant>();
 
@@ -86,6 +94,13 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                     component.Topics.ForEach(topic =>
                     {
                         AddTopic(tenantConfig.Name, product.Name, component.Name, topic.Name, _tenantFactory.CreateTopic(topic.Name));
+
+                        foreach (var subscription in topic.Subscriptions)
+                        {
+                            AddSubscriptionConfiguration(tenantConfig.Name, product.Name, component.Name, topic.Name, subscription.Key
+                                , _subscriptionFactory.CreateSubscription(tenantConfig.Name, product.Name, component.Name, topic.Name, subscription.Key, subscription.Value.SubscriptionType,
+                                subscription.Value.SubscriptionMode, subscription.Value.InitialPosition));
+                        }
                     });
                 });
             });
@@ -153,6 +168,9 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                 var subId = ConnectorHelper.GetSubcriptionId(tenant, product, component, topicName, subscriptionName);
                 _subscriptionHubRepository.AddSubscription(subId, subscription);
 
+                //load subscriptionopicData
+                _outboundMessageService.LoadSubscriptionTopicDataInMemory(_subscriptionFactory.CreateSubscriptionTopicData(subscription));
+
                 if (topicDetails.Subscriptions.ContainsKey(subscriptionName) != true)
                 {
                     topicDetails.Subscriptions.Add(subscriptionName, new SubscriptionConfiguration()
@@ -166,7 +184,6 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                     if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
                         return true;
                 }
-
             }
 
             return true;
