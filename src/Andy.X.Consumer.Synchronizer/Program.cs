@@ -24,13 +24,14 @@ namespace Andy.X.Consumer.Synchronizer
             MessageAcknowledgementService messageAcknoledgmentService = new MessageAcknowledgementService();
             MessageAcknowledgementService msgDeleteService = new MessageAcknowledgementService();
 
-            messageAcknoledgmentService.ReadMessages(tempDir);
-            if (messageAcknoledgmentService.StoreMessages() == true)
-                messageAcknoledgmentService.RemoveBinFiles();
-
+            // synchronise the message count for del and store.
             msgDeleteService.ReadMessages(tempDir, "del_*");
             if (msgDeleteService.DeleteMessages() == true)
                 msgDeleteService.RemoveBinFiles();
+
+            messageAcknoledgmentService.ReadMessages(tempDir);
+            if (messageAcknoledgmentService.StoreMessages() == true)
+                messageAcknoledgmentService.RemoveBinFiles();
 
             Logger.Log($"Subscription Synchronizer for {tenant}/{product}/{component}/{topicDetails} message stored");
         }

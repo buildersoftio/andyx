@@ -300,7 +300,19 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                         }
                         break;
                     case MessageAcknowledgement.Unacknowledged:
-                        await _outboundMessageService.UpdateCurrentPosition(subscriptionId, message.LedgerId, message.EntryId);
+                        if (_outboundMessageService.CheckIfUnackedMessagesExists(subscriptionId, message.LedgerId, message.EntryId) == true)
+                        {
+                            // delete unacked message.
+                            var messageAcked = _subscriptionFactory
+                                .CreateUnackAcknowledgedMessageContent(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName, message);
+                            messageAcked.IsDeleted = true;
+
+                            _inboundMessageService.AcceptUnacknowledgedMessage(messageAcked);
+                        }
+                        else
+                        {
+                            await _outboundMessageService.UpdateCurrentPosition(subscriptionId, message.LedgerId, message.EntryId);
+                        }
 
                         _inboundMessageService.AcceptUnacknowledgedMessage(_subscriptionFactory
                             .CreateUnackAcknowledgedMessageContent(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName, message));
