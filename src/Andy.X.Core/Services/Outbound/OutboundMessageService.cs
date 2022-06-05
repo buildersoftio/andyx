@@ -321,16 +321,6 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             return Task.CompletedTask;
         }
 
-        private long GetLastEntryFromUnckedMessageLogs(SubscriptionTopicData subscriptionTopicData)
-        {
-            using (var ackedDbContext = new MessageAcknowledgementContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
-            {
-                var lastEntry = ackedDbContext.UnacknowledgedMessages.OrderBy(x => x.Id).LastOrDefault();
-                if (lastEntry != null)
-                    return lastEntry.Id;
-            }
-            return 0;
-        }
 
         private bool LoadNext100MessagesInMemory(string subscriptionId)
         {
@@ -424,21 +414,26 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             // check if new messages arrived in memory.
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
 
+            // CHECK but this 'if' does nothing
             if (subscriptionTopicData.Subscription.SubscriptionMode == SubscriptionMode.NonResilient && subscriptionTopicData.DoesUnackedMessagesExists == true)
                 return;
 
             if (subscriptionTopicData.IsConsuming == false)
             {
-                if (LoadNext100MessagesInMemory(subscriptionId) == true)
+                if (subscriptionTopicData.Subscription.SubscriptionMode == SubscriptionMode.Resilient)
                 {
-                    if (subscriptionTopicData.Subscription.SubscriptionMode == SubscriptionMode.Resilient)
-                    {
+                    if (LoadNext100MessagesInMemory(subscriptionId) == true)
                         await SendFirstMessage(subscriptionId, subscriptionTopicData.CurrentPosition.ReadLedgerPosition, subscriptionTopicData.CurrentPosition.ReadEntryPosition);
-                    }
+                }
+                else
+                {
+                    if (LoadNext100MessagesInMemory(subscriptionId) == true)
+                        await SendAllMessages(subscriptionId);
                     else
                     {
-                        // non_resilient mode
-                        await SendAllMessages(subscriptionId);
+                        subscriptionTopicData.LastEntryUnackedInLog = GetLastEntryFromUnckedMessageLogs(subscriptionTopicData);
+                        if (LoadNext100UnacknowledgedMessagesInMemory(subscriptionId) == true)
+                            await SendAllMessages(subscriptionId, true);
                     }
                 }
             }
@@ -470,6 +465,17 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             }
         }
 
+        private long GetLastEntryFromUnckedMessageLogs(SubscriptionTopicData subscriptionTopicData)
+        {
+            using (var ackedDbContext = new MessageAcknowledgementContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
+            {
+                var lastEntry = ackedDbContext.UnacknowledgedMessages.OrderBy(x => x.Id).LastOrDefault();
+                if (lastEntry != null)
+                    return lastEntry.Id;
+            }
+            return 0;
+        }
+
         private void ReleaseMemory(string subscriptionId)
         {
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
@@ -480,6 +486,5 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 GC.WaitForPendingFinalizers();
             }
         }
-
     }
 }
