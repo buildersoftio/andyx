@@ -46,7 +46,8 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             // try to run storage service to store records.
             _orchestratorService.StartTopicStorageSynchronizerProcess(connectorKey);
 
-            _outboundMessageService.TriggerSubscriptionsByProducer(message.Tenant, message.Product, message.Component, message.Topic);
+            // WE ARE NOT TRIGGERING THE CONSUMER ANYMORE FROM HERE, AS EVERY SECOND SUBSCRIPTION IS CHECKING FOR NEW MESSAGES.
+            // _outboundMessageService.TriggerSubscriptionsByProducer(message.Tenant, message.Product, message.Component, message.Topic);
         }
 
         public void AcceptUnacknowledgedMessage(MessageAcknowledgementFileContent messageAcknowledgement)

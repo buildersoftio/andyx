@@ -26,10 +26,8 @@ namespace Andy.X.Storage.Synchronizer
             MessageService messageService;
 
 
-            Logger.Log($"Storage Synchronizer for {tenant}/{product}/{component}/{topicDetails.Name} is online");
+            Logger.Log($"{tenant}/{product}/{component}/{topicDetails.Name} is processing");
 
-
-            Logger.Log(TenantLocations.GetTopicLedgerLogFile(tenant, product, component, topicDetails.Name));
             ledgerService = new(tenant, product, component, topicDetails.Name);
             long currentLedgerId = ledgerService.GetCurrentLedgerId(out long entriesCount);
 
@@ -44,7 +42,7 @@ namespace Andy.X.Storage.Synchronizer
                 messageService.RemoveBinFiles();
             }
 
-            Logger.Log($"Storage Synchronizer for {tenant}/{product}/{component}/{topicDetails} message stored");
+            Logger.Log($"{tenant}/{product}/{component}/{topicDetails.Name} current_ledger={currentLedgerId}; current_entry={entriesCount}");
         }
     }
 }

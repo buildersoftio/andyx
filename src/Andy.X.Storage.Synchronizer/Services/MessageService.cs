@@ -34,24 +34,37 @@ namespace Andy.X.Storage.Synchronizer.Services
         {
             var storeDir = new DirectoryInfo(rootStoreTempDirectory);
             var files = storeDir.GetFiles().ToList().OrderBy(x => x.CreationTimeUtc);
+            int batchCount = 0;
             foreach (var file in files)
             {
+
                 var msgFromBin = MessageIOService.ReadMessage_FromBinFile(file.FullName);
-                _messageBuffer.TryEnqueue(new Message()
+                if (msgFromBin != null)
                 {
-                    LedgerId = currentLedgerId,
-                    MessageId = msgFromBin.Id,
-                    Headers = msgFromBin.Headers.ToJson(),
+                    _messageBuffer.TryEnqueue(new Message()
+                    {
+                        LedgerId = currentLedgerId,
+                        MessageId = msgFromBin.Id,
+                        Headers = msgFromBin.Headers.ToJson(),
 
-                    Payload = msgFromBin.Payload,
+                        Payload = msgFromBin.Payload,
 
-                    SentDate = msgFromBin.SentDate,
-                    StoredDate = DateTimeOffset.Now,
-                }, msgFromBin.SentDate);
+                        SentDate = msgFromBin.SentDate,
+                        StoredDate = DateTimeOffset.Now,
+                    }, msgFromBin.SentDate);
+
+
+                    //TODO: if the message file will be empty 'DID we lose a message here?!' Try to fix this issue.
+                }
 
                 _binFilesToRemove.Enqueue(file.FullName);
 
+                batchCount++;
                 entriesCount++;
+
+                if (batchCount == _storageConfiguration.BatchSize)
+                    break;
+
                 if (entriesCount == _storageConfiguration.LedgerSize)
                     break;
             }

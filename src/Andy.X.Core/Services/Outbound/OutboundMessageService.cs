@@ -49,6 +49,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     subscriptionTopicData.LastLedgerPositionInQueue = subscriptionTopicData.CurrentPosition.ReadLedgerPosition;
                     subscriptionTopicData.LastEntryPositionInQueue = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
                     subscriptionTopicData.LastPositionUnackedInQueue = 0;
+                    subscriptionTopicData.LastEntryUnackedInLog = GetLastEntryFromUnckedMessageLogs(subscriptionTopicData);
                 }
 
                 _subscriptionTopicData.TryAdd(subscriptionId, subscriptionTopicData);
@@ -73,8 +74,10 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 }
                 else
                 {
-                    if (LoadNext100UnacknoledgedMessagesInMemory(subscriptionId) == true)
+                    if (LoadNext100UnacknowledgedMessagesInMemory(subscriptionId) == true)
+                    {
                         await SendAllMessages(subscriptionId, true);
+                    }
                     else
                     {
                         LoadNext100MessagesInMemory(subscriptionId);
@@ -82,8 +85,6 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     }
                 }
             }
-
-            return;
         }
 
         public async Task SendFirstMessage(string subscriptionId, long currentLedgerId, long currentEntryId)
@@ -279,13 +280,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 if (subscriptionTopic.TemporaryMessageQueue.Count == 50)
                 {
                     if (sendUnackedMessage == true)
-                    {
-                        if (LoadNext100UnacknoledgedMessagesInMemory(subscriptionId) != true)
-                        {
-                            sendUnackedMessage = false;
-                            LoadNext100MessagesInMemory(subscriptionId);
-                        }
-                    }
+                        LoadNext100UnacknowledgedMessagesInMemory(subscriptionId);
                     else
                         LoadNext100MessagesInMemory(subscriptionId);
                 }
@@ -312,7 +307,9 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     subscriptionTopicData.LastLedgerPositionInQueue = subscriptionTopicData.CurrentPosition.ReadLedgerPosition;
                     subscriptionTopicData.LastEntryPositionInQueue = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
                     subscriptionTopicData.LastPositionUnackedInQueue = 0;
+                    subscriptionTopicData.LastEntryUnackedInLog = GetLastEntryFromUnckedMessageLogs(subscriptionTopicData);
                 }
+
 
                 _subscriptionTopicData.TryAdd(subscriptionId, subscriptionTopicData);
 
@@ -322,6 +319,17 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             }
 
             return Task.CompletedTask;
+        }
+
+        private long GetLastEntryFromUnckedMessageLogs(SubscriptionTopicData subscriptionTopicData)
+        {
+            using (var ackedDbContext = new MessageAcknowledgementContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
+            {
+                var lastEntry = ackedDbContext.UnacknowledgedMessages.OrderBy(x => x.Id).LastOrDefault();
+                if (lastEntry != null)
+                    return lastEntry.Id;
+            }
+            return 0;
         }
 
         private bool LoadNext100MessagesInMemory(string subscriptionId)
@@ -359,7 +367,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             return isMemoryLoaded;
         }
 
-        private bool LoadNext100UnacknoledgedMessagesInMemory(string subscriptionId)
+        private bool LoadNext100UnacknowledgedMessagesInMemory(string subscriptionId)
         {
             bool isMemoryLoaded = true;
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
@@ -367,8 +375,13 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
 
             using (var unackedContext = new MessageAcknowledgementContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
             {
+                int take = 100;
                 var currentLedgerId = subscriptionTopicData.LastLedgerPositionInQueue;
-                var newUnackMessages = unackedContext.UnacknowledgedMessages.Where(x => x.Id > subscriptionTopicData.LastPositionUnackedInQueue).OrderBy(x => x.Id).Take(100).ToList();
+                if ((subscriptionTopicData.LastEntryUnackedInLog - subscriptionTopicData.LastPositionUnackedInQueue) <= 100)
+                {
+                    take = (int)subscriptionTopicData.LastEntryUnackedInLog - (int)subscriptionTopicData.LastPositionUnackedInQueue;
+                }
+                var newUnackMessages = unackedContext.UnacknowledgedMessages.Where(x => x.Id > subscriptionTopicData.LastPositionUnackedInQueue).OrderBy(x => x.Id).Take(take).ToList();
                 var ledgers = newUnackMessages.Select(x => x.LedgerId).ToList().Distinct();
                 foreach (var ledger in ledgers)
                 {
@@ -397,6 +410,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     subscriptionTopicData.DoesUnackedMessagesExists = false;
                 }
             }
+
             return isMemoryLoaded;
         }
 
@@ -409,6 +423,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
         {
             // check if new messages arrived in memory.
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
+
             if (subscriptionTopicData.Subscription.SubscriptionMode == SubscriptionMode.NonResilient && subscriptionTopicData.DoesUnackedMessagesExists == true)
                 return;
 
@@ -433,13 +448,11 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
         {
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
 
-            if (subscriptionTopicData.TemporaryUnackedMessageIds.Count == 0)
-            {
-                subscriptionTopicData.DoesUnackedMessagesExists = false;
-                return false;
-            }
+            bool isRemoved = subscriptionTopicData.TemporaryUnackedMessageIds.TryRemove($"{ledgerId}:{entryId}", out _);
+            if (isRemoved == true)
+                return true;
 
-            return subscriptionTopicData.TemporaryUnackedMessageIds.TryRemove($"{ledgerId}:{entryId}", out _);
+            return isRemoved;
         }
 
         private bool CheckUnackedMessagesIfExists(string subscriptionId)

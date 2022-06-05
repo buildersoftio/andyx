@@ -38,19 +38,30 @@ namespace Andy.X.Consumer.Synchronizer.Services
             _buffersForSubscription.TryAdd(subscription, new ConcurrentPriorityQueue<MessageAcknowledgementFileContent, DateTimeOffset>());
         }
 
-        public void ReadMessages(string tempDirLocation, string searchPattern = "ua_*")
+        public long ReadMessages(string tempDirLocation, string searchPattern = "ua_*", long sizeFromDeletedFiles = 0)
         {
             var storeDir = new DirectoryInfo(tempDirLocation);
             var files = storeDir.GetFiles(searchPattern).ToList().OrderBy(x => x.CreationTimeUtc);
+
+            long sizeToReadFiles = -1;
+            if (sizeFromDeletedFiles != 0)
+                sizeToReadFiles = sizeFromDeletedFiles / 2;
+
+            long fileRead = 0;
             foreach (var file in files)
             {
+                fileRead++;
                 var msgFromBin = MessageIOService.ReadAckedMessage_FromBinFile(file.FullName);
                 TryAllSubscriptionBuffer(msgFromBin.Tenant, msgFromBin.Product, msgFromBin.Component, msgFromBin.Topic, msgFromBin.Subscription);
                 _buffersForSubscription[msgFromBin.Subscription].TryEnqueue(msgFromBin, msgFromBin.CreatedDate);
 
                 _binFilesToRemove.Enqueue(file.FullName);
+
+                if (fileRead == sizeToReadFiles)
+                    break;
             }
-            Logger.Log("Files to remove are : " + _binFilesToRemove.Count);
+
+            return _binFilesToRemove.Count;
         }
 
 
@@ -125,7 +136,7 @@ namespace Andy.X.Consumer.Synchronizer.Services
             }
             catch (Exception ex)
             {
-                Logger.Log(ex.Message);
+                Logger.Log($"Error accured, details={ex.Message}");
                 return false;
             }
         }

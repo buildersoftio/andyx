@@ -29,6 +29,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
         public long LastEntryPositionInQueue { get; set; }
 
         public long LastPositionUnackedInQueue { get; set; }
+        public long LastEntryUnackedInLog { get; set; }
 
         public bool DoesUnackedMessagesExists { get; set; }
 
@@ -42,10 +43,10 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
 
         public SubscriptionTopicData()
         {
-            currentPositionTimer = new Timer() { AutoReset = true, Interval = new TimeSpan(0, 0, 10).TotalMilliseconds };
+            currentPositionTimer = new Timer() { AutoReset = true, Interval = new TimeSpan(0, 0, 5).TotalMilliseconds };
             currentPositionTimer.Elapsed += CurrentPositionTimer_Elapsed;
 
-            readingMessagesTimer = new Timer() { AutoReset = true, Interval = new TimeSpan(0, 0, 1).TotalMilliseconds };
+            readingMessagesTimer = new Timer() { AutoReset = true, Interval = new TimeSpan(0, 0, 0, 0, 500).TotalMilliseconds };
             readingMessagesTimer.Elapsed += ReadingMessagesTimer_Elapsed;
 
             CurrentPosition = new SubscriptionPosition();
@@ -56,6 +57,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
             TemporaryUnackedMessageIds = new ConcurrentDictionary<string, long>();
 
             LastPositionUnackedInQueue = 0;
+            LastEntryUnackedInLog = 0;
 
             IsConsuming = false;
             DoesUnackedMessagesExists = false;
