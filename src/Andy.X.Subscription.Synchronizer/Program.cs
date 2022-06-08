@@ -1,10 +1,10 @@
-﻿using Andy.X.Consumer.Synchronizer.Loggers;
-using Andy.X.Consumer.Synchronizer.Services;
+﻿using Andy.X.Subscription.Synchronizer.Loggers;
+using Andy.X.Subscription.Synchronizer.Services;
 using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Newtonsoft.Json;
 
-namespace Andy.X.Consumer.Synchronizer
+namespace Andy.X.Subscription.Synchronizer
 {
     internal class Program
     {

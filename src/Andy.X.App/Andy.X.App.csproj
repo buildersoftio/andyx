@@ -28,7 +28,7 @@
 		<ProjectReference Include="..\Andy.X.Cluster.Synchronizer\Andy.X.Cluster.Synchronizer.csproj">
 		  <Private>True</Private>
 		</ProjectReference>
-		<ProjectReference Include="..\Andy.X.Consumer.Synchronizer\Andy.X.Consumer.Synchronizer.csproj" />
+		<ProjectReference Include="..\Andy.X.Subscription.Synchronizer\Andy.X.Subscription.Synchronizer.csproj" />
 		<ProjectReference Include="..\Andy.X.Router\Andy.X.Router.csproj">
 		  <Private>True</Private>
 		</ProjectReference>

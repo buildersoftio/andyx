@@ -58,7 +58,7 @@ namespace Buildersoft.Andy.X.Core.Synchronizers
                     CreateNoWindow = false,
                 };
 
-                SynchronizerProcess.StartInfo.ArgumentList.Add(Path.Join(ConfigurationLocations.GetRootDirectory(), "Andy.X.Consumer.Synchronizer.dll"));
+                SynchronizerProcess.StartInfo.ArgumentList.Add(Path.Join(ConfigurationLocations.GetRootDirectory(), "Andy.X.Subscription.Synchronizer.dll"));
                 SynchronizerProcess.StartInfo.ArgumentList.Add(Tenant);
                 SynchronizerProcess.StartInfo.ArgumentList.Add(Product);
                 SynchronizerProcess.StartInfo.ArgumentList.Add(Component);

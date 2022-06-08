@@ -1,4 +1,4 @@
-﻿using Andy.X.Consumer.Synchronizer.Loggers;
+﻿using Andy.X.Subscription.Synchronizer.Loggers;
 using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Messages;
@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Andy.X.Consumer.Synchronizer.Services
+namespace Andy.X.Subscription.Synchronizer.Services
 {
     public class MessageAcknowledgementService
     {

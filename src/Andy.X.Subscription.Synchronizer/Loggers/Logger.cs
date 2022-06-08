@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace Andy.X.Consumer.Synchronizer.Loggers
+namespace Andy.X.Subscription.Synchronizer.Loggers
 {
     public static class Logger
     {

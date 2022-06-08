@@ -19,9 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andy.X.Cluster.Synchronizer
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Synchronizers", "Synchronizers", "{EBDF7496-FB69-448D-A893-C97B1C5D916B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andy.X.Storage.Synchronizer", "src\Andy.X.Storage.Synchronizer\Andy.X.Storage.Synchronizer.csproj", "{9AD024A1-251D-4871-800A-94C590EBD757}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andy.X.Storage.Synchronizer", "src\Andy.X.Storage.Synchronizer\Andy.X.Storage.Synchronizer.csproj", "{9AD024A1-251D-4871-800A-94C590EBD757}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Andy.X.Consumer.Synchronizer", "src\Andy.X.Consumer.Synchronizer\Andy.X.Consumer.Synchronizer.csproj", "{954A5EC2-0DCB-480F-A232-52E5311FF70A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Andy.X.Subscription.Synchronizer", "src\Andy.X.Subscription.Synchronizer\Andy.X.Subscription.Synchronizer.csproj", "{954A5EC2-0DCB-480F-A232-52E5311FF70A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
