@@ -1,5 +1,6 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.App.Repositories.Memory;
+using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.Core.Contexts.Subscriptions;
 using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.Consumers;
@@ -39,6 +40,13 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                 // make sure that the db is created.
                 subscription.SubscriptionPositionContext.ChangeTracker.AutoDetectChangesEnabled = false;
                 subscription.SubscriptionPositionContext.Database.EnsureCreated();
+
+                subscription.SubscriptionAcknowledgementContext = new MessageAcknowledgementContext(subscription.Tenant,
+                    subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName);
+
+                //  ensure that db is created.
+                subscription.SubscriptionAcknowledgementContext.ChangeTracker.AutoDetectChangesEnabled = false;
+                subscription.SubscriptionAcknowledgementContext.Database.EnsureCreated();
 
                 // check if record exists.
                 var position = (subscription.SubscriptionPositionContext as SubscriptionPositionContext).CurrentPosition.FirstOrDefault();

@@ -53,7 +53,7 @@ namespace Buildersoft.Andy.X.Core.Synchronizers
                 SynchronizerProcess.StartInfo = new ProcessStartInfo()
                 {
                     FileName = "dotnet",
-                    UseShellExecute = false,
+                    UseShellExecute = true,
                     CreateNoWindow = false,
                 };
 

@@ -114,12 +114,12 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
 
         private void ReadingMessagesTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            currentPositionTimer.Stop();
+            readingMessagesTimer.Stop();
 
             var subscriptionId = ConnectorHelper.GetSubcriptionId(Subscription.Tenant, Subscription.Product, Subscription.Component, Subscription.Topic, Subscription.SubscriptionName);
             ReadMessagesFromStorage?.Invoke(this, subscriptionId);
 
-            currentPositionTimer.Start();
+            readingMessagesTimer.Start();
         }
     }
 }
