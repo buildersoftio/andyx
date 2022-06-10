@@ -34,6 +34,9 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
 
             if (Directory.Exists(ConfigurationLocations.StorageDirectory()) != true)
                 Directory.CreateDirectory(ConfigurationLocations.StorageDirectory());
+
+            if (Directory.Exists(ConfigurationLocations.NodeLoggingDirectory()) != true)
+                Directory.CreateDirectory(ConfigurationLocations.NodeLoggingDirectory());
         }
 
         private static void BindTenantsConfiguration(this IServiceCollection services, IConfiguration configuration)

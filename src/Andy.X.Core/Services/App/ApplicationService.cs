@@ -21,7 +21,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write("    ###"); Console.ForegroundColor = generalColor; Console.Write("  ###");
             //Console.WriteLine("       Andy X 3.0.0-alpha. Copyright (C) 2022 Buildersoft LLC");
-            Console.WriteLine("       Andy X 3.0.0-alpha9. Developed with (love) by Buildersoft LLC.");
+            Console.WriteLine("       Andy X 3.0.0-alpha12. Developed with (love) by Buildersoft LLC.");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write("      ####         "); Console.ForegroundColor = generalColor; Console.WriteLine("Licensed under the Apache License 2.0. See https://bit.ly/3DqVQbx");
             Console.ForegroundColor = ConsoleColor.Red;
@@ -34,6 +34,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             Console.WriteLine("");
             Console.WriteLine("                   Starting Buildersoft Andy X...");
             Console.WriteLine("\n");
+            logger.LogInformation("Starting Buildersoft Andy X...");
             logger.LogInformation("Update settings");
             if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS").ToLower() == "true")
                 logger.LogInformation("Configuration endpoints are exposed");

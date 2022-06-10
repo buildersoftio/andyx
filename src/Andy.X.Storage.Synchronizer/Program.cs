@@ -3,7 +3,9 @@ using Andy.X.Storage.Synchronizer.Services;
 using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Utility.Synchronizers;
 using Newtonsoft.Json;
+using System;
 using System.IO;
 
 namespace Andy.X.Storage.Synchronizer
@@ -12,6 +14,7 @@ namespace Andy.X.Storage.Synchronizer
     {
         static void Main(string[] args)
         {
+
             StorageConfiguration storageConfiguration =
                 JsonConvert.DeserializeObject<StorageConfiguration>(File.ReadAllText(ConfigurationLocations.GetStorageConfigurationFile()));
 
@@ -19,7 +22,8 @@ namespace Andy.X.Storage.Synchronizer
             string product = args[1];
             string component = args[2];
             Topic topicDetails = JsonConvert.DeserializeObject<Topic>(args[3]);
-            //string topicDetails = args[3];
+
+            var logSink = new LoggerSink(ConfigurationLocations.StorageSyncLoggingFile(tenant, product, component, topicDetails.Name, DateTime.Now));
 
             LedgerService ledgerService;
             StorageService storageService;

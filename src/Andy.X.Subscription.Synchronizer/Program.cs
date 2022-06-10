@@ -2,7 +2,9 @@
 using Andy.X.Subscription.Synchronizer.Services;
 using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.App.Topics;
+using Buildersoft.Andy.X.Utility.Synchronizers;
 using Newtonsoft.Json;
+using System;
 
 namespace Andy.X.Subscription.Synchronizer
 {
@@ -10,10 +12,13 @@ namespace Andy.X.Subscription.Synchronizer
     {
         static void Main(string[] args)
         {
+            // initialize Log Sink
             string tenant = args[0];
             string product = args[1];
             string component = args[2];
             Topic topicDetails = JsonConvert.DeserializeObject<Topic>(args[3]);
+
+            var logSink = new LoggerSink(ConfigurationLocations.SubscriptionSyncLoggingFile(tenant, product, component, topicDetails.Name, DateTime.Now));
 
             Logger.Log($"Service for {tenant}/{product}/{component}/{topicDetails.Name} is working");
 

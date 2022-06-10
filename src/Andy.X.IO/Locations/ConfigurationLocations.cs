@@ -20,6 +20,32 @@ namespace Buildersoft.Andy.X.IO.Locations
             return Path.Combine(GetDataDirectory(), "active");
         }
 
+        public static string NodeLoggingDirectory()
+        {
+            return Path.Combine(GetDataDirectory(), "logs");
+        }
+
+        public static string NodeLoggingFile()
+        {
+            // date is added from serilog logging library.
+            return Path.Combine(NodeLoggingDirectory(), "node_.log");
+        }
+
+        public static string StorageSyncLoggingFile(string tenant, string product, string component, string topic, DateTime dateTime)
+        {
+            return Path.Combine(NodeLoggingDirectory(), $"storage_sync_{tenant}{product}{component}{topic}_{dateTime:yyyyMMdd}.log");
+        }
+
+        public static string ClusterSyncLoggingFile(string nodeId, DateTime dateTime)
+        {
+            return Path.Combine(NodeLoggingDirectory(), $"cluster_sync_{nodeId}_{dateTime:yyyyMMdd}.log");
+        }
+
+        public static string SubscriptionSyncLoggingFile(string tenant, string product, string component, string topic, DateTime dateTime)
+        {
+            return Path.Combine(NodeLoggingDirectory(), $"subscription_sync_{tenant}{product}{component}{topic}_{dateTime:yyyyMMdd}.log");
+        }
+
         public static string TempDirectory()
         {
             return Path.Combine(GetDataDirectory(), "temp");

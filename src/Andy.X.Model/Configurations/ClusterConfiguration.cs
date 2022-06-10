@@ -19,7 +19,7 @@ namespace Buildersoft.Andy.X.Model.Configurations
     {
         public string NodeId { get; set; }
         public string Host { get; set; }
-        public string Post { get; set; }
+        public string Port { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]
         public NodeConnectionType NodeConnectionType { get; set; }
