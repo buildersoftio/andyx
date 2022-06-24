@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -70,12 +71,19 @@ namespace Buildersoft.Andy.X.Core.Synchronizers
                 SynchronizerProcess.OutputDataReceived -= SynchronizerProcess_OutputDataReceived;
                 SynchronizerProcess = null;
 
-                var filesCount = new DirectoryInfo(TenantLocations.GetTempMessageToStoreTopicRootDirectory(Tenant, Product, Component, Topic.Name)).GetFiles().Count();
+                ReleaseMemory();
+
+                var filesCount = new DirectoryInfo(TenantLocations.GetTempMessageToStoreTopicRootDirectory(Tenant, Product, Component, Topic.Name)).EnumerateFiles().Count();
                 if (filesCount == 0)
                 {
                     IsProcessRunning = false;
                 }
             }
+        }
+        private void ReleaseMemory()
+        {
+            GC.Collect(2, GCCollectionMode.Forced);
+            GC.WaitForPendingFinalizers();
         }
 
         private void SynchronizerProcess_OutputDataReceived(object sender, DataReceivedEventArgs e)

@@ -37,7 +37,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             _subscriptionTopicData = new ConcurrentDictionary<string, SubscriptionTopicData>();
         }
 
-        public async Task AddSubscriptionTopicData(SubscriptionTopicData subscriptionTopicData)
+        public Task AddSubscriptionTopicData(SubscriptionTopicData subscriptionTopicData)
         {
             var subscriptionId = ConnectorHelper.GetSubcriptionId(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName);
             if (_subscriptionTopicData.ContainsKey(subscriptionId) != true)
@@ -58,9 +58,11 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 subscriptionTopicData.StoringCurrentPosition += SubscriptionTopicData_TriggerLogic;
                 subscriptionTopicData.ReadMessagesFromStorage += SubscriptionTopicData_ReadMessagesFromStorage;
             }
-            subscriptionTopicData = _subscriptionTopicData[subscriptionId];
 
+            subscriptionTopicData = _subscriptionTopicData[subscriptionId];
             subscriptionTopicData.StartService();
+
+            return Task.CompletedTask;
         }
 
 
@@ -90,7 +92,6 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             return Task.CompletedTask;
         }
 
-
         public async Task SendFirstMessage(string subscriptionId, long currentLedgerId, long currentEntryId)
         {
             var subscriptionTopic = _subscriptionTopicData[subscriptionId];
@@ -100,8 +101,9 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             {
                 subscriptionTopic.SetConsumingFlag();
 
-                var message = subscriptionTopic.TemporaryMessages[firstMessage];
+                var firstMessageDetails = subscriptionTopic.TemporaryMessages[firstMessage];
 
+                // if we sent the first message we should not update the message.
                 await UpdateCurrentPosition(subscriptionId, currentLedgerId, currentEntryId);
 
 
@@ -110,7 +112,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     subscriptionTopic.Subscription.Component,
                     subscriptionTopic.Subscription.Topic,
                     subscriptionTopic.Subscription.SubscriptionName,
-                    message);
+                    firstMessageDetails);
             }
         }
 
@@ -118,23 +120,22 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
         {
             var subscriptionTopic = _subscriptionTopicData[subscriptionId];
 
+            // ack previous mesasge
+            await UpdateCurrentPosition(subscriptionId, currentLedgerId, currentEntryId);
+            // delete previous message from memory
+            subscriptionTopic.TemporaryMessages.TryRemove($"{currentLedgerId}:{currentEntryId}", out _);
+
             var isNextMessageDequeued = subscriptionTopic.TemporaryMessageQueue.TryDequeue(out string nextMessage, out DateTimeOffset priority);
             if (isNextMessageDequeued == true)
             {
-                var message = subscriptionTopic.TemporaryMessages[nextMessage];
-
-                await UpdateCurrentPosition(subscriptionId, message.LedgerId, message.Id);
-
-                // delete message from memory
-                subscriptionTopic.TemporaryMessages.TryRemove($"{currentLedgerId}:{currentEntryId}", out _);
+                var nextMessageDetails = subscriptionTopic.TemporaryMessages[nextMessage];
 
                 await _subscriptionHubService.TransmitMessage(subscriptionTopic.Subscription.Tenant,
                     subscriptionTopic.Subscription.Product,
                     subscriptionTopic.Subscription.Component,
                     subscriptionTopic.Subscription.Topic,
                     subscriptionTopic.Subscription.SubscriptionName,
-                    subscriptionTopic.TemporaryMessages[nextMessage]);
-
+                    nextMessageDetails);
             }
             else
             {
@@ -189,6 +190,10 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 subscriptionTopic.TemporaryMessageQueue.Clear();
                 subscriptionTopic.TemporaryMessages.Clear();
 
+                // as we are clining the temporary memory the last ledger and entry position will return to the current one.
+                subscriptionTopic.LastLedgerPositionInQueue = subscriptionTopic.CurrentPosition.ReadLedgerPosition;
+                subscriptionTopic.LastEntryPositionInQueue = subscriptionTopic.CurrentPosition.ReadEntryPosition;
+
                 ReleaseMemory(subscriptionId);
             }
 
@@ -205,7 +210,8 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             {
                 var subPositon = subDbContext.CurrentPosition.OrderBy(x => x.SubscriptionName).FirstOrDefault();
 
-                if (subPositon.ReadLedgerPosition != subscriptionTopicData.CurrentPosition.ReadLedgerPosition || subPositon.ReadEntryPosition != subscriptionTopicData.CurrentPosition.ReadEntryPosition)
+                if (subPositon.ReadLedgerPosition != subscriptionTopicData.CurrentPosition.ReadLedgerPosition
+                    || subPositon.ReadEntryPosition != subscriptionTopicData.CurrentPosition.ReadEntryPosition)
                 {
                     subPositon.ReadLedgerPosition = subscriptionTopicData.CurrentPosition.ReadLedgerPosition;
                     subPositon.ReadEntryPosition = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
@@ -250,6 +256,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
         public Task UpdateCurrentPosition(string subscriptionId, long currentLedgerId, long currentEntryId)
         {
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
+
             subscriptionTopicData.CurrentPosition.ReadLedgerPosition = currentLedgerId;
             subscriptionTopicData.CurrentPosition.ReadEntryPosition = currentEntryId;
 
@@ -311,6 +318,13 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 int newMsgCount = newMessages.Count();
                 foreach (var msg in newMessages)
                 {
+                    if (msg.LedgerId == subscriptionTopicData.CurrentPosition.ReadLedgerPosition)
+                    {
+                        // continue if you try to send messages that are sent before.
+                        if (msg.Id < subscriptionTopicData.CurrentPosition.ReadEntryPosition)
+                            continue;
+                    }
+
                     subscriptionTopicData.TemporaryMessageQueue.TryEnqueue($"{msg.LedgerId}:{msg.Id}", msg.SentDate);
                     subscriptionTopicData.TemporaryMessages.TryAdd($"{msg.LedgerId}:{msg.Id}", msg);
 
@@ -390,15 +404,15 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             await StoreCurrentPositionAsync(subscriptionId);
         }
 
-        private async void SubscriptionTopicData_ReadMessagesFromStorage(object sender, string subscriptionId)
+        private async Task<bool> SubscriptionTopicData_ReadMessagesFromStorage(object sender, string subscriptionId)
         {
             // check if new messages arrived in memory.
-
+            var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
             try
             {
-                var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
+                _logger.LogInformation($"check IsConsuming={subscriptionTopicData.IsConsuming}");
 
-                if (subscriptionTopicData.IsConsuming == false)
+                if (subscriptionTopicData.IsConsuming != true)
                 {
                     if (subscriptionTopicData.Subscription.SubscriptionMode == SubscriptionMode.Resilient)
                     {
@@ -423,6 +437,14 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 _logger.LogWarning($"An error accured, couldn't connect to Ledger. Andy X is trying to connect to it, details={ex.Message}.");
             }
 
+            if (_subscriptionHubRepository.GetSubscriptionById(subscriptionId).ConsumersConnected.Count == 0)
+                return false;
+
+            // stop the timer if the consumer/s is/are consuming
+            if (subscriptionTopicData.IsConsuming == true)
+                return false;
+
+            return true;
         }
 
         public bool CheckIfUnackedMessagesExists(string subscriptionId, long ledgerId, long entryId)

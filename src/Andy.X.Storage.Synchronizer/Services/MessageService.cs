@@ -1,4 +1,5 @@
-﻿using Buildersoft.Andy.X.IO.Services;
+﻿using Andy.X.Storage.Synchronizer.Loggers;
+using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Entities.Storages;
 using Buildersoft.Andy.X.Utility.Extensions.Json;
@@ -7,8 +8,10 @@ using EFCore.BulkExtensions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Andy.X.Storage.Synchronizer.Services
 {
@@ -18,7 +21,7 @@ namespace Andy.X.Storage.Synchronizer.Services
         private readonly StorageService _storageService;
         private readonly StorageConfiguration _storageConfiguration;
         private readonly ConcurrentPriorityQueue<Message, DateTimeOffset> _messageBuffer;
-        private readonly ConcurrentQueue<string> _binFilesToRemove;
+        private readonly List<string> _binFilesToRemove;
 
         public MessageService(LedgerService ledgerService, StorageService storageService, StorageConfiguration storageConfiguration)
         {
@@ -27,14 +30,18 @@ namespace Andy.X.Storage.Synchronizer.Services
             _storageConfiguration = storageConfiguration;
 
             _messageBuffer = new ConcurrentPriorityQueue<Message, DateTimeOffset>();
-            _binFilesToRemove = new ConcurrentQueue<string>();
+            _binFilesToRemove = new List<string>();
         }
 
         public long ReadMessages(string rootStoreTempDirectory, long entriesCount, long currentLedgerId)
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             var storeDir = new DirectoryInfo(rootStoreTempDirectory);
             var files = storeDir.GetFiles().ToList().OrderBy(x => x.CreationTimeUtc);
             int batchCount = 0;
+
             foreach (var file in files)
             {
 
@@ -57,7 +64,7 @@ namespace Andy.X.Storage.Synchronizer.Services
                     //TODO: if the message file will be empty 'DID we lose a message here?!' Try to fix this issue.
                 }
 
-                _binFilesToRemove.Enqueue(file.FullName);
+                _binFilesToRemove.Add(file.FullName);
 
                 batchCount++;
                 entriesCount++;
@@ -69,11 +76,17 @@ namespace Andy.X.Storage.Synchronizer.Services
                     break;
             }
 
+            stopwatch.Stop();
+            Logger.Log($"Messages read from disk for {stopwatch.Elapsed.TotalMilliseconds}");
+
             return entriesCount;
         }
 
         public bool StoreMessages()
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             if (_messageBuffer.Count == 0)
                 return false;
 
@@ -84,8 +97,9 @@ namespace Andy.X.Storage.Synchronizer.Services
                 {
                     messagesToStore.Add(message);
                 }
-
                 _storageService.GetStorageContext().BulkInsert(messagesToStore);
+                stopwatch.Stop();
+                Logger.Log($"Messages stored for {stopwatch.Elapsed.TotalMilliseconds}");
 
                 return true;
             }
@@ -97,19 +111,24 @@ namespace Andy.X.Storage.Synchronizer.Services
 
         public bool RemoveBinFiles()
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
             try
             {
-                while (_binFilesToRemove.TryDequeue(out string fileLocation))
+                Parallel.ForEach(_binFilesToRemove, new ParallelOptions { MaxDegreeOfParallelism = 4 }, file =>
                 {
-                    File.Delete(fileLocation);
-                }
+                    File.Delete(file);
+                });
 
+                stopwatch.Stop();
+                Logger.Log($"Files deleted for {stopwatch.Elapsed.TotalMilliseconds}");
                 return true;
             }
             catch (Exception)
             {
                 return false;
             }
+
         }
     }
 }

@@ -169,7 +169,6 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         public void TransmitMessage(Message message)
         {
             _inboundMessageService.AcceptMessage(message);
-            IncreaseMessageProducedCount();
         }
 
         public void TransmitMessages(List<Message> messages)
@@ -178,15 +177,6 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             {
                 _inboundMessageService.AcceptMessage(message);
             }
-
-            IncreaseMessageProducedCount(messages.Count);
-        }
-
-        private void IncreaseMessageProducedCount(int count = 1)
-        {
-            string clientConnectionId = Context.ConnectionId;
-            var producer = _producerHubRepository.GetProducerById(clientConnectionId);
-            producer.CountMessagesProducedSinceConnected = producer.CountMessagesProducedSinceConnected + count;
         }
     }
 }

@@ -5,6 +5,7 @@ using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Cortex.Collections.Generic;
 using System;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using System.Timers;
 
 namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
@@ -14,7 +15,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
         public delegate void StoringCurrentPositionHandler(object sender, string subscriptionId);
         public event StoringCurrentPositionHandler StoringCurrentPosition;
 
-        public delegate void ReadMessagesFromStorageHandler(object sender, string subscriptionId);
+        public delegate Task<bool> ReadMessagesFromStorageHandler(object sender, string subscriptionId);
         public event ReadMessagesFromStorageHandler ReadMessagesFromStorage;
 
         public Subscription Subscription { get; set; }
@@ -112,14 +113,19 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
             currentPositionTimer.Start();
         }
 
-        private void ReadingMessagesTimer_Elapsed(object sender, ElapsedEventArgs e)
+        private async void ReadingMessagesTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
             readingMessagesTimer.Stop();
 
             var subscriptionId = ConnectorHelper.GetSubcriptionId(Subscription.Tenant, Subscription.Product, Subscription.Component, Subscription.Topic, Subscription.SubscriptionName);
-            ReadMessagesFromStorage?.Invoke(this, subscriptionId);
 
-            readingMessagesTimer.Start();
+            // if resut is true, there are consumers connected to this subscription
+            var result = await ReadMessagesFromStorage?.Invoke(this, subscriptionId);
+
+            if (result == true)
+                readingMessagesTimer.Start();
+            else
+                readingMessagesTimer.Stop();
         }
     }
 }

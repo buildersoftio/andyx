@@ -9,6 +9,7 @@ using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Services.Inbound
@@ -45,9 +46,6 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
 
             // try to run storage service to store records.
             _orchestratorService.StartTopicStorageSynchronizerProcess(connectorKey);
-
-            // WE ARE NOT TRIGGERING THE CONSUMER ANYMORE FROM HERE, AS EVERY SECOND SUBSCRIPTION IS CHECKING FOR NEW MESSAGES.
-            // _outboundMessageService.TriggerSubscriptionsByProducer(message.Tenant, message.Product, message.Component, message.Topic);
         }
 
         public void AcceptUnacknowledgedMessage(MessageAcknowledgementFileContent messageAcknowledgement)
@@ -96,13 +94,16 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
 
         private void InboundMessagingProcessor(string connectorKey, Guid threadId)
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            int k = 0;
             while (_topicConnectors[connectorKey].MessagesBuffer.TryDequeue(out Message message))
             {
                 try
                 {
+                    k++;
                     var msgId = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss_") + Guid.NewGuid();
                     MessageIOService.TrySaveInTemp_MessageBinFile(message, msgId);
-
 
                     // TODO: Implement Cluster Syncronization of messages.
                 }
@@ -111,9 +112,10 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
                     // TODO: check this later;
                 }
             }
-
+            stopwatch.Stop();
             _topicConnectors[connectorKey].MessageStoreThreadingPool.Threads[threadId].IsThreadWorking = false;
 
+            _logger.LogInformation($"thread inbount processed threadId={threadId}; count={k}, time from start {stopwatch.Elapsed.TotalSeconds} s");
             // check release memory.
             ReleaseMemoryMessagingProcessor(connectorKey);
         }
