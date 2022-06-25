@@ -13,9 +13,16 @@
             return $"{tenant}:{product}:{component}:{topic}";
         }
 
-        public static string GetTopicSynchronizerKey(string tenant, string product, string component, string topic)
+        public static string GetTopicKey(string tenant, string product, string component, string topic)
         {
             return $"{tenant}:{product}:{component}:{topic}";
+        }
+
+        public static (string, string, string, string) GetDetailsFromTopicKey(this string topicKey)
+        {
+            var splitted = topicKey.Split(":");
+
+            return (splitted[0], splitted[1], splitted[2], splitted[3]);
         }
     }
 }

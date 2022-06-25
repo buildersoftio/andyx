@@ -207,7 +207,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             TenantIOService.TryCreateConsumerDirectory(tenant, product, component, topic, subscriptionName, consumerName);
 
             // TODO: Check _outboundMessageService.AddSubscriptionTopicData as this method is type Task, it should run in another thread!
-            Task.Run(() => _outboundMessageService.AddSubscriptionTopicData(_subscriptionFactory.CreateSubscriptionTopicData(subscriptionToRegister)));
+            //Task.Run(() => _outboundMessageService.AddSubscriptionTopicData(_subscriptionFactory.CreateSubscriptionTopicData(subscriptionToRegister)));
 
             // TODO: Inform other nodes that new consumer has been created.
 

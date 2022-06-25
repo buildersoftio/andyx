@@ -6,10 +6,8 @@ using Buildersoft.Andy.X.Model.Entities.Storages;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
-using Buildersoft.Andy.X.Utility.Extensions.Json;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -62,11 +60,10 @@ namespace Buildersoft.Andy.X.Router.Services.Subscriptions
                 Component = component,
                 Topic = topic,
 
-                LedgerId = message.LedgerId,
-                EntryId = message.Id,
+                EntryId = message.Entry,
 
                 MessageId = message.MessageId,
-                Headers = message.Headers.JsonToObject<Dictionary<string, string>>(),
+                Headers = message.Headers,
                 Payload = message.Payload,
 
                 SentDate = message.SentDate

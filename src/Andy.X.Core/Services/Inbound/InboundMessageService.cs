@@ -1,15 +1,19 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
+using Buildersoft.Andy.X.Core.Contexts.Storages;
+using Buildersoft.Andy.X.Core.Mappers;
 using Buildersoft.Andy.X.Core.Services.Inbound.Connectors;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
+using MessagePack;
 using Microsoft.Extensions.Logging;
+using RocksDbSharp;
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Services.Inbound
@@ -19,46 +23,47 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
         private readonly ILogger<InboundMessageService> _logger;
         private readonly ThreadsConfiguration _threadsConfiguration;
         private readonly IOrchestratorService _orchestratorService;
-        private readonly ConcurrentDictionary<string, MessageTopicConnector> _topicConnectors;
+        private readonly ConcurrentDictionary<string, TopicDataConnector> _topicConnectors;
         private readonly IOutboundMessageService _outboundMessageService;
+
+        private readonly ITenantRepository _tenantRepository;
 
         public InboundMessageService(ILogger<InboundMessageService> logger,
             ThreadsConfiguration threadsConfiguration,
+            ITenantRepository tenantRepository,
             IOrchestratorService orchestratorService,
             IOutboundMessageService outboundMessageService)
         {
             _logger = logger;
             _threadsConfiguration = threadsConfiguration;
+            _tenantRepository = tenantRepository;
+
             _orchestratorService = orchestratorService;
             _outboundMessageService = outboundMessageService;
 
-            _topicConnectors = new ConcurrentDictionary<string, MessageTopicConnector>();
+            _topicConnectors = new ConcurrentDictionary<string, TopicDataConnector>();
         }
 
         public void AcceptMessage(Message message)
         {
-            string connectorKey = ConnectorHelper.GetTopicConnectorKey(message.Tenant, message.Product, message.Component, message.Topic);
-            TryCreateTopicConnector(connectorKey);
+            var topic = _tenantRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic);
+            string topicKey = ConnectorHelper.GetTopicConnectorKey(message.Tenant, message.Product, message.Component, message.Topic);
 
-            _topicConnectors[connectorKey].MessagesBuffer.Enqueue(message);
+            TryCreateTopicConnector(topicKey);
+            _topicConnectors[topicKey].MessagesBuffer.Enqueue(message.Map(topic.TopicStates.LatestEntryId++));
 
-            InitializeInboundMessageProcessor(connectorKey);
-
-            // try to run storage service to store records.
-            _orchestratorService.StartTopicStorageSynchronizerProcess(connectorKey);
+            InitializeInboundMessageProcessor(topicKey);
         }
 
         public void AcceptUnacknowledgedMessage(MessageAcknowledgementFileContent messageAcknowledgement)
         {
+            // TODO: Update Unacked messages with consumption.
             string connectorKey = ConnectorHelper.GetTopicConnectorKey(messageAcknowledgement.Tenant, messageAcknowledgement.Product, messageAcknowledgement.Component, messageAcknowledgement.Topic);
             TryCreateTopicConnector(connectorKey);
 
-            _topicConnectors[connectorKey].UnacknowledgedMessageBuffer.Enqueue(messageAcknowledgement);
+            //_topicConnectors[connectorKey].UnacknowledgedMessageBuffer.Enqueue(messageAcknowledgement);
 
             InitializeInboundUnacknowledgedMessageProcessor(connectorKey);
-
-            // try to run storage service to store records.
-            _orchestratorService.StartSubscriptionSynchronizerProcess(connectorKey);
         }
 
         #region Store Message Region
@@ -92,116 +97,116 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             }
         }
 
-        private void InboundMessagingProcessor(string connectorKey, Guid threadId)
+        private void InboundMessagingProcessor(string topicKey, Guid threadId)
         {
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            int k = 0;
-            while (_topicConnectors[connectorKey].MessagesBuffer.TryDequeue(out Message message))
+            while (_topicConnectors[topicKey].MessagesBuffer.TryDequeue(out Model.Entities.Storages.Message message))
             {
                 try
                 {
-                    k++;
-                    var msgId = DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss_") + Guid.NewGuid();
-                    MessageIOService.TrySaveInTemp_MessageBinFile(message, msgId);
-
-                    // TODO: Implement Cluster Syncronization of messages.
+                    _orchestratorService.GetTopicDataService(topicKey).Put(message.Entry.ToString(), message);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // TODO: check this later;
+                    _logger.LogError($"An error accured, read details {ex.Message}");
                 }
             }
-            stopwatch.Stop();
-            _topicConnectors[connectorKey].MessageStoreThreadingPool.Threads[threadId].IsThreadWorking = false;
 
-            _logger.LogInformation($"thread inbount processed threadId={threadId}; count={k}, time from start {stopwatch.Elapsed.TotalSeconds} s");
-            // check release memory.
-            ReleaseMemoryMessagingProcessor(connectorKey);
+            _topicConnectors[topicKey].MessageStoreThreadingPool.Threads[threadId].IsThreadWorking = false;
         }
 
-        private void ReleaseMemoryMessagingProcessor(string connectorKey)
+        private bool TryCreateTopicConnector(string topicKey)
         {
-            if (_topicConnectors[connectorKey].MessagesBuffer.Count == 0)
-            {
-                GC.Collect(2, GCCollectionMode.Forced);
-                GC.WaitForPendingFinalizers();
-            }
-        }
-
-        private bool TryCreateTopicConnector(string connectorKey)
-        {
-            if (_topicConnectors.ContainsKey(connectorKey))
+            if (_topicConnectors.ContainsKey(topicKey))
                 return true;
 
-            return _topicConnectors.TryAdd(connectorKey, new MessageTopicConnector(_threadsConfiguration.MaxNumber));
+            var msgTopicConnector = new TopicDataConnector(topicKey, _threadsConfiguration.MaxNumber);
+            msgTopicConnector.StoringCurrentEntryPosition += MsgTopicConnector_StoringCurrentEntryPosition;
+
+            return _topicConnectors.TryAdd(topicKey, msgTopicConnector);
         }
+
+        private void MsgTopicConnector_StoringCurrentEntryPosition(object sender, string topicKey)
+        {
+            (string tenant, string product, string component, string topic) = topicKey.GetDetailsFromTopicKey();
+            var topicDetails = _tenantRepository.GetTopic(tenant, product, component, topic);
+
+            using (var topicStateContext = new TopicStateContext(tenant, product, component, topic))
+            {
+                var currentData = topicStateContext.TopicStates.Find("DEFAULT");
+                currentData.CurrentEntry = topicDetails.TopicStates.LatestEntryId;
+                currentData.MarkDeleteEntryPosition = topicDetails.TopicStates.MarkDeleteEntryPosition;
+                currentData.UpdatedDate = DateTimeOffset.Now;
+
+                topicStateContext.TopicStates.Update(currentData);
+                topicStateContext.SaveChanges();
+            }
+        }
+
         #endregion
 
         #region Store Unacked Messages Region
         private void InitializeInboundUnacknowledgedMessageProcessor(string connectorKey)
         {
-            if (_topicConnectors[connectorKey].UnacknowledgedMessageThreadingPool.AreThreadsRunning != true)
-            {
-                _topicConnectors[connectorKey].UnacknowledgedMessageThreadingPool.AreThreadsRunning = true;
+            //if (_topicConnectors[connectorKey].UnacknowledgedMessageThreadingPool.AreThreadsRunning != true)
+            //{
+            //    _topicConnectors[connectorKey].UnacknowledgedMessageThreadingPool.AreThreadsRunning = true;
 
-                // initialize threads.
-                InitializeInboundUnacknowledgedMessageProcessorThreads(connectorKey);
-            }
+            //    // initialize threads.
+            //    InitializeInboundUnacknowledgedMessageProcessorThreads(connectorKey);
+            //}
         }
         private void InitializeInboundUnacknowledgedMessageProcessorThreads(string connectorKey)
         {
-            foreach (var thread in _topicConnectors[connectorKey].UnacknowledgedMessageThreadingPool.Threads)
-            {
-                if (thread.Value.IsThreadWorking != true)
-                {
-                    try
-                    {
-                        thread.Value.IsThreadWorking = true;
-                        thread.Value.Task = Task.Run(() => InboundUnacknowledgedMessagingProcessor(connectorKey, thread.Key));
-                    }
-                    catch (Exception)
-                    {
-                        _logger.LogError($"Inbound unacknowledged message processor thread '{thread.Key}' failed to restart");
-                    }
-                }
-            }
+            //foreach (var thread in _topicConnectors[connectorKey].UnacknowledgedMessageThreadingPool.Threads)
+            //{
+            //    if (thread.Value.IsThreadWorking != true)
+            //    {
+            //        try
+            //        {
+            //            thread.Value.IsThreadWorking = true;
+            //            thread.Value.Task = Task.Run(() => InboundUnacknowledgedMessagingProcessor(connectorKey, thread.Key));
+            //        }
+            //        catch (Exception)
+            //        {
+            //            _logger.LogError($"Inbound unacknowledged message processor thread '{thread.Key}' failed to restart");
+            //        }
+            //    }
+            //}
         }
 
         private void InboundUnacknowledgedMessagingProcessor(string connectorKey, Guid threadId)
         {
-            while (_topicConnectors[connectorKey].UnacknowledgedMessageBuffer.TryDequeue(out MessageAcknowledgementFileContent messageAcknowledgement))
-            {
-                try
-                {
-                    var msgId = $"ua_{messageAcknowledgement.Subscription}" + Guid.NewGuid();
-                    if (messageAcknowledgement.IsDeleted == true)
-                        msgId = $"del_" + Guid.NewGuid();
+            //while (_topicConnectors[connectorKey].UnacknowledgedMessageBuffer.TryDequeue(out MessageAcknowledgementFileContent messageAcknowledgement))
+            //{
+            //    try
+            //    {
+            //        var msgId = $"ua_{messageAcknowledgement.Subscription}" + Guid.NewGuid();
+            //        if (messageAcknowledgement.IsDeleted == true)
+            //            msgId = $"del_" + Guid.NewGuid();
 
-                    MessageIOService.TrySaveInTemp_UnackedMessageBinFile(messageAcknowledgement, msgId);
+            //        MessageIOService.TrySaveInTemp_UnackedMessageBinFile(messageAcknowledgement, msgId);
 
 
-                    // TODO: Implement Cluster Syncronization of messages.
-                }
-                catch (Exception)
-                {
-                    // TODO: check this later;
-                }
-            }
+            //        // TODO: Implement Cluster Syncronization of messages.
+            //    }
+            //    catch (Exception)
+            //    {
+            //        // TODO: check this later;
+            //    }
+            //}
 
-            _topicConnectors[connectorKey].UnacknowledgedMessageThreadingPool.Threads[threadId].IsThreadWorking = false;
+            //_topicConnectors[connectorKey].UnacknowledgedMessageThreadingPool.Threads[threadId].IsThreadWorking = false;
 
             // check release memory.
             ReleaseMemoryUnacknowledgedMessagingProcessor(connectorKey);
         }
-
         private void ReleaseMemoryUnacknowledgedMessagingProcessor(string connectorKey)
         {
-            if (_topicConnectors[connectorKey].UnacknowledgedMessageBuffer.Count == 0)
-            {
-                GC.Collect(2, GCCollectionMode.Forced);
-                GC.WaitForPendingFinalizers();
-            }
+            //if (_topicConnectors[connectorKey].UnacknowledgedMessageBuffer.Count == 0)
+            //{
+            //    GC.Collect(2, GCCollectionMode.Forced);
+            //    GC.WaitForPendingFinalizers();
+            //}
         }
 
         #endregion

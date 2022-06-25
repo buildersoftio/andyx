@@ -4,6 +4,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
+using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.IO.Readers;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.IO.Writers;
@@ -113,9 +114,6 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                     if (_tenants[tenant].Products[product].Components.ContainsKey(component))
                     {
                         _tenants[tenant].Products[product].Components[component].Topics.TryAdd(topicName, topic);
-
-                        // Starting the storage syncronizer
-                        _orchestratorService.AddTopicStorageSynchronizer(tenant, product, component, topic);
                     }
 
             List<TenantConfiguration> tenantsConfig = TenantIOReader.ReadTenantsFromConfigFile();
@@ -131,6 +129,29 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                     return false;
 
                 TenantIOService.TryCreateTopicDirectory(tenant, product, component, topicName);
+
+                // Open connection with topic log data.
+                using (var topicStateContext = new TopicStateContext(tenant, product, component, topicName))
+                {
+                    topicStateContext.Database.EnsureCreated();
+                    var currentData = topicStateContext.TopicStates.Find("DEFAULT");
+                    if (currentData == null)
+                    {
+                        currentData = new Model.Entities.Storages.TopicState()
+                        {
+                            Id = "DEFAULT",
+                            CurrentEntry = 1,
+                            MarkDeleteEntryPosition = -1,
+                            CreateDate = System.DateTimeOffset.Now
+                        };
+                        topicStateContext.TopicStates.Add(currentData);
+                        topicStateContext.SaveChanges();
+                    }
+                    topic.TopicStates.LatestEntryId = currentData.CurrentEntry;
+                    topic.TopicStates.MarkDeleteEntryPosition = currentData.MarkDeleteEntryPosition;
+                }
+
+                _orchestratorService.InitializeTopicDataService(tenant, product, component, topic);
 
                 var topicDetails = componentDetails.Topics.Find(x => x.Name == topicName);
                 if (topicDetails != null)
@@ -169,7 +190,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                 _subscriptionHubRepository.AddSubscription(subId, subscription);
 
                 //load subscriptionopicData
-                _outboundMessageService.LoadSubscriptionTopicDataInMemory(_subscriptionFactory.CreateSubscriptionTopicData(subscription));
+                //_outboundMessageService.LoadSubscriptionTopicDataInMemory(_subscriptionFactory.CreateSubscriptionTopicData(subscription));
 
                 if (topicDetails.Subscriptions.ContainsKey(subscriptionName) != true)
                 {

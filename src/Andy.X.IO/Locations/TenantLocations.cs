@@ -119,9 +119,10 @@ namespace Buildersoft.Andy.X.IO.Locations
         {
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "messages");
         }
-        public static string GetMessageLedgerFile(string tenantName, string productName, string componentName, string topicName, long ledgerId)
+
+        public static string GetTopicStateFile(string tenantName, string productName, string componentName, string topicName)
         {
-            return Path.Combine(GetMessageRootDirectory(tenantName, productName, componentName, topicName), $"msg_{ledgerId}.andx");
+            return Path.Combine(GetTopicLogRootDirectory(tenantName, productName, componentName, topicName), $"{topicName.ToLower()}_current_state.andx");
         }
 
         public static string GetTempTopicRootDirectory(string tenantName, string productName, string componentName, string topicName)
@@ -137,7 +138,7 @@ namespace Buildersoft.Andy.X.IO.Locations
         {
             return Path.Combine(GetTempMessageToStoreTopicRootDirectory(tenantName, productName, componentName, topicName), $"{msgId}.bin");
         }
-        
+
         public static string GetTempMessageUnAckedTopicRootDirectory(string tenantName, string productName, string componentName, string topicName)
         {
             return Path.Combine(GetTempTopicRootDirectory(tenantName, productName, componentName, topicName), "unacked");

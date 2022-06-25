@@ -1,5 +1,4 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
-using Buildersoft.Andy.X.Core.Services.Outbound.Connectors;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Model.Subscriptions;
@@ -24,14 +23,6 @@ namespace Buildersoft.Andy.X.Core.Factories.Subscriptions
                 InitialPosition = initialPosition,
 
                 CreatedDate = DateTimeOffset.Now
-            };
-        }
-
-        public SubscriptionTopicData CreateSubscriptionTopicData(Subscription subscription)
-        {
-            return new SubscriptionTopicData()
-            {
-                Subscription = subscription
             };
         }
 

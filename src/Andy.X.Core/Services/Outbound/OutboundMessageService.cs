@@ -284,7 +284,8 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     message);
 
                 // delete message from memory
-                subscriptionTopic.TemporaryMessages.TryRemove($"{message.LedgerId}:{message.Id}", out _);
+                // TODO: Commented because of RocksDB implementation.
+                //subscriptionTopic.TemporaryMessages.TryRemove($"{message.LedgerId}:{message.Id}", out _);
 
                 // reading new messages from disk
                 // check if messages are 50% in the queue.
@@ -312,40 +313,41 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             bool isMemoryLoaded = true;
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
 
-            using (var storageContext = new StorageContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.LastLedgerPositionInQueue))
-            {
-                var newMessages = storageContext.Messages.Where(x => x.Id > subscriptionTopicData.LastEntryPositionInQueue).OrderBy(o => o.Id).Take(100);
-                int newMsgCount = newMessages.Count();
-                foreach (var msg in newMessages)
-                {
-                    if (msg.LedgerId == subscriptionTopicData.CurrentPosition.ReadLedgerPosition)
-                    {
-                        // continue if you try to send messages that are sent before.
-                        if (msg.Id < subscriptionTopicData.CurrentPosition.ReadEntryPosition)
-                            continue;
-                    }
+            //using (var storageContext = new StorageContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.LastLedgerPositionInQueue))
+            //{
+            //    //var newMessages = storageContext.Messages.Where(x => x.Id > subscriptionTopicData.LastEntryPositionInQueue).OrderBy(o => o.Id).Take(100);
+            //    var newMessages = storageContext.Messages.Where(x => x.Entry > subscriptionTopicData.LastEntryPositionInQueue).OrderBy(o => o.Entry).Take(100);
+            //    int newMsgCount = newMessages.Count();
+            //    foreach (var msg in newMessages)
+            //    {
+            //        //if (msg.LedgerId == subscriptionTopicData.CurrentPosition.ReadLedgerPosition)
+            //        //{
+            //        //    // continue if you try to send messages that are sent before.
+            //        //    if (msg.Id < subscriptionTopicData.CurrentPosition.ReadEntryPosition)
+            //        //        continue;
+            //        //}
 
-                    subscriptionTopicData.TemporaryMessageQueue.TryEnqueue($"{msg.LedgerId}:{msg.Id}", msg.SentDate);
-                    subscriptionTopicData.TemporaryMessages.TryAdd($"{msg.LedgerId}:{msg.Id}", msg);
+            //        //subscriptionTopicData.TemporaryMessageQueue.TryEnqueue($"{msg.LedgerId}:{msg.Id}", msg.SentDate);
+            //        //subscriptionTopicData.TemporaryMessages.TryAdd($"{msg.LedgerId}:{msg.Id}", msg);
 
-                    subscriptionTopicData.LastLedgerPositionInQueue = msg.LedgerId;
-                    subscriptionTopicData.LastEntryPositionInQueue = msg.Id;
-                }
+            //        //subscriptionTopicData.LastLedgerPositionInQueue = msg.LedgerId;
+            //        //subscriptionTopicData.LastEntryPositionInQueue = msg.Id;
+            //    }
 
-                if (newMsgCount >= 0)
-                {
-                    if (subscriptionTopicData.LastEntryPositionInQueue == _storageConfiguration.LedgerSize)
-                    {
-                        // prepare ledger change for the next file
-                        subscriptionTopicData.LastLedgerPositionInQueue = subscriptionTopicData.LastLedgerPositionInQueue + 1;
-                        subscriptionTopicData.LastEntryPositionInQueue = 0;
-                    }
-                }
+            //    if (newMsgCount >= 0)
+            //    {
+            //        if (subscriptionTopicData.LastEntryPositionInQueue == _storageConfiguration.LedgerSize)
+            //        {
+            //            // prepare ledger change for the next file
+            //            subscriptionTopicData.LastLedgerPositionInQueue = subscriptionTopicData.LastLedgerPositionInQueue + 1;
+            //            subscriptionTopicData.LastEntryPositionInQueue = 0;
+            //        }
+            //    }
 
 
-                if (newMsgCount == 0)
-                    isMemoryLoaded = false;
-            }
+            //    if (newMsgCount == 0)
+            //        isMemoryLoaded = false;
+            //}
 
             return isMemoryLoaded;
         }
@@ -368,21 +370,23 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 var newUnackMessages = unackedContext.UnacknowledgedMessages.Where(x => x.Id > subscriptionTopicData.LastPositionUnackedInQueue).OrderBy(x => x.Id).Take(take).ToList();
                 int newUnackedCount = newUnackMessages.Count();
                 var ledgers = newUnackMessages.Select(x => x.LedgerId).ToList().Distinct();
-                foreach (var ledger in ledgers)
-                {
-                    var listOfEntries = newUnackMessages.Where(x => x.LedgerId == ledger).Select(x => x.EntryId).ToList();
-                    using (var storageContext = new StorageContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, ledger))
-                    {
-                        var messages = storageContext.Messages.Where(x => x.LedgerId == ledger && listOfEntries.Contains(x.Id));
-                        foreach (var msg in messages)
-                        {
-                            subscriptionTopicData.TemporaryMessageQueue.TryEnqueue($"{msg.LedgerId}:{msg.Id}", msg.SentDate);
-                            subscriptionTopicData.TemporaryMessages.TryAdd($"{msg.LedgerId}:{msg.Id}", msg);
+                //foreach (var ledger in ledgers)
+                //{
+                //    var listOfEntries = newUnackMessages.Where(x => x.LedgerId == ledger).Select(x => x.EntryId).ToList();
+                //    using (var storageContext = new StorageContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, ledger))
+                //    {
+                //        //var messages = storageContext.Messages.Where(x => x.Id == ledger && listOfEntries.Contains(x.Id));
+                //        // updated because the logic will change
+                //        var messages = storageContext.Messages.Where(x => x.MessageId == ledger.ToString());
+                //        foreach (var msg in messages)
+                //        {
+                //            //subscriptionTopicData.TemporaryMessageQueue.TryEnqueue($"{msg.LedgerId}:{msg.Id}", msg.SentDate);
+                //            //subscriptionTopicData.TemporaryMessages.TryAdd($"{msg.LedgerId}:{msg.Id}", msg);
 
-                            subscriptionTopicData.TemporaryUnackedMessageIds.TryAdd($"{msg.LedgerId}:{msg.Id}", msg.Id);
-                        }
-                    }
-                }
+                //            //subscriptionTopicData.TemporaryUnackedMessageIds.TryAdd($"{msg.LedgerId}:{msg.Id}", msg.Id);
+                //        }
+                //    }
+                //}
 
                 if (newUnackedCount != 0)
                 {

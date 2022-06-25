@@ -1,10 +1,12 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Producers;
 using Buildersoft.Andy.X.Model.App.Topics;
-using Buildersoft.Andy.X.Core.Synchronizers;
-using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using Buildersoft.Andy.X.Utility.Extensions.Helpers;
+using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
+using Buildersoft.Andy.X.Core.Services.Data;
 
 namespace Buildersoft.Andy.X.Router.Services.Orchestrators
 {
@@ -13,43 +15,36 @@ namespace Buildersoft.Andy.X.Router.Services.Orchestrators
         private readonly ILogger<OrchestratorService> _logger;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IProducerHubService _producerHubService;
+        private readonly StorageConfiguration _storageConfiguration;
 
-        private readonly ConcurrentDictionary<string, TopicSynchronizerProcess> _topicProcesses;
-        private readonly ConcurrentDictionary<string, SubscriptionSynchronizerProcess> _subscriptionProcesses;
+        private readonly ConcurrentDictionary<string, ITopicDataService> _topicLogServices;
 
-        public OrchestratorService(ILoggerFactory logger, IProducerHubService producerHubService)
+        public OrchestratorService(ILoggerFactory logger, IProducerHubService producerHubService, StorageConfiguration storageConfiguration)
         {
             _logger = logger.CreateLogger<OrchestratorService>();
 
             _loggerFactory = logger;
             _producerHubService = producerHubService;
+            _storageConfiguration = storageConfiguration;
 
-            _topicProcesses = new ConcurrentDictionary<string, TopicSynchronizerProcess>();
-            _subscriptionProcesses = new ConcurrentDictionary<string, SubscriptionSynchronizerProcess>();
+            _topicLogServices = new ConcurrentDictionary<string, ITopicDataService>();
         }
 
-        public void AddTopicStorageSynchronizer(string tenant, string product, string component, Topic topic)
+        public ITopicDataService GetTopicDataService(string topicKey)
         {
-            string processKey = ConnectorHelper.GetTopicSynchronizerKey(tenant, product, component, topic.Name);
-            if (_topicProcesses.ContainsKey(processKey))
-                return;
+            if (_topicLogServices.ContainsKey(topicKey) != true)
+                return null;
 
-            _topicProcesses.TryAdd(processKey,
-                new TopicSynchronizerProcess(_loggerFactory.CreateLogger<TopicSynchronizerProcess>()) { Tenant = tenant, Product = product, Component = component, Topic = topic });
-            _subscriptionProcesses.TryAdd(processKey,
-                new SubscriptionSynchronizerProcess(_loggerFactory.CreateLogger<SubscriptionSynchronizerProcess>()) { Tenant = tenant, Product = product, Component = component, Topic = topic });
-
-            _topicProcesses[processKey].StartProcess();
+            return _topicLogServices[topicKey];
         }
 
-        public void StartSubscriptionSynchronizerProcess(string topicKey)
+        public bool InitializeTopicDataService(string tenant, string product, string component, Topic topic)
         {
-            _subscriptionProcesses[topicKey].StartProcess();
-        }
+            string topicKey = ConnectorHelper.GetTopicKey(tenant, product, component, topic.Name);
+            if (_topicLogServices.ContainsKey(topicKey))
+                return false;
 
-        public void StartTopicStorageSynchronizerProcess(string topicKey)
-        {
-            _topicProcesses[topicKey].StartProcess();
+            return _topicLogServices.TryAdd(topicKey, new TopicRocksDbDataService(tenant, product, component, topic.Name, _storageConfiguration));
         }
     }
 }
