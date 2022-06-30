@@ -80,6 +80,11 @@ namespace Buildersoft.Andy.X.IO.Locations
             return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "logs");
         }
 
+        public static string GetSubscriptionUnackedDirectory(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
+        {
+            return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "unacked");
+        }
+
         public static string GetSubscriptionPositionLogFile(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
         {
             return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "position_log.andx");

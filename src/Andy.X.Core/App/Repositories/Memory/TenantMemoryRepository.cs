@@ -153,6 +153,9 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
                 _orchestratorService.InitializeTopicDataService(tenant, product, component, topic);
 
+                // We are not initializing the readonly when the topic is created, beacuse of memory leak.
+                //_orchestratorService.InitializeTopicReadonlyDataService(tenant, product, component, topic);
+
                 var topicDetails = componentDetails.Topics.Find(x => x.Name == topicName);
                 if (topicDetails != null)
                     return false;

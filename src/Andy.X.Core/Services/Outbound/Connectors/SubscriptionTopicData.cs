@@ -21,20 +21,11 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
         public Subscription Subscription { get; set; }
         public SubscriptionPosition CurrentPosition { get; set; }
 
-        public ConcurrentPriorityQueue<string, DateTimeOffset> TemporaryMessageQueue { get; set; }
-        public ConcurrentDictionary<string, Message> TemporaryMessages { get; set; }
-
         public ConcurrentDictionary<string, long> TemporaryUnackedMessageIds { get; set; }
 
-        public long LastLedgerPositionInQueue { get; set; }
-        public long LastEntryPositionInQueue { get; set; }
-
-        public long LastPositionUnackedInQueue { get; set; }
-        public long LastEntryUnackedInLog { get; set; }
-
-        public bool DoesUnackedMessagesExists { get; set; }
-
         public bool IsConsuming { get; set; }
+
+        public long LastEntryPositionSent { get; set; }
 
         public bool IsOutboundServiceRunning { get; set; }
 
@@ -42,7 +33,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
         private readonly Timer currentPositionTimer;
         private readonly Timer readingMessagesTimer;
 
-        public SubscriptionTopicData()
+        public SubscriptionTopicData(int flushCurrentPositionTimer, int backgroundIntervalReadMessages)
         {
             currentPositionTimer = new Timer() { AutoReset = true, Interval = new TimeSpan(0, 0, 5).TotalMilliseconds };
             currentPositionTimer.Elapsed += CurrentPositionTimer_Elapsed;
@@ -52,16 +43,11 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
 
             CurrentPosition = new SubscriptionPosition();
 
-            TemporaryMessageQueue = new ConcurrentPriorityQueue<string, DateTimeOffset>();
-            TemporaryMessages = new ConcurrentDictionary<string, Message>();
-
             TemporaryUnackedMessageIds = new ConcurrentDictionary<string, long>();
 
-            LastPositionUnackedInQueue = 0;
-            LastEntryUnackedInLog = 0;
+            LastEntryPositionSent = 0;
 
             IsConsuming = false;
-            DoesUnackedMessagesExists = false;
         }
 
         public void StartService()

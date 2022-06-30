@@ -5,13 +5,10 @@ using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.Core.Mappers;
 using Buildersoft.Andy.X.Core.Services.Inbound.Connectors;
-using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
-using MessagePack;
 using Microsoft.Extensions.Logging;
-using RocksDbSharp;
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
@@ -25,6 +22,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
         private readonly IOrchestratorService _orchestratorService;
         private readonly ConcurrentDictionary<string, TopicDataConnector> _topicConnectors;
         private readonly IOutboundMessageService _outboundMessageService;
+        private readonly StorageConfiguration _storageConfiguration;
 
         private readonly ITenantRepository _tenantRepository;
 
@@ -32,14 +30,17 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             ThreadsConfiguration threadsConfiguration,
             ITenantRepository tenantRepository,
             IOrchestratorService orchestratorService,
-            IOutboundMessageService outboundMessageService)
+            IOutboundMessageService outboundMessageService,
+            StorageConfiguration storageConfiguration)
         {
             _logger = logger;
+
             _threadsConfiguration = threadsConfiguration;
             _tenantRepository = tenantRepository;
 
             _orchestratorService = orchestratorService;
             _outboundMessageService = outboundMessageService;
+            _storageConfiguration = storageConfiguration;
 
             _topicConnectors = new ConcurrentDictionary<string, TopicDataConnector>();
         }
@@ -119,7 +120,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             if (_topicConnectors.ContainsKey(topicKey))
                 return true;
 
-            var msgTopicConnector = new TopicDataConnector(topicKey, _threadsConfiguration.MaxNumber);
+            var msgTopicConnector = new TopicDataConnector(topicKey, _threadsConfiguration.MaxNumber, _storageConfiguration.InboundMemoryReleaseInMilliseconds, _storageConfiguration.InboundFlushCurrentEntryPositionInMilliseconds);
             msgTopicConnector.StoringCurrentEntryPosition += MsgTopicConnector_StoringCurrentEntryPosition;
 
             return _topicConnectors.TryAdd(topicKey, msgTopicConnector);

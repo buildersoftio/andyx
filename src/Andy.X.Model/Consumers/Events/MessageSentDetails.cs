@@ -17,20 +17,18 @@ namespace Buildersoft.Andy.X.Model.Consumers.Events
         public string Topic { get; set; }
 
         [Key(4)]
-        public long LedgerId { get; set; }
-        [Key(5)]
         public long EntryId { get; set; }
 
-        [Key(6)]
+        [Key(5)]
         public Dictionary<string, string> Headers { get; set; }
 
-        [Key(7)]
+        [Key(6)]
         public string MessageId { get; set; }
 
-        [Key(8)]
+        [Key(7)]
         public byte[] Payload { get; set; }
 
-        [Key(9)]
+        [Key(8)]
         public DateTimeOffset SentDate { get; set; }
     }
 }

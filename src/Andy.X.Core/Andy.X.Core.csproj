@@ -19,9 +19,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Cortex.Collections" Version="1.0.0-preview11" />
+		<PackageReference Include="RocksDB" Version="7.2.2.30179" />
 
-		<PackageReference Include="RocksDbNative" Version="6.2.2" />
-		<PackageReference Include="RocksDbSharp" Version="6.2.2" />
 	</ItemGroup>
 
 

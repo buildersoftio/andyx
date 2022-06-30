@@ -9,6 +9,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Messages;
+using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Model.Subscriptions;
@@ -33,6 +34,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
         private readonly IOutboundMessageService _outboundMessageService;
         private readonly IInboundMessageService _inboundMessageService;
+        private readonly StorageConfiguration _storageConfiguration;
 
         public ConsumerHub(ILogger<ConsumerHub> logger,
             ISubscriptionHubRepository subscriptionHubRepository,
@@ -41,7 +43,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             IConsumerFactory consumerFactory,
             ISubscriptionFactory subscriptionFactory,
             IOutboundMessageService outboundMessageService,
-            IInboundMessageService inboundMessageService
+            IInboundMessageService inboundMessageService,
+            StorageConfiguration storageConfiguration
             )
         {
             _logger = logger;
@@ -55,6 +58,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
             _outboundMessageService = outboundMessageService;
             _inboundMessageService = inboundMessageService;
+            _storageConfiguration = storageConfiguration;
         }
 
         public override Task OnConnectedAsync()
@@ -207,7 +211,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             TenantIOService.TryCreateConsumerDirectory(tenant, product, component, topic, subscriptionName, consumerName);
 
             // TODO: Check _outboundMessageService.AddSubscriptionTopicData as this method is type Task, it should run in another thread!
-            //Task.Run(() => _outboundMessageService.AddSubscriptionTopicData(_subscriptionFactory.CreateSubscriptionTopicData(subscriptionToRegister)));
+            Task.Run(() => _outboundMessageService.AddSubscriptionTopicData(_subscriptionFactory.CreateSubscriptionTopicData(subscriptionToRegister,
+                _storageConfiguration.OutboundFlushCurrentEntryPositionInMilliseconds,
+                _storageConfiguration.OutboundBackgroundIntervalReadMessagesInMilliseconds)));
 
             // TODO: Inform other nodes that new consumer has been created.
 
@@ -270,10 +276,10 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 {
                     case MessageAcknowledgement.Acknowledged:
                     case MessageAcknowledgement.Skipped:
-                        await _outboundMessageService.SendNextMessage(subscriptionId, message.LedgerId, message.EntryId);
+                        await _outboundMessageService.SendNextMessage(subscriptionId, message.EntryId);
                         break;
                     case MessageAcknowledgement.Unacknowledged:
-                        await _outboundMessageService.SendSameMessage(subscriptionId, message.LedgerId, message.EntryId);
+                        await _outboundMessageService.SendSameMessage(subscriptionId, message.EntryId);
                         break;
                     default:
                         break;
@@ -285,7 +291,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 {
                     case MessageAcknowledgement.Acknowledged:
                     case MessageAcknowledgement.Skipped:
-                        if (_outboundMessageService.CheckIfUnackedMessagesExists(subscriptionId, message.LedgerId, message.EntryId) == true)
+                        if (_outboundMessageService.CheckIfUnackedMessagesExists(subscriptionId, message.EntryId) == true)
                         {
                             // delete unacked message.
                             var messageAcked = _subscriptionFactory
@@ -296,11 +302,11 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                         }
                         else
                         {
-                            await _outboundMessageService.UpdateCurrentPosition(subscriptionId, message.LedgerId, message.EntryId);
+                            await _outboundMessageService.UpdateCurrentPosition(subscriptionId, message.EntryId);
                         }
                         break;
                     case MessageAcknowledgement.Unacknowledged:
-                        if (_outboundMessageService.CheckIfUnackedMessagesExists(subscriptionId, message.LedgerId, message.EntryId) == true)
+                        if (_outboundMessageService.CheckIfUnackedMessagesExists(subscriptionId, message.EntryId) == true)
                         {
                             // delete unacked message.
                             var messageAcked = _subscriptionFactory
@@ -311,7 +317,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                         }
                         else
                         {
-                            await _outboundMessageService.UpdateCurrentPosition(subscriptionId, message.LedgerId, message.EntryId);
+                            await _outboundMessageService.UpdateCurrentPosition(subscriptionId, message.EntryId);
                         }
 
                         _inboundMessageService.AcceptUnacknowledgedMessage(_subscriptionFactory

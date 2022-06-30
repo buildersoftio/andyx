@@ -23,7 +23,6 @@ namespace Buildersoft.Andy.X.Model.Subscriptions
 
         public int CurrentConnectionIndex { get; set; }
         public DbContext SubscriptionPositionContext { get; set; }
-        public DbContext SubscriptionAcknowledgementContext { get; set; }
         public DateTimeOffset CreatedDate { get; set; }
 
         public Subscription()

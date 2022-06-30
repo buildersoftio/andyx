@@ -6,11 +6,9 @@ namespace Buildersoft.Andy.X.Model.Consumers.Events
     public class MessageAcknowledgedDetails
     {
         [Key(0)]
-        public long LedgerId { get; set; }
-        [Key(1)]
         public long EntryId { get; set; }
 
-        [Key(2)]
+        [Key(1)]
         public int Acknowledgement { get; set; }
     }
 }

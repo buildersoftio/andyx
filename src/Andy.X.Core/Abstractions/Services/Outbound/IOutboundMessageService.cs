@@ -1,19 +1,22 @@
-﻿using System.Threading.Tasks;
+﻿using Buildersoft.Andy.X.Core.Services.Outbound.Connectors;
+using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Services.Outbound
 {
     public interface IOutboundMessageService
     {
-        Task SendAllMessages(string subscriptionId, bool sendUnackedMessage = false);
-        bool CheckIfUnackedMessagesExists(string subscriptionId, long ledgerId, long entryId);
+        Task AddSubscriptionTopicData(SubscriptionTopicData subscriptionTopicData);
 
-        Task SendFirstMessage(string subscriptionId, long currentLedgerId, long currentEntryId);
+        Task SendAllMessages(string subscriptionId);
+        bool CheckIfUnackedMessagesExists(string subscriptionId, long entryId);
+
+        Task SendFirstMessage(string subscriptionId, long currentEntryId);
 
         // This method is needed for 'NonResilient' Mode Subscription
-        Task UpdateCurrentPosition(string subscriptionId, long currentLedgerId, long currentEntryId);
+        Task UpdateCurrentPosition(string subscriptionId, long currentEntryId);
 
-        Task SendNextMessage(string subscriptionId, long currentLedgerId, long currentEntryId);
-        Task SendSameMessage(string subscriptionId, long currentLedgerId, long currentEntryId);
+        Task SendNextMessage(string subscriptionId, long currentEntryId);
+        Task SendSameMessage(string subscriptionId, long currentEntryId);
 
         Task StoreCurrentPositionAsync(string subscriptionId);
         Task StopOutboundMessageServiceForSubscription(string subscriptionId);

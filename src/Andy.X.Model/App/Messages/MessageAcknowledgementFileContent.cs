@@ -19,15 +19,13 @@ namespace Buildersoft.Andy.X.Model.App.Messages
         public string Subscription { get; set; }
 
         [Key(5)]
-        public long LedgerId { get; set; }
-        [Key(6)]
         public long EntryId { get; set; }
 
-        [Key(7)]
+        [Key(6)]
         public bool IsDeleted { get; set; }
 
 
-        [Key(8)]
+        [Key(7)]
         public DateTimeOffset CreatedDate { get; set; }
 
     }

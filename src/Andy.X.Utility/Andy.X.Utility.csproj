@@ -1,18 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <Version>3.0.0</Version>
-    <Company>Buildersoft</Company>
-    <Product>Buildersoft Andy</Product>
-    <Authors>Buildersoft</Authors>
-    <Description>Buildersoft Andy X is a distributed messaging system. This system will empower developers to move into Event Driven Systems. Andy X is a multi-tenant system.</Description>
-    <Copyright>Copyright © Buildersoft 2022</Copyright>
-    <RootNamespace>Buildersoft.Andy.X.Utility</RootNamespace>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<Version>3.0.0</Version>
+		<Company>Buildersoft</Company>
+		<Product>Buildersoft Andy</Product>
+		<Authors>Buildersoft</Authors>
+		<Description>Buildersoft Andy X is a distributed messaging system. This system will empower developers to move into Event Driven Systems. Andy X is a multi-tenant system.</Description>
+		<Copyright>Copyright © Buildersoft 2022</Copyright>
+		<RootNamespace>Buildersoft.Andy.X.Utility</RootNamespace>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="6.0.5" />
+	</ItemGroup>
 
 </Project>

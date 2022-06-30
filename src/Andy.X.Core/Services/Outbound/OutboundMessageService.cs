@@ -1,10 +1,11 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Subscriptions;
-using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.Core.Contexts.Subscriptions;
 using Buildersoft.Andy.X.Core.Services.Outbound.Connectors;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Model.Entities.Storages;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.Extensions.Logging;
@@ -20,6 +21,8 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
         private readonly ILogger<OutboundMessageService> _logger;
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
         private readonly ISubscriptionHubService _subscriptionHubService;
+        private readonly IOrchestratorService _orchestratorService;
+
         private readonly StorageConfiguration _storageConfiguration;
 
         private readonly ConcurrentDictionary<string, SubscriptionTopicData> _subscriptionTopicData;
@@ -28,12 +31,16 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             ILogger<OutboundMessageService> logger,
             ISubscriptionHubRepository subscriptionHubRepository,
             ISubscriptionHubService subscriptionHubService,
+            IOrchestratorService orchestratorService,
             StorageConfiguration storageConfiguration)
         {
             _logger = logger;
+
             _subscriptionHubRepository = subscriptionHubRepository;
             _subscriptionHubService = subscriptionHubService;
+            _orchestratorService = orchestratorService;
             _storageConfiguration = storageConfiguration;
+
             _subscriptionTopicData = new ConcurrentDictionary<string, SubscriptionTopicData>();
         }
 
@@ -45,16 +52,11 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 using (var subDbContext = new SubscriptionPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
                 {
                     subscriptionTopicData.CurrentPosition = subDbContext.CurrentPosition.OrderBy(x => x.SubscriptionName).FirstOrDefault();
-
-                    subscriptionTopicData.LastLedgerPositionInQueue = subscriptionTopicData.CurrentPosition.ReadLedgerPosition;
-                    subscriptionTopicData.LastEntryPositionInQueue = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
-                    subscriptionTopicData.LastPositionUnackedInQueue = 0;
-                    subscriptionTopicData.LastEntryUnackedInLog = GetLastEntryFromUnckedMessageLogs(subscriptionTopicData);
+                    subscriptionTopicData.LastEntryPositionSent = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
                 }
 
                 _subscriptionTopicData.TryAdd(subscriptionId, subscriptionTopicData);
 
-                subscriptionTopicData.DoesUnackedMessagesExists = CheckUnackedMessagesIfExists(subscriptionId);
                 subscriptionTopicData.StoringCurrentPosition += SubscriptionTopicData_TriggerLogic;
                 subscriptionTopicData.ReadMessagesFromStorage += SubscriptionTopicData_ReadMessagesFromStorage;
             }
@@ -74,17 +76,11 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 using (var subDbContext = new SubscriptionPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
                 {
                     subscriptionTopicData.CurrentPosition = subDbContext.CurrentPosition.OrderBy(x => x.SubscriptionName).FirstOrDefault();
-
-                    subscriptionTopicData.LastLedgerPositionInQueue = subscriptionTopicData.CurrentPosition.ReadLedgerPosition;
-                    subscriptionTopicData.LastEntryPositionInQueue = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
-                    subscriptionTopicData.LastPositionUnackedInQueue = 0;
-                    subscriptionTopicData.LastEntryUnackedInLog = GetLastEntryFromUnckedMessageLogs(subscriptionTopicData);
+                    subscriptionTopicData.LastEntryPositionSent = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
                 }
-
 
                 _subscriptionTopicData.TryAdd(subscriptionId, subscriptionTopicData);
 
-                subscriptionTopicData.DoesUnackedMessagesExists = CheckUnackedMessagesIfExists(subscriptionId);
                 subscriptionTopicData.StoringCurrentPosition += SubscriptionTopicData_TriggerLogic;
                 subscriptionTopicData.ReadMessagesFromStorage += SubscriptionTopicData_ReadMessagesFromStorage;
             }
@@ -92,20 +88,21 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             return Task.CompletedTask;
         }
 
-        public async Task SendFirstMessage(string subscriptionId, long currentLedgerId, long currentEntryId)
+        public async Task SendFirstMessage(string subscriptionId, long currentEntryId)
         {
+            var topicDataService = _orchestratorService.GetTopicDataService(subscriptionId.GetTopicKeyFromSubcriptionId());
             var subscriptionTopic = _subscriptionTopicData[subscriptionId];
 
-            var isFirstMessageDequeued = subscriptionTopic.TemporaryMessageQueue.TryDequeue(out string firstMessage, out DateTimeOffset priority);
-            if (isFirstMessageDequeued == true)
+            // get the message from the service.
+            var isFirstMessageExists = topicDataService.TryGetNext(currentEntryId, out Message message);
+            if (isFirstMessageExists == true)
             {
                 subscriptionTopic.SetConsumingFlag();
 
-                var firstMessageDetails = subscriptionTopic.TemporaryMessages[firstMessage];
+                var firstMessageDetails = message;
 
                 // if we sent the first message we should not update the message.
-                await UpdateCurrentPosition(subscriptionId, currentLedgerId, currentEntryId);
-
+                await UpdateCurrentPosition(subscriptionId, currentEntryId);
 
                 await _subscriptionHubService.TransmitMessage(subscriptionTopic.Subscription.Tenant,
                     subscriptionTopic.Subscription.Product,
@@ -116,19 +113,19 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             }
         }
 
-        public async Task SendNextMessage(string subscriptionId, long currentLedgerId, long currentEntryId)
+        public async Task SendNextMessage(string subscriptionId, long currentEntryId)
         {
+            var topicDataService = _orchestratorService.GetTopicDataService(subscriptionId.GetTopicKeyFromSubcriptionId());
             var subscriptionTopic = _subscriptionTopicData[subscriptionId];
 
             // ack previous mesasge
-            await UpdateCurrentPosition(subscriptionId, currentLedgerId, currentEntryId);
-            // delete previous message from memory
-            subscriptionTopic.TemporaryMessages.TryRemove($"{currentLedgerId}:{currentEntryId}", out _);
+            await UpdateCurrentPosition(subscriptionId, currentEntryId);
 
-            var isNextMessageDequeued = subscriptionTopic.TemporaryMessageQueue.TryDequeue(out string nextMessage, out DateTimeOffset priority);
-            if (isNextMessageDequeued == true)
+            //var isNextMessageDequeued = subscriptionTopic.TemporaryMessageQueue.TryDequeue(out string nextMessage, out DateTimeOffset priority);
+            var isNextMessageExists = topicDataService.TryGetNext(currentEntryId, out Message nextMessage);
+            if (isNextMessageExists == true)
             {
-                var nextMessageDetails = subscriptionTopic.TemporaryMessages[nextMessage];
+                var nextMessageDetails = nextMessage;
 
                 await _subscriptionHubService.TransmitMessage(subscriptionTopic.Subscription.Tenant,
                     subscriptionTopic.Subscription.Product,
@@ -139,22 +136,18 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             }
             else
             {
-                if (currentEntryId == _storageConfiguration.LedgerSize)
-                {
-                    subscriptionTopic.CurrentPosition.ReadLedgerPosition = subscriptionTopic.CurrentPosition.ReadLedgerPosition + 1;
-                    subscriptionTopic.CurrentPosition.ReadEntryPosition = 0;
-                }
-
                 subscriptionTopic.UnsetConsumingFlag();
             }
 
+            // we dont need to check in memory anymore. for now we are commenting the code.
             // check if messages are 50% in the queue.
-            if (subscriptionTopic.TemporaryMessageQueue.Count == 50)
-                LoadNext100MessagesInMemory(subscriptionId);
+            //if (subscriptionTopic.TemporaryMessageQueue.Count == _storageConfiguration.NumberOfMessagesInMemoryToRequest)
+            //    LoadNext100MessagesInMemory(subscriptionId);
         }
 
-        public async Task SendSameMessage(string subscriptionId, long currentLedgerId, long currentEntryId)
+        public async Task SendSameMessage(string subscriptionId, long currentEntryId)
         {
+            var topicDataService = _orchestratorService.GetTopicDataService(subscriptionId.GetTopicKeyFromSubcriptionId());
             var subscriptionTopic = _subscriptionTopicData[subscriptionId];
 
             await _subscriptionHubService.TransmitMessage(subscriptionTopic.Subscription.Tenant,
@@ -162,7 +155,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 subscriptionTopic.Subscription.Component,
                 subscriptionTopic.Subscription.Topic,
                 subscriptionTopic.Subscription.SubscriptionName,
-                subscriptionTopic.TemporaryMessages[$"{currentLedgerId}:{currentEntryId}"]);
+                topicDataService.Get(currentEntryId));
         }
 
         public Task StartOutboundMessageServiceForSubscription(string subscriptionId)
@@ -185,16 +178,10 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 subscriptionTopic.IsOutboundServiceRunning = false;
                 subscriptionTopic.IsConsuming = false;
 
-                // remove all messages from memory, current position is saved
-                subscriptionTopic.LastPositionUnackedInQueue = 0;
-                subscriptionTopic.TemporaryMessageQueue.Clear();
-                subscriptionTopic.TemporaryMessages.Clear();
+                // return LastEntryPositionSent when the ReadEntryPosition is left.
+                subscriptionTopic.LastEntryPositionSent = subscriptionTopic.CurrentPosition.ReadEntryPosition;
 
-                // as we are clining the temporary memory the last ledger and entry position will return to the current one.
-                subscriptionTopic.LastLedgerPositionInQueue = subscriptionTopic.CurrentPosition.ReadLedgerPosition;
-                subscriptionTopic.LastEntryPositionInQueue = subscriptionTopic.CurrentPosition.ReadEntryPosition;
-
-                ReleaseMemory(subscriptionId);
+                ReleaseMemory();
             }
 
             return Task.CompletedTask;
@@ -210,10 +197,8 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             {
                 var subPositon = subDbContext.CurrentPosition.OrderBy(x => x.SubscriptionName).FirstOrDefault();
 
-                if (subPositon.ReadLedgerPosition != subscriptionTopicData.CurrentPosition.ReadLedgerPosition
-                    || subPositon.ReadEntryPosition != subscriptionTopicData.CurrentPosition.ReadEntryPosition)
+                if (subPositon.ReadEntryPosition != subscriptionTopicData.CurrentPosition.ReadEntryPosition)
                 {
-                    subPositon.ReadLedgerPosition = subscriptionTopicData.CurrentPosition.ReadLedgerPosition;
                     subPositon.ReadEntryPosition = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
                     subPositon.UpdatedDate = DateTimeOffset.Now;
 
@@ -236,16 +221,13 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 var subTopic = _subscriptionTopicData[subscription.Key];
                 if (subTopic.IsConsuming != true)
                 {
-                    if (LoadNext100MessagesInMemory(subscription.Key) == true)
+                    if (subTopic.Subscription.SubscriptionMode == SubscriptionMode.Resilient)
                     {
-                        if (subTopic.Subscription.SubscriptionMode == SubscriptionMode.Resilient)
-                        {
-                            Task.Run(async () => await SendFirstMessage(subscription.Key, subTopic.CurrentPosition.ReadLedgerPosition, subTopic.CurrentPosition.ReadEntryPosition));
-                        }
-                        else
-                        {
-                            Task.Run(async () => await SendAllMessages(subscription.Key));
-                        }
+                        Task.Run(async () => await SendFirstMessage(subscription.Key, subTopic.CurrentPosition.ReadEntryPosition));
+                    }
+                    else
+                    {
+                        Task.Run(async () => await SendAllMessages(subscription.Key));
                     }
                 }
             }
@@ -253,154 +235,42 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             return Task.CompletedTask;
         }
 
-        public Task UpdateCurrentPosition(string subscriptionId, long currentLedgerId, long currentEntryId)
+        public Task UpdateCurrentPosition(string subscriptionId, long currentEntryId)
         {
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
 
-            subscriptionTopicData.CurrentPosition.ReadLedgerPosition = currentLedgerId;
             subscriptionTopicData.CurrentPosition.ReadEntryPosition = currentEntryId;
 
             return Task.CompletedTask;
         }
 
-        public async Task SendAllMessages(string subscriptionId, bool sendUnackedMessage = false)
+        public async Task SendAllMessages(string subscriptionId)
         {
+            var topicDataService = _orchestratorService.GetTopicDataService(subscriptionId.GetTopicKeyFromSubcriptionId());
             var subscriptionTopic = _subscriptionTopicData[subscriptionId];
             subscriptionTopic.SetConsumingFlag();
-            while (subscriptionTopic.TemporaryMessageQueue.TryDequeue(out string nextMessage, out DateTimeOffset priority))
-            {
-                var message = subscriptionTopic.TemporaryMessages[nextMessage];
 
-                // TODO: Test with 'shared' subscription type.
-                // we are updating the current position when the consumer is responsing that if it got the message.
-                //if (sendUnackedMessage != true)
-                //    await UpdateCurrentPosition(subscriptionId, message.LedgerId, message.Id);
+            long startEntry = subscriptionTopic.LastEntryPositionSent;
+
+            while (topicDataService.TryGetNext(startEntry, out Message nextMessage))
+            {
+                if (subscriptionTopic.IsConsuming == false)
+                    break;
+
+                var nextMessageDetails = nextMessage;
 
                 await _subscriptionHubService.TransmitMessage(subscriptionTopic.Subscription.Tenant,
                     subscriptionTopic.Subscription.Product,
                     subscriptionTopic.Subscription.Component,
                     subscriptionTopic.Subscription.Topic,
                     subscriptionTopic.Subscription.SubscriptionName,
-                    message);
+                    nextMessageDetails);
 
-                // delete message from memory
-                // TODO: Commented because of RocksDB implementation.
-                //subscriptionTopic.TemporaryMessages.TryRemove($"{message.LedgerId}:{message.Id}", out _);
-
-                // reading new messages from disk
-                // check if messages are 50% in the queue.
-                if (subscriptionTopic.TemporaryMessageQueue.Count == 50)
-                {
-                    if (sendUnackedMessage == true)
-                        LoadNext100UnacknowledgedMessagesInMemory(subscriptionId);
-                    else
-                        LoadNext100MessagesInMemory(subscriptionId);
-                }
-
-                if (subscriptionTopic.IsConsuming == false)
-                    break;
+                startEntry = startEntry + 1;
             }
 
-            if (subscriptionTopic.TemporaryMessageQueue.Count == 0 && sendUnackedMessage == true)
-                subscriptionTopic.DoesUnackedMessagesExists = false;
-
+            subscriptionTopic.LastEntryPositionSent = startEntry;
             subscriptionTopic.UnsetConsumingFlag();
-        }
-
-
-        private bool LoadNext100MessagesInMemory(string subscriptionId)
-        {
-            bool isMemoryLoaded = true;
-            var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
-
-            //using (var storageContext = new StorageContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.LastLedgerPositionInQueue))
-            //{
-            //    //var newMessages = storageContext.Messages.Where(x => x.Id > subscriptionTopicData.LastEntryPositionInQueue).OrderBy(o => o.Id).Take(100);
-            //    var newMessages = storageContext.Messages.Where(x => x.Entry > subscriptionTopicData.LastEntryPositionInQueue).OrderBy(o => o.Entry).Take(100);
-            //    int newMsgCount = newMessages.Count();
-            //    foreach (var msg in newMessages)
-            //    {
-            //        //if (msg.LedgerId == subscriptionTopicData.CurrentPosition.ReadLedgerPosition)
-            //        //{
-            //        //    // continue if you try to send messages that are sent before.
-            //        //    if (msg.Id < subscriptionTopicData.CurrentPosition.ReadEntryPosition)
-            //        //        continue;
-            //        //}
-
-            //        //subscriptionTopicData.TemporaryMessageQueue.TryEnqueue($"{msg.LedgerId}:{msg.Id}", msg.SentDate);
-            //        //subscriptionTopicData.TemporaryMessages.TryAdd($"{msg.LedgerId}:{msg.Id}", msg);
-
-            //        //subscriptionTopicData.LastLedgerPositionInQueue = msg.LedgerId;
-            //        //subscriptionTopicData.LastEntryPositionInQueue = msg.Id;
-            //    }
-
-            //    if (newMsgCount >= 0)
-            //    {
-            //        if (subscriptionTopicData.LastEntryPositionInQueue == _storageConfiguration.LedgerSize)
-            //        {
-            //            // prepare ledger change for the next file
-            //            subscriptionTopicData.LastLedgerPositionInQueue = subscriptionTopicData.LastLedgerPositionInQueue + 1;
-            //            subscriptionTopicData.LastEntryPositionInQueue = 0;
-            //        }
-            //    }
-
-
-            //    if (newMsgCount == 0)
-            //        isMemoryLoaded = false;
-            //}
-
-            return isMemoryLoaded;
-        }
-
-        private bool LoadNext100UnacknowledgedMessagesInMemory(string subscriptionId)
-        {
-            bool isMemoryLoaded = true;
-            var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
-            subscriptionTopicData.DoesUnackedMessagesExists = true;
-
-            using (var unackedContext = new MessageAcknowledgementContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
-            {
-                // check if this db exists...
-                int take = 100;
-                var currentLedgerId = subscriptionTopicData.LastLedgerPositionInQueue;
-                if ((subscriptionTopicData.LastEntryUnackedInLog - subscriptionTopicData.LastPositionUnackedInQueue) <= 100)
-                {
-                    take = (int)subscriptionTopicData.LastEntryUnackedInLog - (int)subscriptionTopicData.LastPositionUnackedInQueue;
-                }
-                var newUnackMessages = unackedContext.UnacknowledgedMessages.Where(x => x.Id > subscriptionTopicData.LastPositionUnackedInQueue).OrderBy(x => x.Id).Take(take).ToList();
-                int newUnackedCount = newUnackMessages.Count();
-                var ledgers = newUnackMessages.Select(x => x.LedgerId).ToList().Distinct();
-                //foreach (var ledger in ledgers)
-                //{
-                //    var listOfEntries = newUnackMessages.Where(x => x.LedgerId == ledger).Select(x => x.EntryId).ToList();
-                //    using (var storageContext = new StorageContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, ledger))
-                //    {
-                //        //var messages = storageContext.Messages.Where(x => x.Id == ledger && listOfEntries.Contains(x.Id));
-                //        // updated because the logic will change
-                //        var messages = storageContext.Messages.Where(x => x.MessageId == ledger.ToString());
-                //        foreach (var msg in messages)
-                //        {
-                //            //subscriptionTopicData.TemporaryMessageQueue.TryEnqueue($"{msg.LedgerId}:{msg.Id}", msg.SentDate);
-                //            //subscriptionTopicData.TemporaryMessages.TryAdd($"{msg.LedgerId}:{msg.Id}", msg);
-
-                //            //subscriptionTopicData.TemporaryUnackedMessageIds.TryAdd($"{msg.LedgerId}:{msg.Id}", msg.Id);
-                //        }
-                //    }
-                //}
-
-                if (newUnackedCount != 0)
-                {
-                    subscriptionTopicData.LastPositionUnackedInQueue = newUnackMessages.Last().Id;
-                }
-
-                if (newUnackedCount == 0)
-                {
-                    isMemoryLoaded = false;
-                    subscriptionTopicData.DoesUnackedMessagesExists = false;
-                }
-            }
-
-            return isMemoryLoaded;
         }
 
         private async void SubscriptionTopicData_TriggerLogic(object sender, string subscriptionId)
@@ -410,35 +280,28 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
 
         private async Task<bool> SubscriptionTopicData_ReadMessagesFromStorage(object sender, string subscriptionId)
         {
-            // check if new messages arrived in memory.
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
             try
             {
-                _logger.LogInformation($"check IsConsuming={subscriptionTopicData.IsConsuming}");
+                //_logger.LogInformation($"checking IsConsuming={subscriptionTopicData.IsConsuming}");
 
                 if (subscriptionTopicData.IsConsuming != true)
                 {
                     if (subscriptionTopicData.Subscription.SubscriptionMode == SubscriptionMode.Resilient)
                     {
-                        if (LoadNext100MessagesInMemory(subscriptionId) == true)
-                            await SendFirstMessage(subscriptionId, subscriptionTopicData.CurrentPosition.ReadLedgerPosition, subscriptionTopicData.CurrentPosition.ReadEntryPosition);
+                        await SendFirstMessage(subscriptionId, subscriptionTopicData.CurrentPosition.ReadEntryPosition);
                     }
                     else
                     {
-                        if (LoadNext100MessagesInMemory(subscriptionId) == true)
-                            await SendAllMessages(subscriptionId);
-                        else
-                        {
-                            subscriptionTopicData.LastEntryUnackedInLog = GetLastEntryFromUnckedMessageLogs(subscriptionTopicData);
-                            if (LoadNext100UnacknowledgedMessagesInMemory(subscriptionId) == true)
-                                await SendAllMessages(subscriptionId, true);
-                        }
+                        await SendAllMessages(subscriptionId);
+
+                        //TODO : Implement Unacked messages here.
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"An error accured, couldn't connect to Ledger. Andy X is trying to connect to it, details={ex.Message}.");
+                _logger.LogWarning($"An error accured, couldn't connect to topic store. Andy X is trying to connect to it, details={ex.Message}.");
             }
 
             if (_subscriptionHubRepository.GetSubscriptionById(subscriptionId).ConsumersConnected.Count == 0)
@@ -451,52 +314,32 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             return true;
         }
 
-        public bool CheckIfUnackedMessagesExists(string subscriptionId, long ledgerId, long entryId)
+        public bool CheckIfUnackedMessagesExists(string subscriptionId, long entryId)
         {
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
 
-            bool isRemoved = subscriptionTopicData.TemporaryUnackedMessageIds.TryRemove($"{ledgerId}:{entryId}", out _);
+            bool isRemoved = subscriptionTopicData.TemporaryUnackedMessageIds.TryRemove($"{entryId}", out _);
             if (isRemoved == true)
                 return true;
 
             return isRemoved;
         }
 
-        private bool CheckUnackedMessagesIfExists(string subscriptionId)
-        {
-            var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
-            using (var unackedContext = new MessageAcknowledgementContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
-            {
-                unackedContext.ChangeTracker.AutoDetectChangesEnabled = false;
-                unackedContext.Database.EnsureCreated();
-
-                if (unackedContext.UnacknowledgedMessages.Count() == 0)
-                    return false;
-
-                return true;
-            }
-        }
-
         private long GetLastEntryFromUnckedMessageLogs(SubscriptionTopicData subscriptionTopicData)
         {
-            using (var ackedDbContext = new MessageAcknowledgementContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
-            {
-                var lastEntry = ackedDbContext.UnacknowledgedMessages.OrderBy(x => x.Id).LastOrDefault();
-                if (lastEntry != null)
-                    return lastEntry.Id;
-            }
+            //using (var ackedDbContext = new MessageAcknowledgementContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
+            //{
+            //    var lastEntry = ackedDbContext.UnacknowledgedMessages.OrderBy(x => x.Id).LastOrDefault();
+            //    if (lastEntry != null)
+            //        return lastEntry.Id;
+            //}
             return 0;
         }
 
-        private void ReleaseMemory(string subscriptionId)
+        private void ReleaseMemory()
         {
-            var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
-
-            if (subscriptionTopicData.TemporaryMessages.Count == 0)
-            {
-                GC.Collect(2, GCCollectionMode.Forced);
-                GC.WaitForPendingFinalizers();
-            }
+            GC.Collect(2, GCCollectionMode.Forced);
+            GC.WaitForPendingFinalizers();
         }
     }
 }

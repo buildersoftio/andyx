@@ -21,12 +21,12 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound.Connectors
         private readonly Timer releaseMemoryTimer;
         private readonly Timer currentPositionTimer;
 
-        public TopicDataConnector(string topicKey, int threadsCount)
+        public TopicDataConnector(string topicKey, int threadsCount, int inboundMemoryReleaseInMillisec, int inboundFlashCurrentEntryPositionInMillisec)
         {
-            releaseMemoryTimer = new Timer() { Interval = new TimeSpan(0, 10, 0).TotalMilliseconds, AutoReset = true };
+            releaseMemoryTimer = new Timer() { Interval = inboundMemoryReleaseInMillisec, AutoReset = true };
             releaseMemoryTimer.Elapsed += ReleaseMemoryTimer_Elapsed;
 
-            currentPositionTimer = new Timer() { AutoReset = true, Interval = new TimeSpan(0, 0, 5).TotalMilliseconds };
+            currentPositionTimer = new Timer() { AutoReset = true, Interval = inboundFlashCurrentEntryPositionInMillisec };
             currentPositionTimer.Elapsed += CurrentPositionTimer_Elapsed;
 
 
@@ -56,7 +56,6 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound.Connectors
 
         private void ReleaseMemoryMessagingProcessor()
         {
-            // TODO: Move Release Memory into a Timer every 10 minutes.
             if (MessagesBuffer.Count == 0)
             {
                 GC.Collect(2, GCCollectionMode.Forced);

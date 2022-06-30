@@ -114,6 +114,7 @@ namespace Buildersoft.Andy.X.IO.Services
                 Directory.CreateDirectory(TenantLocations.GetSubscriptionDirectory(tenant, product, component, topic, subscription));
                 Directory.CreateDirectory(TenantLocations.GetConsumerRootDirectory(tenant, product, component, topic, subscription));
                 Directory.CreateDirectory(TenantLocations.GetSubscriptionLogsDirectory(tenant, product, component, topic, subscription));
+                Directory.CreateDirectory(TenantLocations.GetSubscriptionUnackedDirectory(tenant, product, component, topic, subscription));
 
                 //TODO: CREATE db_log FILES HERE.
 

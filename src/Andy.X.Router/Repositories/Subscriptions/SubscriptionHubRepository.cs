@@ -41,12 +41,9 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                 subscription.SubscriptionPositionContext.ChangeTracker.AutoDetectChangesEnabled = false;
                 subscription.SubscriptionPositionContext.Database.EnsureCreated();
 
-                subscription.SubscriptionAcknowledgementContext = new MessageAcknowledgementContext(subscription.Tenant,
-                    subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName);
+                //subscription.SubscriptionAcknowledgementContext = new MessageAcknowledgementContext(subscription.Tenant,
+                //    subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName);
 
-                //  ensure that db is created.
-                subscription.SubscriptionAcknowledgementContext.ChangeTracker.AutoDetectChangesEnabled = false;
-                subscription.SubscriptionAcknowledgementContext.Database.EnsureCreated();
 
                 // check if record exists.
                 var position = (subscription.SubscriptionPositionContext as SubscriptionPositionContext).CurrentPosition.FirstOrDefault();
@@ -58,10 +55,8 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                     (subscription.SubscriptionPositionContext as SubscriptionPositionContext).CurrentPosition.Add(new SubscriptionPosition()
                     {
                         SubscriptionName = subscription.SubscriptionName,
-                        MarkDeleteLedgerPosition = 1,
                         MarkDeleteEntryPosition = -1,
 
-                        ReadLedgerPosition = 1,
                         ReadEntryPosition = 0,
                         PendingReadOperations = 0,
                         EntriesSinceLastUnacked = 0,
@@ -77,10 +72,8 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                         (subscription.SubscriptionPositionContext as SubscriptionPositionContext).CurrentPosition.Add(new SubscriptionPosition()
                         {
                             SubscriptionName = subscription.SubscriptionName,
-                            MarkDeleteLedgerPosition = 1,
                             MarkDeleteEntryPosition = -1,
 
-                            ReadLedgerPosition = 1,
                             ReadEntryPosition = 0,
                             PendingReadOperations = 0,
                             EntriesSinceLastUnacked = 0,
@@ -97,10 +90,8 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                             (subscription.SubscriptionPositionContext as SubscriptionPositionContext).CurrentPosition.Add(new SubscriptionPosition()
                             {
                                 SubscriptionName = subscription.SubscriptionName,
-                                MarkDeleteLedgerPosition = 1,
                                 MarkDeleteEntryPosition = -1,
 
-                                ReadLedgerPosition = 1,
                                 ReadEntryPosition = 0,
                                 PendingReadOperations = 0,
                                 EntriesSinceLastUnacked = 0,
@@ -113,10 +104,8 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                             (subscription.SubscriptionPositionContext as SubscriptionPositionContext).CurrentPosition.Add(new SubscriptionPosition()
                             {
                                 SubscriptionName = subscription.SubscriptionName,
-                                MarkDeleteLedgerPosition = 1,
                                 MarkDeleteEntryPosition = -1,
 
-                                ReadLedgerPosition = ledger.Id,
                                 ReadEntryPosition = ledger.Entries,
                                 PendingReadOperations = 0,
                                 EntriesSinceLastUnacked = 0,

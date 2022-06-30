@@ -1,7 +1,37 @@
 ﻿{
-  "BatchSize": 10000,
-  "LedgerSize": 50000,
-  "TimeoutBatchMs": 1000,
-  "BatchSizeBytes": 1000000,
-  "Locations": [ "data/storage" ]
+  // RocksDB Configurations
+  "KeepLogFileNumber": 5,
+  "DumpStatsInSeconds": 5,
+  "DeleteObsoleteFilesPeriodMilliseconds": 1800000,
+  "EnableWriteThreadAdaptiveYield": true,
+  "MaxFileOpeningThreads": 4,
+
+  // write_buffer_size sets the size of a single memtable. Once memtable exceeds this size, it is marked immutable and a new one is created, for now we are creating as 100MB SIZE
+  "WriteBufferSizeInBytes": 64000000,
+  
+  // max_write_buffer_number sets the maximum number of memtables, both active and immutable. If the active memtable fills up and the total number of memtables is larger than max_write_buffer_number we stall further writes. This may happen if the flush process is slower than the write rate.
+  "MaxWriteBufferNumber": 4,
+  
+  //The amount of write history to maintain in memory, in bytes. This includes the current memtable size, sealed but unflushed memtables, and flushed memtables that are kept around. RocksDB will try to keep at least this much history in memory - if dropping a flushed memtable would result in history falling below this threshold, it would not be dropped. (Default: 0)
+  "MaxWriteBufferSizeToMaintain": 0,
+  
+  // min_write_buffer_number_to_merge is the minimum number of memtables to be merged before flushing to storage. For example, if this option is set to 2, immutable memtables are only flushed when there are two of them - a single immutable memtable will never be flushed. If multiple memtables are merged together, less data may be written to storage since two updates are merged to a single key. However, every Get() must traverse all immutable memtables linearly to check if the key is there. Setting this option too high may hurt read performance.
+  "MinWriteBufferNumberToMerge": 2,
+
+
+
+  // max_background_compactions is the maximum number of concurrent background compactions. The default is 1, but to fully utilize your CPU and storage you might want to increase this to the minimum of (the number of cores in the system, the disk throughput divided by the average throughput of one compaction thread).
+  "MaxBackgroundCompactionsThreads": 1,
+
+  // max_background_flushes is the maximum number of concurrent flush operations. It is usually good enough to set this to 1.
+  "MaxBackgroundFlushesThreads": 1,
+
+
+
+
+  "InboundMemoryReleaseInMilliseconds": 300000,
+  "InboundFlushCurrentEntryPositionInMilliseconds": 5000,
+
+  "OutboundBackgroundIntervalReadMessagesInMilliseconds": 500,
+  "OutboundFlushCurrentEntryPositionInMilliseconds": 5000
 }
