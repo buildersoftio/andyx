@@ -2,7 +2,6 @@
 using Buildersoft.Andy.X.Model.Entities.Subscriptions;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
-using Cortex.Collections.Generic;
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
@@ -21,11 +20,14 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
         public Subscription Subscription { get; set; }
         public SubscriptionPosition CurrentPosition { get; set; }
 
+        public TopicState TopicState { get; set; }
+
         public ConcurrentDictionary<string, long> TemporaryUnackedMessageIds { get; set; }
 
         public bool IsConsuming { get; set; }
 
-        public long LastEntryPositionSent { get; set; }
+        public long LastMessageEntryPositionSent { get; set; }
+        public long LastUnackedMessageEntryPositionSent { get; set; }
 
         public bool IsOutboundServiceRunning { get; set; }
 
@@ -35,17 +37,18 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
 
         public SubscriptionTopicData(int flushCurrentPositionTimer, int backgroundIntervalReadMessages)
         {
-            currentPositionTimer = new Timer() { AutoReset = true, Interval = new TimeSpan(0, 0, 5).TotalMilliseconds };
+            currentPositionTimer = new Timer() { AutoReset = true, Interval = new TimeSpan(0, 0, 0, 0, flushCurrentPositionTimer).TotalMilliseconds };
             currentPositionTimer.Elapsed += CurrentPositionTimer_Elapsed;
 
-            readingMessagesTimer = new Timer() { AutoReset = true, Interval = new TimeSpan(0, 0, 0, 0, 500).TotalMilliseconds };
+            readingMessagesTimer = new Timer() { AutoReset = true, Interval = new TimeSpan(0, 0, 0, 0, backgroundIntervalReadMessages).TotalMilliseconds };
             readingMessagesTimer.Elapsed += ReadingMessagesTimer_Elapsed;
 
             CurrentPosition = new SubscriptionPosition();
 
             TemporaryUnackedMessageIds = new ConcurrentDictionary<string, long>();
 
-            LastEntryPositionSent = 0;
+            LastMessageEntryPositionSent = 0;
+            LastUnackedMessageEntryPositionSent = 0;
 
             IsConsuming = false;
         }

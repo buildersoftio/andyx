@@ -92,10 +92,20 @@ namespace Buildersoft.Andy.X.IO.Locations
             return Path.Combine(Settings_InitialConfigDirectory(), "storage_initial.json");
         }
 
+        public static string GetTransportInitialConfigurationFile()
+        {
+            return Path.Combine(Settings_InitialConfigDirectory(), "transport_initial.json");
+        }
+
 
         public static string GetStorageConfigurationFile()
         {
             return Path.Combine(ActiveConfigDirectory(), "storage_config.json");
+        }
+
+        public static string GetTransportConfigurationFile()
+        {
+            return Path.Combine(ActiveConfigDirectory(), "transport_config.json");
         }
 
         public static string GetUsersConfigurationFile()

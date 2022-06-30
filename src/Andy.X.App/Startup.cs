@@ -1,6 +1,8 @@
 using Buildersoft.Andy.X.Core.Services.App;
 using Buildersoft.Andy.X.Extensions.DependencyInjection;
 using Buildersoft.Andy.X.Handlers;
+using Buildersoft.Andy.X.IO.Locations;
+using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Buildersoft.Andy.X.Router.Hubs.Producers;
 using Microsoft.AspNetCore.Authentication;
@@ -13,6 +15,7 @@ using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.Json.Serialization;
 
 namespace Andy.X.App
@@ -29,6 +32,9 @@ namespace Andy.X.App
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddConfigurations(Configuration);
+            var transportConfiguration = JsonConvert.DeserializeObject<TransportConfiguration>(File.ReadAllText(ConfigurationLocations.GetTransportConfigurationFile()));
+
             if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS").ToLower() == "true")
             {
                 services.AddControllers()
@@ -40,8 +46,13 @@ namespace Andy.X.App
 
             services.AddSignalR(opt =>
                 {
-                    opt.MaximumReceiveMessageSize = null;
+                    opt.MaximumReceiveMessageSize = transportConfiguration.MaximumReceiveMessageSizeInBytes;
+                    opt.ClientTimeoutInterval = new TimeSpan(0, 0, transportConfiguration.ClientTimeoutInterval);
+                    opt.HandshakeTimeout = new TimeSpan(0, 0, transportConfiguration.HandshakeTimeout);
+                    opt.KeepAliveInterval = new TimeSpan(0, 0, transportConfiguration.KeepAliveInterval);
 
+                    opt.StreamBufferCapacity = transportConfiguration.StreamBufferCapacity;
+                    opt.MaximumParallelInvocationsPerClient = transportConfiguration.MaximumParallelInvocationsPerClient;
                 })
                 .AddJsonProtocol(opts =>
                 {
@@ -49,12 +60,6 @@ namespace Andy.X.App
                 })
                 .AddMessagePackProtocol();
 
-            //.AddMessagePackProtocol(option =>
-            //{
-            //    option.SerializerOptions = MessagePackSerializerOptions.Standard
-            //        .WithCompression(MessagePackCompression.None)
-            //        .WithSecurity(MessagePackSecurity.UntrustedData);
-            //});
 
             services.AddSwaggerGen(c =>
             {
@@ -99,7 +104,6 @@ namespace Andy.X.App
             services.AddProducerFactoryMethods();
             services.AddConsumerFactoryMethods();
 
-            services.AddConfigurations(Configuration);
 
             services.AddOrchestratorService();
             services.AddInboundMessageServices();
@@ -154,6 +158,11 @@ namespace Andy.X.App
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
+
+
+            var transportConfiguration = serviceProvider.GetRequiredService<TransportConfiguration>();
+
+
             app.UseEndpoints(endpoints =>
             {
                 // Mapping Rest endpoints
@@ -161,8 +170,16 @@ namespace Andy.X.App
                     endpoints.MapControllers();
 
                 // Mapping SignalR Hubs
-                endpoints.MapHub<ProducerHub>("/realtime/v3/producer");
-                endpoints.MapHub<ConsumerHub>("/realtime/v3/consumer");
+                endpoints.MapHub<ProducerHub>("/realtime/v3/producer", opt =>
+                {
+                    opt.ApplicationMaxBufferSize = transportConfiguration.ApplicationMaxBufferSizeInBytes;
+                    opt.TransportMaxBufferSize = transportConfiguration.TransportMaxBufferSizeInBytes;
+                });
+                endpoints.MapHub<ConsumerHub>("/realtime/v3/consumer", opt =>
+                {
+                    opt.ApplicationMaxBufferSize = transportConfiguration.ApplicationMaxBufferSizeInBytes;
+                    opt.TransportMaxBufferSize = transportConfiguration.TransportMaxBufferSizeInBytes;
+                });
             });
         }
     }

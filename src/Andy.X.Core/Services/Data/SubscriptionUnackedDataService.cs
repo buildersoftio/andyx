@@ -166,5 +166,11 @@ namespace Buildersoft.Andy.X.Core.Services.Data
             var nextId = entryId + 1;
             return TryGet(nextId, out message);
         }
+
+        public void Delete(long entryId)
+        {
+            var entryIdBytes = entryId.ToEntryBytes();
+            rocksDb.Remove(entryIdBytes);
+        }
     }
 }

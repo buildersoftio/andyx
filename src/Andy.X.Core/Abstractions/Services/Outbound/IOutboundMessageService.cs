@@ -9,6 +9,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Outbound
 
         Task SendAllMessages(string subscriptionId);
         bool CheckIfUnackedMessagesExists(string subscriptionId, long entryId);
+        void DeleteEntryOfUnackedMessages(string subscriptionId);
 
         Task SendFirstMessage(string subscriptionId, long currentEntryId);
 
@@ -23,5 +24,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Outbound
         Task StartOutboundMessageServiceForSubscription(string subscriptionId);
 
         Task TriggerSubscriptionsByProducer(string tenant, string product, string component, string topic);
+
+        SubscriptionTopicData GetSubscriptionDataConnector(string subscriptionId);
     }
 }

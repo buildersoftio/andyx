@@ -199,8 +199,6 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 }
             }
 
-
-
             subscriptionToRegister = _subscriptionFactory.CreateSubscription(tenant, product, component, topic, subscriptionName, subscriptionType, subscriptionMode, initialPosition);
             _tenantRepository.AddSubscriptionConfiguration(tenant, product, component, topic, subscriptionName, subscriptionToRegister);
 
@@ -293,12 +291,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                     case MessageAcknowledgement.Skipped:
                         if (_outboundMessageService.CheckIfUnackedMessagesExists(subscriptionId, message.EntryId) == true)
                         {
-                            // delete unacked message.
-                            var messageAcked = _subscriptionFactory
-                                .CreateUnackAcknowledgedMessageContent(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName, message);
-                            messageAcked.IsDeleted = true;
-
-                            _inboundMessageService.AcceptUnacknowledgedMessage(messageAcked);
+                            _outboundMessageService.DeleteEntryOfUnackedMessages(subscriptionId);
                         }
                         else
                         {
@@ -308,20 +301,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                     case MessageAcknowledgement.Unacknowledged:
                         if (_outboundMessageService.CheckIfUnackedMessagesExists(subscriptionId, message.EntryId) == true)
                         {
-                            // delete unacked message.
-                            var messageAcked = _subscriptionFactory
-                                .CreateUnackAcknowledgedMessageContent(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName, message);
-                            messageAcked.IsDeleted = true;
-
-                            _inboundMessageService.AcceptUnacknowledgedMessage(messageAcked);
+                            _outboundMessageService.DeleteEntryOfUnackedMessages(subscriptionId);
                         }
                         else
                         {
                             await _outboundMessageService.UpdateCurrentPosition(subscriptionId, message.EntryId);
                         }
 
-                        _inboundMessageService.AcceptUnacknowledgedMessage(_subscriptionFactory
-                            .CreateUnackAcknowledgedMessageContent(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName, message));
+                        _inboundMessageService.AcceptUnacknowledgedMessage(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName, message);
                         break;
                     default:
                         break;

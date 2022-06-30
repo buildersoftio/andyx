@@ -23,5 +23,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Data
 
         long GetReadKeysStatistics();
         long GetReadBytesStatistics();
+
+        void Delete(long entryId);
     }
 }

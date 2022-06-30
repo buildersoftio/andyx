@@ -1,0 +1,13 @@
+﻿{
+  "ClientTimeoutInterval": 30,
+  "HandshakeTimeout": 15,
+  "KeepAliveInterval": 15,
+  "StreamBufferCapacity": 10,
+
+  "MaximumReceiveMessageSizeInBytes": null,
+  
+  "MaximumParallelInvocationsPerClient": 1,
+
+  "ApplicationMaxBufferSizeInBytes": 64000,
+  "TransportMaxBufferSizeInBytes": 64000
+}

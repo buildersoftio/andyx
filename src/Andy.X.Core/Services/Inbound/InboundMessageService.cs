@@ -7,6 +7,7 @@ using Buildersoft.Andy.X.Core.Mappers;
 using Buildersoft.Andy.X.Core.Services.Inbound.Connectors;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.Extensions.Logging;
 using System;
@@ -56,16 +57,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             InitializeInboundMessageProcessor(topicKey);
         }
 
-        public void AcceptUnacknowledgedMessage(MessageAcknowledgementFileContent messageAcknowledgement)
-        {
-            // TODO: Update Unacked messages with consumption.
-            string connectorKey = ConnectorHelper.GetTopicConnectorKey(messageAcknowledgement.Tenant, messageAcknowledgement.Product, messageAcknowledgement.Component, messageAcknowledgement.Topic);
-            TryCreateTopicConnector(connectorKey);
 
-            //_topicConnectors[connectorKey].UnacknowledgedMessageBuffer.Enqueue(messageAcknowledgement);
-
-            InitializeInboundUnacknowledgedMessageProcessor(connectorKey);
-        }
 
         #region Store Message Region
         private void InitializeInboundMessageProcessor(string connectorKey)
@@ -145,71 +137,14 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
 
         #endregion
 
-        #region Store Unacked Messages Region
-        private void InitializeInboundUnacknowledgedMessageProcessor(string connectorKey)
+        public void AcceptUnacknowledgedMessage(string tenant, string product, string component, string topic, string subscription, MessageAcknowledgedDetails messageAcknowledgement)
         {
-            //if (_topicConnectors[connectorKey].UnacknowledgedMessageThreadingPool.AreThreadsRunning != true)
-            //{
-            //    _topicConnectors[connectorKey].UnacknowledgedMessageThreadingPool.AreThreadsRunning = true;
+            var subscriptionId = ConnectorHelper.GetSubcriptionId(tenant, product, component, topic, subscription);
+            var unacknowledgedMessage = new Model.Entities.Storages.UnacknowledgedMessage() { MessageEntry = messageAcknowledgement.EntryId };
 
-            //    // initialize threads.
-            //    InitializeInboundUnacknowledgedMessageProcessorThreads(connectorKey);
-            //}
+            var topicStateOfSubscription = _outboundMessageService.GetSubscriptionDataConnector(subscriptionId).TopicState;
+            topicStateOfSubscription.CurrentEntryOfUnacknowledgedMessage = topicStateOfSubscription.CurrentEntryOfUnacknowledgedMessage + 1;
+            _orchestratorService.GetSubscriptionUnackedDataService(subscriptionId).Put(topicStateOfSubscription.CurrentEntryOfUnacknowledgedMessage.ToString(), unacknowledgedMessage);
         }
-        private void InitializeInboundUnacknowledgedMessageProcessorThreads(string connectorKey)
-        {
-            //foreach (var thread in _topicConnectors[connectorKey].UnacknowledgedMessageThreadingPool.Threads)
-            //{
-            //    if (thread.Value.IsThreadWorking != true)
-            //    {
-            //        try
-            //        {
-            //            thread.Value.IsThreadWorking = true;
-            //            thread.Value.Task = Task.Run(() => InboundUnacknowledgedMessagingProcessor(connectorKey, thread.Key));
-            //        }
-            //        catch (Exception)
-            //        {
-            //            _logger.LogError($"Inbound unacknowledged message processor thread '{thread.Key}' failed to restart");
-            //        }
-            //    }
-            //}
-        }
-
-        private void InboundUnacknowledgedMessagingProcessor(string connectorKey, Guid threadId)
-        {
-            //while (_topicConnectors[connectorKey].UnacknowledgedMessageBuffer.TryDequeue(out MessageAcknowledgementFileContent messageAcknowledgement))
-            //{
-            //    try
-            //    {
-            //        var msgId = $"ua_{messageAcknowledgement.Subscription}" + Guid.NewGuid();
-            //        if (messageAcknowledgement.IsDeleted == true)
-            //            msgId = $"del_" + Guid.NewGuid();
-
-            //        MessageIOService.TrySaveInTemp_UnackedMessageBinFile(messageAcknowledgement, msgId);
-
-
-            //        // TODO: Implement Cluster Syncronization of messages.
-            //    }
-            //    catch (Exception)
-            //    {
-            //        // TODO: check this later;
-            //    }
-            //}
-
-            //_topicConnectors[connectorKey].UnacknowledgedMessageThreadingPool.Threads[threadId].IsThreadWorking = false;
-
-            // check release memory.
-            ReleaseMemoryUnacknowledgedMessagingProcessor(connectorKey);
-        }
-        private void ReleaseMemoryUnacknowledgedMessagingProcessor(string connectorKey)
-        {
-            //if (_topicConnectors[connectorKey].UnacknowledgedMessageBuffer.Count == 0)
-            //{
-            //    GC.Collect(2, GCCollectionMode.Forced);
-            //    GC.WaitForPendingFinalizers();
-            //}
-        }
-
-        #endregion
     }
 }

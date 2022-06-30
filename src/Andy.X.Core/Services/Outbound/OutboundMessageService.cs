@@ -2,6 +2,7 @@
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Subscriptions;
+using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.Core.Contexts.Subscriptions;
 using Buildersoft.Andy.X.Core.Services.Outbound.Connectors;
 using Buildersoft.Andy.X.Model.Configurations;
@@ -52,7 +53,13 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 using (var subDbContext = new SubscriptionPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
                 {
                     subscriptionTopicData.CurrentPosition = subDbContext.CurrentPosition.OrderBy(x => x.SubscriptionName).FirstOrDefault();
-                    subscriptionTopicData.LastEntryPositionSent = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
+                    subscriptionTopicData.LastMessageEntryPositionSent = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
+                }
+
+                using (var topicStateContext = new TopicStateContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
+                {
+                    subscriptionTopicData.TopicState = topicStateContext.TopicStates.Find(subscriptionId);
+                    subscriptionTopicData.LastUnackedMessageEntryPositionSent = subscriptionTopicData.TopicState.CurrentDeletedEntryOfUnacknowledgedMessage;
                 }
 
                 _subscriptionTopicData.TryAdd(subscriptionId, subscriptionTopicData);
@@ -76,7 +83,13 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 using (var subDbContext = new SubscriptionPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
                 {
                     subscriptionTopicData.CurrentPosition = subDbContext.CurrentPosition.OrderBy(x => x.SubscriptionName).FirstOrDefault();
-                    subscriptionTopicData.LastEntryPositionSent = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
+                    subscriptionTopicData.LastMessageEntryPositionSent = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
+                }
+
+                using (var topicStateContext = new TopicStateContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
+                {
+                    subscriptionTopicData.TopicState = topicStateContext.TopicStates.Find(subscriptionId);
+                    subscriptionTopicData.LastUnackedMessageEntryPositionSent = subscriptionTopicData.TopicState.CurrentDeletedEntryOfUnacknowledgedMessage;
                 }
 
                 _subscriptionTopicData.TryAdd(subscriptionId, subscriptionTopicData);
@@ -179,14 +192,13 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 subscriptionTopic.IsConsuming = false;
 
                 // return LastEntryPositionSent when the ReadEntryPosition is left.
-                subscriptionTopic.LastEntryPositionSent = subscriptionTopic.CurrentPosition.ReadEntryPosition;
+                subscriptionTopic.LastMessageEntryPositionSent = subscriptionTopic.CurrentPosition.ReadEntryPosition;
 
                 ReleaseMemory();
             }
 
             return Task.CompletedTask;
         }
-
 
         public Task StoreCurrentPositionAsync(string subscriptionId)
         {
@@ -204,6 +216,22 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
 
                     subDbContext.CurrentPosition.Update(subPositon);
                     subDbContext.SaveChanges();
+                }
+            }
+
+            using (var topicStateContext = new TopicStateContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
+            {
+                var state = topicStateContext.TopicStates.Find(subscriptionId);
+                if (state.CurrentEntryOfUnacknowledgedMessage != subscriptionTopicData.TopicState.CurrentEntryOfUnacknowledgedMessage ||
+                   state.CurrentDeletedEntryOfUnacknowledgedMessage != subscriptionTopicData.TopicState.CurrentDeletedEntryOfUnacknowledgedMessage)
+                {
+                    state.CurrentEntryOfUnacknowledgedMessage = subscriptionTopicData.TopicState.CurrentEntryOfUnacknowledgedMessage;
+                    state.CurrentDeletedEntryOfUnacknowledgedMessage = subscriptionTopicData.TopicState.CurrentDeletedEntryOfUnacknowledgedMessage;
+
+                    state.UpdatedDate = DateTimeOffset.Now;
+
+                    topicStateContext.TopicStates.Update(state);
+                    topicStateContext.SaveChanges();
                 }
             }
 
@@ -250,7 +278,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             var subscriptionTopic = _subscriptionTopicData[subscriptionId];
             subscriptionTopic.SetConsumingFlag();
 
-            long startEntry = subscriptionTopic.LastEntryPositionSent;
+            long startEntry = subscriptionTopic.LastMessageEntryPositionSent;
 
             while (topicDataService.TryGetNext(startEntry, out Message nextMessage))
             {
@@ -269,7 +297,38 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 startEntry = startEntry + 1;
             }
 
-            subscriptionTopic.LastEntryPositionSent = startEntry;
+            subscriptionTopic.LastMessageEntryPositionSent = startEntry;
+            subscriptionTopic.UnsetConsumingFlag();
+        }
+
+        private async Task SendAllUnackedMessages(string subscriptionId)
+        {
+            var subscriptionTopic = _subscriptionTopicData[subscriptionId];
+            subscriptionTopic.SetConsumingFlag();
+
+            var topicDataService = _orchestratorService.GetTopicDataService(subscriptionId.GetTopicKeyFromSubcriptionId());
+            var subscriptionDataService = _orchestratorService.GetSubscriptionUnackedDataService(subscriptionId);
+
+            var unackedStartEntry = subscriptionTopic.LastUnackedMessageEntryPositionSent;
+            while (subscriptionDataService.TryGetNext(unackedStartEntry, out UnacknowledgedMessage unacknowledgedMessage))
+            {
+                var messageDetails = topicDataService.Get(unacknowledgedMessage.MessageEntry);
+                if (messageDetails != null)
+                {
+                    subscriptionTopic.TemporaryUnackedMessageIds.TryAdd(unacknowledgedMessage.MessageEntry.ToString(), unackedStartEntry);
+
+                    await _subscriptionHubService.TransmitMessage(subscriptionTopic.Subscription.Tenant,
+                       subscriptionTopic.Subscription.Product,
+                       subscriptionTopic.Subscription.Component,
+                       subscriptionTopic.Subscription.Topic,
+                       subscriptionTopic.Subscription.SubscriptionName,
+                       messageDetails);
+                }
+
+                unackedStartEntry = unackedStartEntry + 1;
+            }
+
+            subscriptionTopic.LastUnackedMessageEntryPositionSent = unackedStartEntry;
             subscriptionTopic.UnsetConsumingFlag();
         }
 
@@ -294,8 +353,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     else
                     {
                         await SendAllMessages(subscriptionId);
-
-                        //TODO : Implement Unacked messages here.
+                        await SendAllUnackedMessages(subscriptionId);
                     }
                 }
             }
@@ -318,28 +376,33 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
         {
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
 
-            bool isRemoved = subscriptionTopicData.TemporaryUnackedMessageIds.TryRemove($"{entryId}", out _);
+            bool isRemoved = subscriptionTopicData.TemporaryUnackedMessageIds.TryRemove(entryId.ToString(), out _);
             if (isRemoved == true)
+            {
                 return true;
+            }
 
             return isRemoved;
         }
 
-        private long GetLastEntryFromUnckedMessageLogs(SubscriptionTopicData subscriptionTopicData)
+        public void DeleteEntryOfUnackedMessages(string subscriptionId)
         {
-            //using (var ackedDbContext = new MessageAcknowledgementContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
-            //{
-            //    var lastEntry = ackedDbContext.UnacknowledgedMessages.OrderBy(x => x.Id).LastOrDefault();
-            //    if (lastEntry != null)
-            //        return lastEntry.Id;
-            //}
-            return 0;
+            var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
+            subscriptionTopicData.TopicState.CurrentDeletedEntryOfUnacknowledgedMessage++;
         }
 
         private void ReleaseMemory()
         {
             GC.Collect(2, GCCollectionMode.Forced);
             GC.WaitForPendingFinalizers();
+        }
+
+        public SubscriptionTopicData GetSubscriptionDataConnector(string subscriptionId)
+        {
+            if (_subscriptionTopicData.ContainsKey(subscriptionId) is false)
+                return null;
+
+            return _subscriptionTopicData[subscriptionId];
         }
     }
 }

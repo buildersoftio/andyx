@@ -142,6 +142,10 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                             Id = "DEFAULT",
                             CurrentEntry = 1,
                             MarkDeleteEntryPosition = -1,
+
+                            CurrentEntryOfUnacknowledgedMessage = 0,
+                            CurrentDeletedEntryOfUnacknowledgedMessage = 0,
+
                             CreateDate = System.DateTimeOffset.Now
                         };
                         topicStateContext.TopicStates.Add(currentData);
@@ -194,6 +198,28 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
                 //load subscriptionopicData
                 //_outboundMessageService.LoadSubscriptionTopicDataInMemory(_subscriptionFactory.CreateSubscriptionTopicData(subscription));
+
+                // check if the subscription exists in topicState
+                using (var topicStateContext = new TopicStateContext(tenant, product, component, topicName))
+                {
+                    var currentSubscriptionData = topicStateContext.TopicStates.Find(subId);
+                    if (currentSubscriptionData == null)
+                    {
+                        currentSubscriptionData = new Model.Entities.Storages.TopicState()
+                        {
+                            Id = subId,
+                            CurrentEntry = -1,
+                            CurrentEntryOfUnacknowledgedMessage = 0,
+                            CurrentDeletedEntryOfUnacknowledgedMessage = 0,
+                            MarkDeleteEntryPosition = -1,
+                            CreateDate = System.DateTimeOffset.Now
+                        };
+                        topicStateContext.TopicStates.Add(currentSubscriptionData);
+                        topicStateContext.SaveChanges();
+                    }
+                }
+
+                _orchestratorService.InitializeSubscriptionUnackedDataService(tenant, product, component, topicName, subscriptionName);
 
                 if (topicDetails.Subscriptions.ContainsKey(subscriptionName) != true)
                 {
