@@ -1,5 +1,6 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Model.Consumers;
+using Buildersoft.Andy.X.Model.Subscriptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,9 +20,9 @@ namespace Buildersoft.Andy.X.Controllers
     public class ConsumersController : ControllerBase
     {
         private readonly ILogger<ConsumersController> _logger;
-        private readonly IConsumerHubRepository _consumerHubRepository;
+        private readonly ISubscriptionHubRepository _consumerHubRepository;
 
-        public ConsumersController(ILogger<ConsumersController> logger, IConsumerHubRepository consumerHubRepository)
+        public ConsumersController(ILogger<ConsumersController> logger, ISubscriptionHubRepository consumerHubRepository)
         {
             _logger = logger;
             _consumerHubRepository = consumerHubRepository;
@@ -38,15 +39,15 @@ namespace Buildersoft.Andy.X.Controllers
             else
                 _logger.LogInformation($"GET '{HttpContext.Request.Path}' is called");
 
-            var consumers = _consumerHubRepository.GetAllConsumerNames();
+            var consumers = _consumerHubRepository.GetAllSubscriptionNames();
 
             return Ok(consumers);
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpGet("{consumerName}")]
-        public ActionResult<Consumer> GetConsumer(string consumerName)
+        [HttpGet("{subscriptionName}")]
+        public ActionResult<Subscription> GetSubscription(string subscriptionName)
         {
             var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
             if (isFromCli != "")
@@ -55,7 +56,7 @@ namespace Buildersoft.Andy.X.Controllers
                 _logger.LogInformation($"GET '{HttpContext.Request.Path}' is called");
 
 
-            var consumer = _consumerHubRepository.GetConsumerById(consumerName);
+            var consumer = _consumerHubRepository.GetSubscriptionById(subscriptionName);
             if (consumer == null)
                 return NotFound();
 

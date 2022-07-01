@@ -11,18 +11,13 @@ namespace Buildersoft.Andy.X.Core.Factories.Consumers
             return new Consumer();
         }
 
-        public Consumer CreateConsumer(string tenant, string product, string component, string topic, string consumerName, SubscriptionType consumerType, InitialPosition initialPosition)
+        public Consumer CreateConsumer(string subscriptionName, string consumerName)
         {
             return new Consumer()
             {
                 Id = Guid.NewGuid(),
-                Tenant = tenant,
-                Product = product,
-                Component = component,
-                Topic = topic,
-                ConsumerName = consumerName,
-                SubscriptionType = consumerType,
-                ConsumerSettings = new ConsumerSettings() { InitialPosition = initialPosition }
+                Name = consumerName,
+                Subscription = subscriptionName,
             };
         }
     }

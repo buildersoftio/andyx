@@ -65,10 +65,51 @@ namespace Buildersoft.Andy.X.IO.Locations
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "producers");
         }
 
-        public static string GetConsumerRootDirectory(string tenantName, string productName, string componentName, string topicName)
+        public static string GetSubscriptionRootDirectory(string tenantName, string productName, string componentName, string topicName)
         {
-            return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "consumers");
+            return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "subscriptions");
         }
+
+        public static string GetSubscriptionDirectory(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
+        {
+            return Path.Combine(GetSubscriptionRootDirectory(tenantName, productName, componentName, topicName), subscriptionName);
+        }
+
+        public static string GetSubscriptionLogsDirectory(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
+        {
+            return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "logs");
+        }
+
+        public static string GetSubscriptionUnackedDirectory(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
+        {
+            return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "unacked");
+        }
+
+        public static string GetSubscriptionPositionLogFile(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
+        {
+            return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "position_log.andx");
+        }
+
+        public static string GetSubscriptionAcknowledgementLogFile(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
+        {
+            return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "acknowledgement_log.andx");
+        }
+
+        public static string GetConsumerRootDirectory(string tenantName, string productName, string componentName, string topicName, string subscriptionName)
+        {
+            return Path.Combine(GetSubscriptionDirectory(tenantName, productName, componentName, topicName, subscriptionName), "consumers");
+        }
+
+        public static string GetConsumerDirectory(string tenantName, string productName, string componentName, string topicName, string subscriptionName, string consumerName)
+        {
+            return Path.Combine(GetConsumerRootDirectory(tenantName, productName, componentName, topicName, subscriptionName), consumerName);
+        }
+
+        public static string GetConsumerLogsRootDirectory(string tenantName, string productName, string componentName, string topicName, string subscriptionName, string consumerName)
+        {
+            return Path.Combine(GetConsumerDirectory(tenantName, productName, componentName, topicName, subscriptionName, consumerName), "logs");
+        }
+
         public static string GetTopicLogRootDirectory(string tenantName, string productName, string componentName, string topicName)
         {
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "logs");
@@ -83,9 +124,10 @@ namespace Buildersoft.Andy.X.IO.Locations
         {
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "messages");
         }
-        public static string GetMessageLedgerFile(string tenantName, string productName, string componentName, string topicName, long ledgerId)
+
+        public static string GetTopicStateFile(string tenantName, string productName, string componentName, string topicName)
         {
-            return Path.Combine(GetMessageRootDirectory(tenantName, productName, componentName, topicName), $"msg_{ledgerId}.andx");
+            return Path.Combine(GetTopicLogRootDirectory(tenantName, productName, componentName, topicName), $"{topicName.ToLower()}_current_state.andx");
         }
 
         public static string GetTempTopicRootDirectory(string tenantName, string productName, string componentName, string topicName)
@@ -101,9 +143,15 @@ namespace Buildersoft.Andy.X.IO.Locations
         {
             return Path.Combine(GetTempMessageToStoreTopicRootDirectory(tenantName, productName, componentName, topicName), $"{msgId}.bin");
         }
-        public static string GetTempMessageAckedTopicRootDirectory(string tenantName, string productName, string componentName, string topicName)
+
+        public static string GetTempMessageUnAckedTopicRootDirectory(string tenantName, string productName, string componentName, string topicName)
         {
-            return Path.Combine(GetTempTopicRootDirectory(tenantName, productName, componentName, topicName), "acked");
+            return Path.Combine(GetTempTopicRootDirectory(tenantName, productName, componentName, topicName), "unacked");
+        }
+
+        public static string GetNextUnAckedMessageToStoreFile(string tenantName, string productName, string componentName, string topicName, string msgId)
+        {
+            return Path.Combine(GetTempMessageUnAckedTopicRootDirectory(tenantName, productName, componentName, topicName), $"{msgId}.bin");
         }
         #endregion
     }

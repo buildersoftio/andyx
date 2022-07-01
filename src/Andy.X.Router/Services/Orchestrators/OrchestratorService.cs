@@ -1,41 +1,112 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Producers;
 using Buildersoft.Andy.X.Model.App.Topics;
-using Buildersoft.Andy.X.Core.Synchronizers;
-using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using Buildersoft.Andy.X.Utility.Extensions.Helpers;
+using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
+using Buildersoft.Andy.X.Core.Services.Data;
+using Buildersoft.Andy.X.Model.Entities.Storages;
 
 namespace Buildersoft.Andy.X.Router.Services.Orchestrators
 {
     public class OrchestratorService : IOrchestratorService
     {
         private readonly ILogger<OrchestratorService> _logger;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly IProducerHubService _producerHubService;
+        private readonly StorageConfiguration _storageConfiguration;
 
-        private readonly ConcurrentDictionary<string, TopicSynchronizerProcess> _topicProcesses;
+        private readonly ConcurrentDictionary<string, ITopicDataService<Message>> _topicDataServices;
+        private readonly ConcurrentDictionary<string, ITopicReadonlyDataService<Message>> _topicReadonlyDataServices;
 
-        public OrchestratorService(ILogger<OrchestratorService> logger, IProducerHubService producerHubService)
+        private readonly ConcurrentDictionary<string, ITopicDataService<UnacknowledgedMessage>> _subscriptionUnackedDataServices;
+        private readonly ConcurrentDictionary<string, ITopicReadonlyDataService<UnacknowledgedMessage>> _subscriptionUnackedReadonlyDataServices;
+
+        public OrchestratorService(ILoggerFactory logger, IProducerHubService producerHubService, StorageConfiguration storageConfiguration)
         {
-            _logger = logger;
+            _logger = logger.CreateLogger<OrchestratorService>();
+
+            _loggerFactory = logger;
             _producerHubService = producerHubService;
+            _storageConfiguration = storageConfiguration;
 
-            _topicProcesses = new ConcurrentDictionary<string, TopicSynchronizerProcess>();
+            _topicDataServices = new ConcurrentDictionary<string, ITopicDataService<Message>>();
+            _topicReadonlyDataServices = new ConcurrentDictionary<string, ITopicReadonlyDataService<Message>>();
+
+            _subscriptionUnackedDataServices = new ConcurrentDictionary<string, ITopicDataService<UnacknowledgedMessage>>();
+            _subscriptionUnackedReadonlyDataServices = new ConcurrentDictionary<string, ITopicReadonlyDataService<UnacknowledgedMessage>>();
         }
 
-        public void AddTopicStorageSynchronizer(string tenant, string product, string component, Topic topic)
-        {
-            string processKey = ConnectorHelper.GetTopicSynchronizerKey(tenant, product, component, topic.Name);
-            if (_topicProcesses.ContainsKey(processKey))
-                return;
 
-            _topicProcesses.TryAdd(processKey, new TopicSynchronizerProcess(_logger) { Tenant = tenant, Product = product, Component = component, Topic = topic });
-            _topicProcesses[processKey].StartProcess();
+        public ITopicDataService<Message> GetTopicDataService(string topicKey)
+        {
+            if (_topicDataServices.ContainsKey(topicKey) != true)
+                return null;
+
+            return _topicDataServices[topicKey];
         }
 
-        public void StartTopicStorageSynchronizerProcess(string topicKey)
+        public ITopicReadonlyDataService<Message> GetTopicReadonlyDataService(string topicKey)
         {
-            _topicProcesses[topicKey].StartProcess();
+            if (_topicReadonlyDataServices.ContainsKey(topicKey) != true)
+                return null;
+
+            return _topicReadonlyDataServices[topicKey];
+        }
+
+        public bool InitializeTopicDataService(string tenant, string product, string component, Topic topic)
+        {
+            string topicKey = ConnectorHelper.GetTopicKey(tenant, product, component, topic.Name);
+            if (_topicDataServices.ContainsKey(topicKey))
+                return false;
+
+            return _topicDataServices.TryAdd(topicKey, new TopicRocksDbDataService(tenant, product, component, topic.Name, _storageConfiguration));
+        }
+
+        public bool InitializeTopicReadonlyDataService(string tenant, string product, string component, Topic topic)
+        {
+            string topicKey = ConnectorHelper.GetTopicKey(tenant, product, component, topic.Name);
+            if (_topicReadonlyDataServices.ContainsKey(topicKey))
+                return false;
+
+            return _topicReadonlyDataServices.TryAdd(topicKey, new TopicRocksDbReadonlyDataService(tenant, product, component, topic.Name, _storageConfiguration));
+        }
+
+
+        public bool InitializeSubscriptionUnackedDataService(string tenant, string product, string component, string topic, string subscription)
+        {
+            string subscriptionKey = ConnectorHelper.GetSubcriptionId(tenant, product, component, topic, subscription);
+            if (_subscriptionUnackedDataServices.ContainsKey(subscriptionKey))
+                return false;
+
+            return _subscriptionUnackedDataServices.TryAdd(subscriptionKey, new SubscriptionUnackedDataService(tenant, product, component, topic, subscription, _storageConfiguration));
+        }
+
+        public bool InitializeSubscriptionUnackedReadonlyDataService(string tenant, string product, string component, string topic, string subscription)
+        {
+            string subscriptionKey = ConnectorHelper.GetSubcriptionId(tenant, product, component, topic, subscription);
+            if (_subscriptionUnackedReadonlyDataServices.ContainsKey(subscriptionKey))
+                return false;
+
+            return _subscriptionUnackedReadonlyDataServices.TryAdd(subscriptionKey, new SubscriptionUnackedReadonlyDataService(tenant, product, component, topic, subscription, _storageConfiguration));
+        }
+
+        public ITopicDataService<UnacknowledgedMessage> GetSubscriptionUnackedDataService(string subscriptionKey)
+        {
+            if (_subscriptionUnackedDataServices.ContainsKey(subscriptionKey) != true)
+                return null;
+
+            return _subscriptionUnackedDataServices[subscriptionKey];
+        }
+
+        public ITopicReadonlyDataService<UnacknowledgedMessage> GetSubscriptionUnackedReadonlyDataService(string subscriptionKey)
+        {
+            if (_subscriptionUnackedReadonlyDataServices.ContainsKey(subscriptionKey) != true)
+                return null;
+
+            return _subscriptionUnackedReadonlyDataServices[subscriptionKey];
         }
     }
 }

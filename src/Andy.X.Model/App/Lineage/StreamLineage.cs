@@ -1,5 +1,5 @@
-﻿using Buildersoft.Andy.X.Model.Consumers;
-using Buildersoft.Andy.X.Model.Producers;
+﻿using Buildersoft.Andy.X.Model.Producers;
+using Buildersoft.Andy.X.Model.Subscriptions;
 using System.Collections.Generic;
 
 namespace Buildersoft.Andy.X.Model.App.Lineage
@@ -9,12 +9,12 @@ namespace Buildersoft.Andy.X.Model.App.Lineage
         public List<Producer> Producers { get; set; }
         public string Topic { get; set; }
         public string TopicPhysicalPath { get; set; }
-        public List<Consumer> Consumers { get; set; }
+        public List<Subscription> Subscriptions { get; set; }
 
         public StreamLineage()
         {
             Producers = new List<Producer>();
-            Consumers = new List<Consumer>();
+            Subscriptions = new List<Subscription>();
         }
     }
 }

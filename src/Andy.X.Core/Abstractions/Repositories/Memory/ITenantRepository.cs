@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Model.Subscriptions;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
@@ -14,6 +15,8 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory
         bool AddProduct(string tenant, string productName, Product product);
         bool AddComponent(string tenant, string product, string componentName, Component component);
         bool AddTopic(string tenant, string product, string component, string topicName, Topic topic);
+        public bool AddSubscriptionConfiguration(string tenant, string product, string component, string topicName, string subscriptionName, Subscription subscription);
+
 
         Tenant GetTenant(string tenant);
         Product GetProduct(string tenant, string product);

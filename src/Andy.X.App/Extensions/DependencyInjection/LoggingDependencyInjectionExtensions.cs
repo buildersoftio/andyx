@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Buildersoft.Andy.X.IO.Locations;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -8,8 +9,10 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
     {
         public static void AddSerilogLoggingConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
+            string logFileLocatiom = ConfigurationLocations.NodeLoggingFile();
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
+                .WriteTo.File(logFileLocatiom, rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
             //Log.Logger = new LoggerConfiguration()

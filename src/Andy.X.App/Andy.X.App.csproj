@@ -25,13 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Andy.X.Cluster.Synchronizer\Andy.X.Cluster.Synchronizer.csproj">
-		  <Private>True</Private>
-		</ProjectReference>
 		<ProjectReference Include="..\Andy.X.Router\Andy.X.Router.csproj">
-		  <Private>True</Private>
-		</ProjectReference>
-		<ProjectReference Include="..\Andy.X.Storage.Synchronizer\Andy.X.Storage.Synchronizer.csproj">
 		  <Private>True</Private>
 		</ProjectReference>
 		<ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj">

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <Version>2.1.0</Version>
+    <Version>3.0.0</Version>
     <Company>Buildersoft</Company>
     <Product>Buildersoft Andy</Product>
     <Authors>Buildersoft</Authors>
@@ -10,6 +10,12 @@
     <Copyright>Copyright © Buildersoft 2022</Copyright>
     <RootNamespace>Buildersoft.Andy.X.Router</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Services\Consumers\**" />
+    <EmbeddedResource Remove="Services\Consumers\**" />
+    <None Remove="Services\Consumers\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
@@ -20,10 +26,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Andy.X.Core\Andy.X.Core.csproj" />
     <ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\Consumers\" />
   </ItemGroup>
 
 </Project>

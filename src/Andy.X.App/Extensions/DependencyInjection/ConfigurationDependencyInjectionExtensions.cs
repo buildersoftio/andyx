@@ -17,6 +17,7 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
             services.BindStorageConfiguration(configuration);
             services.BindCredentialsConfiguration(configuration);
             services.BindClusterConfiguration(configuration);
+            services.BindTransportConfiguration(configuration);
 
             services.BindThreadsConfiguration(configuration);
         }
@@ -34,6 +35,9 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
 
             if (Directory.Exists(ConfigurationLocations.StorageDirectory()) != true)
                 Directory.CreateDirectory(ConfigurationLocations.StorageDirectory());
+
+            if (Directory.Exists(ConfigurationLocations.NodeLoggingDirectory()) != true)
+                Directory.CreateDirectory(ConfigurationLocations.NodeLoggingDirectory());
         }
 
         private static void BindTenantsConfiguration(this IServiceCollection services, IConfiguration configuration)
@@ -96,5 +100,20 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
             configuration.Bind("Threads", agentConfiguration);
             services.AddSingleton(agentConfiguration);
         }
+
+        private static void BindTransportConfiguration(this IServiceCollection services, IConfiguration configuration)
+        {
+            var transportConfiguration = new TransportConfiguration();
+
+            if (File.Exists(ConfigurationLocations.GetTransportConfigurationFile()) != true)
+            {
+                transportConfiguration = JsonConvert.DeserializeObject<TransportConfiguration>(File.ReadAllText(ConfigurationLocations.GetTransportInitialConfigurationFile()));
+                TenantIOWriter.WriteTransportConfiguration(transportConfiguration);
+            }
+
+            transportConfiguration = JsonConvert.DeserializeObject<TransportConfiguration>(File.ReadAllText(ConfigurationLocations.GetTransportConfigurationFile()));
+            services.AddSingleton(transportConfiguration);
+        }
+
     }
 }

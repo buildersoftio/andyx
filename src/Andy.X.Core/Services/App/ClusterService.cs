@@ -21,10 +21,10 @@ namespace Buildersoft.Andy.X.Core.Services.App
             _clusterConfiguration = clusterConfiguration;
             clusterSyncronizers = new ConcurrentDictionary<string, Process>();
 
-            InitializeCluster();
+            // InitializeCluster();
         }
 
-        private void InitializeCluster()
+        public void InitializeCluster()
         {
             foreach (var node in _clusterConfiguration.Nodes)
             {

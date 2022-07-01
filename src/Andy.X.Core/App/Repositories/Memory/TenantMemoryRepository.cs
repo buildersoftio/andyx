@@ -1,6 +1,10 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
+using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
+using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.IO.Readers;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.IO.Writers;
@@ -9,6 +13,8 @@ using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Model.Subscriptions;
+using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -21,16 +27,26 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
         private readonly ILogger<TenantMemoryRepository> _logger;
         private readonly ITenantFactory _tenantFactory;
         private readonly IOrchestratorService _orchestratorService;
-        private ConcurrentDictionary<string, Tenant> _tenants;
+        private readonly ISubscriptionHubRepository _subscriptionHubRepository;
+        private readonly IOutboundMessageService _outboundMessageService;
+        private readonly ISubscriptionFactory _subscriptionFactory;
+
+        private readonly ConcurrentDictionary<string, Tenant> _tenants;
 
         public TenantMemoryRepository(ILogger<TenantMemoryRepository> logger,
             List<TenantConfiguration> tenantConfigurations,
             ITenantFactory tenantFactory,
-            IOrchestratorService orchestratorService)
+            IOrchestratorService orchestratorService,
+            ISubscriptionHubRepository subscriptionHubRepository,
+            IOutboundMessageService outboundMessageService,
+            ISubscriptionFactory subscriptionFactory)
         {
             _logger = logger;
             _tenantFactory = tenantFactory;
             _orchestratorService = orchestratorService;
+            _subscriptionHubRepository = subscriptionHubRepository;
+            _outboundMessageService = outboundMessageService;
+            _subscriptionFactory = subscriptionFactory;
 
             _tenants = new ConcurrentDictionary<string, Tenant>();
 
@@ -79,6 +95,13 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                     component.Topics.ForEach(topic =>
                     {
                         AddTopic(tenantConfig.Name, product.Name, component.Name, topic.Name, _tenantFactory.CreateTopic(topic.Name));
+
+                        foreach (var subscription in topic.Subscriptions)
+                        {
+                            AddSubscriptionConfiguration(tenantConfig.Name, product.Name, component.Name, topic.Name, subscription.Key
+                                , _subscriptionFactory.CreateSubscription(tenantConfig.Name, product.Name, component.Name, topic.Name, subscription.Key, subscription.Value.SubscriptionType,
+                                subscription.Value.SubscriptionMode, subscription.Value.InitialPosition));
+                        }
                     });
                 });
             });
@@ -91,9 +114,6 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                     if (_tenants[tenant].Products[product].Components.ContainsKey(component))
                     {
                         _tenants[tenant].Products[product].Components[component].Topics.TryAdd(topicName, topic);
-
-                        // Starting the storage syncronizer
-                        _orchestratorService.AddTopicStorageSynchronizer(tenant, product, component, topic);
                     }
 
             List<TenantConfiguration> tenantsConfig = TenantIOReader.ReadTenantsFromConfigFile();
@@ -110,6 +130,36 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
                 TenantIOService.TryCreateTopicDirectory(tenant, product, component, topicName);
 
+                // Open connection with topic log data.
+                using (var topicStateContext = new TopicStateContext(tenant, product, component, topicName))
+                {
+                    topicStateContext.Database.EnsureCreated();
+                    var currentData = topicStateContext.TopicStates.Find("DEFAULT");
+                    if (currentData == null)
+                    {
+                        currentData = new Model.Entities.Storages.TopicState()
+                        {
+                            Id = "DEFAULT",
+                            CurrentEntry = 1,
+                            MarkDeleteEntryPosition = -1,
+
+                            CurrentEntryOfUnacknowledgedMessage = 0,
+                            CurrentDeletedEntryOfUnacknowledgedMessage = 0,
+
+                            CreateDate = System.DateTimeOffset.Now
+                        };
+                        topicStateContext.TopicStates.Add(currentData);
+                        topicStateContext.SaveChanges();
+                    }
+                    topic.TopicStates.LatestEntryId = currentData.CurrentEntry;
+                    topic.TopicStates.MarkDeleteEntryPosition = currentData.MarkDeleteEntryPosition;
+                }
+
+                _orchestratorService.InitializeTopicDataService(tenant, product, component, topic);
+
+                // We are not initializing the readonly when the topic is created, beacuse of memory leak.
+                //_orchestratorService.InitializeTopicReadonlyDataService(tenant, product, component, topic);
+
                 var topicDetails = componentDetails.Topics.Find(x => x.Name == topicName);
                 if (topicDetails != null)
                     return false;
@@ -121,6 +171,74 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
             return false;
         }
+
+        public bool AddSubscriptionConfiguration(string tenant, string product, string component, string topicName, string subscriptionName, Subscription subscription)
+        {
+
+            List<TenantConfiguration> tenantsConfig = TenantIOReader.ReadTenantsFromConfigFile();
+            var tenantDetail = tenantsConfig.Find(x => x.Name == tenant);
+            if (tenantDetail != null)
+            {
+                var productDetail = tenantDetail.Products.Find(x => x.Name == product);
+                if (productDetail == null)
+                    return false;
+
+                var componentDetails = productDetail.Components.Find(x => x.Name == component);
+                if (componentDetails == null)
+                    return false;
+
+                var topicDetails = componentDetails.Topics.Find(x => x.Name == topicName);
+                if (topicDetails == null)
+                    return false;
+
+                TenantIOService.TryCreateSubscriptionDirectory(tenant, product, component, topicName, subscriptionName);
+
+                var subId = ConnectorHelper.GetSubcriptionId(tenant, product, component, topicName, subscriptionName);
+                _subscriptionHubRepository.AddSubscription(subId, subscription);
+
+                //load subscriptionopicData
+                //_outboundMessageService.LoadSubscriptionTopicDataInMemory(_subscriptionFactory.CreateSubscriptionTopicData(subscription));
+
+                // check if the subscription exists in topicState
+                using (var topicStateContext = new TopicStateContext(tenant, product, component, topicName))
+                {
+                    var currentSubscriptionData = topicStateContext.TopicStates.Find(subId);
+                    if (currentSubscriptionData == null)
+                    {
+                        currentSubscriptionData = new Model.Entities.Storages.TopicState()
+                        {
+                            Id = subId,
+                            CurrentEntry = -1,
+                            CurrentEntryOfUnacknowledgedMessage = 0,
+                            CurrentDeletedEntryOfUnacknowledgedMessage = 0,
+                            MarkDeleteEntryPosition = -1,
+                            CreateDate = System.DateTimeOffset.Now
+                        };
+                        topicStateContext.TopicStates.Add(currentSubscriptionData);
+                        topicStateContext.SaveChanges();
+                    }
+                }
+
+                _orchestratorService.InitializeSubscriptionUnackedDataService(tenant, product, component, topicName, subscriptionName);
+
+                if (topicDetails.Subscriptions.ContainsKey(subscriptionName) != true)
+                {
+                    topicDetails.Subscriptions.Add(subscriptionName, new SubscriptionConfiguration()
+                    {
+                        SubscriptionType = subscription.SubscriptionType,
+                        SubscriptionMode = subscription.SubscriptionMode,
+                        InitialPosition = subscription.InitialPosition,
+                        CreatedDate = subscription.CreatedDate,
+                    });
+
+                    if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
+                        return true;
+                }
+            }
+
+            return true;
+        }
+
 
         public bool AddComponent(string tenant, string product, string componentName, Component component)
         {

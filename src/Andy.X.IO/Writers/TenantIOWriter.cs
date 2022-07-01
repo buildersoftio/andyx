@@ -40,6 +40,23 @@ namespace Buildersoft.Andy.X.IO.Writers
             }
         }
 
+        public static bool WriteTransportConfiguration(TransportConfiguration transport)
+        {
+            if (File.Exists(ConfigurationLocations.GetTransportConfigurationFile()))
+                File.Delete(ConfigurationLocations.GetTransportConfigurationFile());
+
+            try
+            {
+                File.WriteAllText(ConfigurationLocations.GetTransportConfigurationFile(), transport.ToPrettyJson());
+                return true;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
+        }
+
+
         public static bool WriteClusterConfiguration(ClusterConfiguration cluster)
         {
             if (File.Exists(ConfigurationLocations.GetClustersConfigurationFile()))

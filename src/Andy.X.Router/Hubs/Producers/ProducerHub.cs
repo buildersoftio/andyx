@@ -57,7 +57,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             bool isPersistent = Boolean.Parse(headers["x-andyx-topic-is-persistent"]);
 
 
-            string producerName = headers["x-andyx-producer"].ToString();
+            string producerName = headers["x-andyx-producer-name"].ToString();
 
             _logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} requested connection");
 
@@ -169,7 +169,6 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         public void TransmitMessage(Message message)
         {
             _inboundMessageService.AcceptMessage(message);
-            IncreaseMessageProducedCount();
         }
 
         public void TransmitMessages(List<Message> messages)
@@ -178,15 +177,6 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             {
                 _inboundMessageService.AcceptMessage(message);
             }
-
-            IncreaseMessageProducedCount(messages.Count);
-        }
-
-        private void IncreaseMessageProducedCount(int count = 1)
-        {
-            string clientConnectionId = Context.ConnectionId;
-            var producer = _producerHubRepository.GetProducerById(clientConnectionId);
-            producer.CountMessagesProducedSinceConnected = producer.CountMessagesProducedSinceConnected + count;
         }
     }
 }

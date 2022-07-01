@@ -20,8 +20,7 @@ namespace Buildersoft.Andy.X.Handlers
             ILoggerFactory logger,
             UrlEncoder encoder,
             ISystemClock clock,
-            IConfiguration configuration)
-            : base(options, logger, encoder, clock)
+            IConfiguration configuration) : base(options, logger, encoder, clock)
         {
             this.configuration = configuration;
         }
