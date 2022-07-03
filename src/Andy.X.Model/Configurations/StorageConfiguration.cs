@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Buildersoft.Andy.X.Model.Configurations
+﻿namespace Buildersoft.Andy.X.Model.Configurations
 {
     public class StorageConfiguration
     {
@@ -13,6 +11,8 @@ namespace Buildersoft.Andy.X.Model.Configurations
         public bool EnableWriteThreadAdaptiveYield { get; set; }
         public int MaxFileOpeningThreads { get; set; }
 
+        public ulong MaxLogFileSizeInBytes { get; set; }
+
 
         public int InboundMemoryReleaseInMilliseconds { get; set; }
         public int InboundFlushCurrentEntryPositionInMilliseconds { get; set; }
@@ -22,7 +22,7 @@ namespace Buildersoft.Andy.X.Model.Configurations
 
 
         // Flushing options
-        // write_buffer_size sets the size of a single memtable. Once memtable exceeds this size, it is marked immutable and a new one is created, for now we are creating as 100MB SIZE
+        // write_buffer_size sets the size of a single memtable. Once memtable exceeds this size, it is marked immutable and a new one is created, for now we are creating as 64MB SIZE
         public ulong WriteBufferSizeInBytes { get; set; }
         //max_write_buffer_number sets the maximum number of memtables, both active and immutable. If the active memtable fills up and the total number of memtables is larger than max_write_buffer_number we stall further writes. This may happen if the flush process is slower than the write rate.
         public int MaxWriteBufferNumber { get; set; }
@@ -44,7 +44,9 @@ namespace Buildersoft.Andy.X.Model.Configurations
             MaxFileOpeningThreads = 4;
 
             KeepLogFileNumber = 5;
+            MaxLogFileSizeInBytes = 104857600;
             DumpStatsInSeconds = 60;
+
 
             InboundMemoryReleaseInMilliseconds = 5 * 1000 * 60;
             InboundFlushCurrentEntryPositionInMilliseconds = 5 * 1000;

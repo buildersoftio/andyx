@@ -37,10 +37,14 @@ namespace Buildersoft.Andy.X.Core.Services.Data
             _dataPath = TenantLocations.GetMessageRootDirectory(tenant, product, component, topic);
             _logPath = TenantLocations.GetTopicLogRootDirectory(tenant, product, component, topic);
 
+            
 
             dbOptions = new DbOptions()
                 .SetDbLogDir(_logPath)
                 .SetCreateIfMissing(true)
+                .SetMaxLogFileSize(storageConfiguration.MaxLogFileSizeInBytes)
+                .SetStatsDumpPeriodSec(storageConfiguration.DumpStatsInSeconds)
+                .SetKeepLogFileNum(storageConfiguration.KeepLogFileNumber)
                 .SetMaxBackgroundCompactions(storageConfiguration.MaxBackgroundCompactionsThreads)
                 .EnableStatistics()
                 .SetMaxBackgroundFlushes(storageConfiguration.MaxBackgroundFlushesThreads)

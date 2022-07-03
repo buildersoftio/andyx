@@ -99,7 +99,6 @@ namespace Andy.X.App
 
             services.AddSerilogLoggingConfiguration(Configuration);
             services.AddSingleton<ApplicationService>();
-            services.AddSingleton<ClusterService>();
             services.AddAppFactoryMethods();
             services.AddProducerFactoryMethods();
             services.AddConsumerFactoryMethods();

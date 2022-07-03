@@ -98,8 +98,8 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
                         foreach (var subscription in topic.Subscriptions)
                         {
-                            AddSubscriptionConfiguration(tenantConfig.Name, product.Name, component.Name, topic.Name, subscription.Key
-                                , _subscriptionFactory.CreateSubscription(tenantConfig.Name, product.Name, component.Name, topic.Name, subscription.Key, subscription.Value.SubscriptionType,
+                            AddSubscriptionConfiguration(tenantConfig.Name, product.Name, component.Name, topic.Name, subscription.Key,
+                                 _subscriptionFactory.CreateSubscription(tenantConfig.Name, product.Name, component.Name, topic.Name, subscription.Key, subscription.Value.SubscriptionType,
                                 subscription.Value.SubscriptionMode, subscription.Value.InitialPosition));
                         }
                     });
@@ -141,7 +141,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                         {
                             Id = "DEFAULT",
                             CurrentEntry = 1,
-                            MarkDeleteEntryPosition = -1,
+                            MarkDeleteEntryPosition = 0,
 
                             CurrentEntryOfUnacknowledgedMessage = 0,
                             CurrentDeletedEntryOfUnacknowledgedMessage = 0,
@@ -194,10 +194,8 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                 TenantIOService.TryCreateSubscriptionDirectory(tenant, product, component, topicName, subscriptionName);
 
                 var subId = ConnectorHelper.GetSubcriptionId(tenant, product, component, topicName, subscriptionName);
-                _subscriptionHubRepository.AddSubscription(subId, subscription);
+                _subscriptionHubRepository.AddSubscription(subId, _tenants[tenant].Products[product].Components[component].Topics[topicName], subscription);
 
-                //load subscriptionopicData
-                //_outboundMessageService.LoadSubscriptionTopicDataInMemory(_subscriptionFactory.CreateSubscriptionTopicData(subscription));
 
                 // check if the subscription exists in topicState
                 using (var topicStateContext = new TopicStateContext(tenant, product, component, topicName))
@@ -211,7 +209,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                             CurrentEntry = -1,
                             CurrentEntryOfUnacknowledgedMessage = 0,
                             CurrentDeletedEntryOfUnacknowledgedMessage = 0,
-                            MarkDeleteEntryPosition = -1,
+                            MarkDeleteEntryPosition = 0,
                             CreateDate = System.DateTimeOffset.Now
                         };
                         topicStateContext.TopicStates.Add(currentSubscriptionData);

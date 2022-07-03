@@ -115,11 +115,6 @@ namespace Buildersoft.Andy.X.IO.Locations
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "logs");
         }
 
-        public static string GetTopicLedgerLogFile(string tenantName, string productName, string componentName, string topicName)
-        {
-            return Path.Combine(GetTopicLogRootDirectory(tenantName, productName, componentName, topicName), "ledger_log.andx");
-        }
-
         public static string GetMessageRootDirectory(string tenantName, string productName, string componentName, string topicName)
         {
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "messages");

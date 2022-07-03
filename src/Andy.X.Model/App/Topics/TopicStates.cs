@@ -8,7 +8,7 @@
         public TopicStates()
         {
             LatestEntryId = 1;
-            MarkDeleteEntryPosition = -1;
+            MarkDeleteEntryPosition = 0;
         }
     }
 }
