@@ -1,4 +1,5 @@
-﻿using Buildersoft.Andy.X.Model.Consumers;
+﻿using Buildersoft.Andy.X.Model.App.Topics;
+using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers
     public interface ISubscriptionHubRepository
     {
 
-        bool AddSubscription(string subscriptionId, Subscription subscription);
+        bool AddSubscription(string subscriptionId, Topic topic, Subscription subscription);
 
         bool AddConsumer(string subscriptionId, string connectionId, Consumer consumer);
         bool AddExternalConsumer(string subscriptionId, string connectionId, Consumer consumer);

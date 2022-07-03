@@ -6,9 +6,8 @@ namespace Buildersoft.Andy.X.Core.Services.App
 {
     public class ApplicationService
     {
-        private readonly ClusterService _clusterService;
 
-        public ApplicationService(ILogger<ApplicationService> logger, ClusterService clusterService)
+        public ApplicationService(ILogger<ApplicationService> logger)
         {
             var generalColor = Console.ForegroundColor;
 
@@ -21,7 +20,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write("    ###"); Console.ForegroundColor = generalColor; Console.Write("  ###");
             //Console.WriteLine("       Andy X 3.0.0-alpha. Copyright (C) 2022 Buildersoft LLC");
-            Console.WriteLine("       Andy X 3.0.0-alpha328. Developed with (love) by Buildersoft LLC.");
+            Console.WriteLine("       Andy X 3.0.0-alpha421. Developed with (love) by Buildersoft LLC.");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.Write("      ####         "); Console.ForegroundColor = generalColor; Console.WriteLine("Licensed under the Apache License 2.0. See https://bit.ly/3DqVQbx");
             Console.ForegroundColor = ConsoleColor.Red;
@@ -39,11 +38,8 @@ namespace Buildersoft.Andy.X.Core.Services.App
             if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS").ToLower() == "true")
                 logger.LogInformation("Configuration endpoints are exposed");
 
-            clusterService.InitializeCluster();
-
             logger.LogInformation("Andy X is ready");
 
-            _clusterService = clusterService;
         }
 
         private void ExposePorts()

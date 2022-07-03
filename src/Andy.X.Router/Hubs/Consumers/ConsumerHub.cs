@@ -79,10 +79,6 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             bool isPersistent = bool.Parse(headers["x-andyx-topic-is-persistent"]);
             string consumerName = headers["x-andyx-consumer-name"].ToString();
 
-            //TODO: Add Client Ip Address
-            //string consumerIpAddress = Context.GetHttpContext().Connection.RemoteIpAddress.ToString();
-            //_logger.LogInformation($"Client connected with IP {consumerIpAddress}");
-
             string subscriptionName = headers["x-andyx-subscription-name"].ToString();
             SubscriptionMode subscriptionMode = (SubscriptionMode)Enum.Parse(typeof(SubscriptionMode), headers["x-andyx-subscription-mode"].ToString());
             SubscriptionType subscriptionType = (SubscriptionType)Enum.Parse(typeof(SubscriptionType), headers["x-andyx-subscription-type"].ToString());
@@ -146,8 +142,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                     return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component."));
                 }
 
-                var topicDetails = _tenantFactory.CreateTopic(topic, isPersistent);
-                _tenantRepository.AddTopic(tenant, product, component, topic, topicDetails);
+                connectedTopic = _tenantFactory.CreateTopic(topic, isPersistent);
+                _tenantRepository.AddTopic(tenant, product, component, topic, connectedTopic);
             }
 
 
@@ -202,13 +198,12 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             subscriptionToRegister = _subscriptionFactory.CreateSubscription(tenant, product, component, topic, subscriptionName, subscriptionType, subscriptionMode, initialPosition);
             _tenantRepository.AddSubscriptionConfiguration(tenant, product, component, topic, subscriptionName, subscriptionToRegister);
 
-            _subscriptionHubRepository.AddSubscription(subscriptionId, subscriptionToRegister);
+            _subscriptionHubRepository.AddSubscription(subscriptionId, connectedTopic, subscriptionToRegister);
 
             var consumer = _consumerFactory.CreateConsumer(subscriptionName, consumerName);
             _subscriptionHubRepository.AddConsumer(subscriptionId, clientConnectionId, consumer);
             TenantIOService.TryCreateConsumerDirectory(tenant, product, component, topic, subscriptionName, consumerName);
 
-            // TODO: Check _outboundMessageService.AddSubscriptionTopicData as this method is type Task, it should run in another thread!
             Task.Run(() => _outboundMessageService.AddSubscriptionTopicData(_subscriptionFactory.CreateSubscriptionTopicData(subscriptionToRegister,
                 _storageConfiguration.OutboundFlushCurrentEntryPositionInMilliseconds,
                 _storageConfiguration.OutboundBackgroundIntervalReadMessagesInMilliseconds)));

@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Core.App.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.Core.Contexts.Subscriptions;
 using Buildersoft.Andy.X.IO.Locations;
+using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Entities.Subscriptions;
 using Buildersoft.Andy.X.Model.Subscriptions;
@@ -26,7 +27,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
             _subscriptions = new ConcurrentDictionary<string, Subscription>();
         }
 
-        public bool AddSubscription(string subscriptionId, Subscription subscription)
+        public bool AddSubscription(string subscriptionId, Topic topic, Subscription subscription)
         {
             if (_subscriptions.ContainsKey(subscriptionId))
                 return false;
@@ -41,11 +42,7 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                 subscription.SubscriptionPositionContext.ChangeTracker.AutoDetectChangesEnabled = false;
                 subscription.SubscriptionPositionContext.Database.EnsureCreated();
 
-                //subscription.SubscriptionAcknowledgementContext = new MessageAcknowledgementContext(subscription.Tenant,
-                //    subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName);
 
-
-                // check if record exists.
                 var position = (subscription.SubscriptionPositionContext as SubscriptionPositionContext).CurrentPosition.FirstOrDefault();
                 if (position != null)
                     return true;
@@ -55,9 +52,10 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                     (subscription.SubscriptionPositionContext as SubscriptionPositionContext).CurrentPosition.Add(new SubscriptionPosition()
                     {
                         SubscriptionName = subscription.SubscriptionName,
-                        MarkDeleteEntryPosition = -1,
+                        MarkDeleteEntryPosition = 0,
 
-                        ReadEntryPosition = 0,
+                        // If there where some records deleted, the entry position should move to MarkDeleteEntryPosition of DEFAULT topic state.
+                        ReadEntryPosition = topic.TopicStates.MarkDeleteEntryPosition,
                         PendingReadOperations = 0,
                         EntriesSinceLastUnacked = 0,
                         IsConnected = false,
@@ -66,54 +64,19 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                 }
                 else
                 {
-                    // get the ledger log db file
-                    if (File.Exists(TenantLocations.GetTopicLedgerLogFile(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic)) != true)
+
+                    (subscription.SubscriptionPositionContext as SubscriptionPositionContext).CurrentPosition.Add(new SubscriptionPosition()
                     {
-                        (subscription.SubscriptionPositionContext as SubscriptionPositionContext).CurrentPosition.Add(new SubscriptionPosition()
-                        {
-                            SubscriptionName = subscription.SubscriptionName,
-                            MarkDeleteEntryPosition = -1,
+                        SubscriptionName = subscription.SubscriptionName,
+                        MarkDeleteEntryPosition = 0,
 
-                            ReadEntryPosition = 0,
-                            PendingReadOperations = 0,
-                            EntriesSinceLastUnacked = 0,
-                            IsConnected = false,
-                            CreatedDate = DateTimeOffset.Now,
-                        });
-                    }
-                    else
-                    {
-                        var ledgerRepository = new LedgerRepository(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic);
-                        var ledger = ledgerRepository.GetLastestLedgerData();
-                        if (ledger == null)
-                        {
-                            (subscription.SubscriptionPositionContext as SubscriptionPositionContext).CurrentPosition.Add(new SubscriptionPosition()
-                            {
-                                SubscriptionName = subscription.SubscriptionName,
-                                MarkDeleteEntryPosition = -1,
+                        ReadEntryPosition = topic.TopicStates.LatestEntryId,
+                        PendingReadOperations = 0,
+                        EntriesSinceLastUnacked = 0,
+                        IsConnected = false,
+                        CreatedDate = DateTimeOffset.Now,
+                    });
 
-                                ReadEntryPosition = 0,
-                                PendingReadOperations = 0,
-                                EntriesSinceLastUnacked = 0,
-                                IsConnected = false,
-                                CreatedDate = DateTimeOffset.Now,
-                            });
-                        }
-                        else
-                        {
-                            (subscription.SubscriptionPositionContext as SubscriptionPositionContext).CurrentPosition.Add(new SubscriptionPosition()
-                            {
-                                SubscriptionName = subscription.SubscriptionName,
-                                MarkDeleteEntryPosition = -1,
-
-                                ReadEntryPosition = ledger.Entries,
-                                PendingReadOperations = 0,
-                                EntriesSinceLastUnacked = 0,
-                                IsConnected = false,
-                                CreatedDate = DateTimeOffset.Now,
-                            });
-                        }
-                    }
                 }
                 (subscription.SubscriptionPositionContext as SubscriptionPositionContext).SaveChanges();
             }
