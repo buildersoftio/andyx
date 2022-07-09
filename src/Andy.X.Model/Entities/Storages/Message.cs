@@ -19,10 +19,16 @@ namespace Buildersoft.Andy.X.Model.Entities.Storages
         [Key(3)]
         public byte[] Payload { get; set; }
 
+
+        // this property is  for clustering, to know to which Node to send the acknowledgment of the message.
         [Key(4)]
-        public DateTimeOffset StoredDate { get; set; }
+        public string NodeId { get; set; }
+
 
         [Key(5)]
+        public DateTimeOffset StoredDate { get; set; }
+
+        [Key(6)]
         public DateTimeOffset SentDate { get; set; }
     }
 }

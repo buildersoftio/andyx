@@ -61,6 +61,7 @@ namespace Buildersoft.Andy.X.Router.Services.Subscriptions
                 Topic = topic,
 
                 EntryId = message.Entry,
+                NodeId = message.NodeId,
 
                 MessageId = message.MessageId,
                 Headers = message.Headers,

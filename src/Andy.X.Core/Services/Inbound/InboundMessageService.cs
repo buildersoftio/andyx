@@ -24,6 +24,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
         private readonly ConcurrentDictionary<string, TopicDataConnector> _topicConnectors;
         private readonly IOutboundMessageService _outboundMessageService;
         private readonly StorageConfiguration _storageConfiguration;
+        private readonly NodeConfiguration _nodeConfiguration;
 
         private readonly ITenantRepository _tenantRepository;
 
@@ -32,7 +33,8 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             ITenantRepository tenantRepository,
             IOrchestratorService orchestratorService,
             IOutboundMessageService outboundMessageService,
-            StorageConfiguration storageConfiguration)
+            StorageConfiguration storageConfiguration,
+            NodeConfiguration nodeConfiguration)
         {
             _logger = logger;
 
@@ -42,7 +44,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             _orchestratorService = orchestratorService;
             _outboundMessageService = outboundMessageService;
             _storageConfiguration = storageConfiguration;
-
+            _nodeConfiguration = nodeConfiguration;
             _topicConnectors = new ConcurrentDictionary<string, TopicDataConnector>();
         }
 
@@ -52,7 +54,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             string topicKey = ConnectorHelper.GetTopicConnectorKey(message.Tenant, message.Product, message.Component, message.Topic);
 
             TryCreateTopicConnector(topicKey);
-            _topicConnectors[topicKey].MessagesBuffer.Enqueue(message.Map(topic.TopicStates.LatestEntryId++));
+            _topicConnectors[topicKey].MessagesBuffer.Enqueue(message.Map(_nodeConfiguration.NodeId, topic.TopicStates.LatestEntryId++));
 
             InitializeInboundMessageProcessor(topicKey);
         }
@@ -140,11 +142,19 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
         public void AcceptUnacknowledgedMessage(string tenant, string product, string component, string topic, string subscription, MessageAcknowledgedDetails messageAcknowledgement)
         {
             var subscriptionId = ConnectorHelper.GetSubcriptionId(tenant, product, component, topic, subscription);
-            var unacknowledgedMessage = new Model.Entities.Storages.UnacknowledgedMessage() { MessageEntry = messageAcknowledgement.EntryId };
 
-            var topicStateOfSubscription = _outboundMessageService.GetSubscriptionDataConnector(subscriptionId).TopicState;
-            topicStateOfSubscription.CurrentEntryOfUnacknowledgedMessage = topicStateOfSubscription.CurrentEntryOfUnacknowledgedMessage + 1;
-            _orchestratorService.GetSubscriptionUnackedDataService(subscriptionId).Put(topicStateOfSubscription.CurrentEntryOfUnacknowledgedMessage.ToString(), unacknowledgedMessage);
+            // Store here only if this entry message has come from this node.
+            if (messageAcknowledgement.NodeId == _nodeConfiguration.NodeId)
+            {
+                var unacknowledgedMessage = new Model.Entities.Storages.UnacknowledgedMessage() { MessageEntry = messageAcknowledgement.EntryId };
+                var topicStateOfSubscription = _outboundMessageService.GetSubscriptionDataConnector(subscriptionId).TopicState;
+                topicStateOfSubscription.CurrentEntryOfUnacknowledgedMessage = topicStateOfSubscription.CurrentEntryOfUnacknowledgedMessage + 1;
+                _orchestratorService.GetSubscriptionUnackedDataService(subscriptionId).Put(topicStateOfSubscription.CurrentEntryOfUnacknowledgedMessage.ToString(), unacknowledgedMessage);
+            }
+            else
+            {
+                // TODO: Implement Clustering.
+            }
         }
     }
 }

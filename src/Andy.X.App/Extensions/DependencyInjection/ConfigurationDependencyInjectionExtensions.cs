@@ -13,6 +13,7 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
     {
         public static void AddConfigurations(this IServiceCollection services, IConfiguration configuration)
         {
+            services.BindNodeConfiguration(configuration);
             services.BindTenantsConfiguration(configuration);
             services.BindStorageConfiguration(configuration);
             services.BindCredentialsConfiguration(configuration);
@@ -38,6 +39,15 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
 
             if (Directory.Exists(ConfigurationLocations.NodeLoggingDirectory()) != true)
                 Directory.CreateDirectory(ConfigurationLocations.NodeLoggingDirectory());
+        }
+
+        private static void BindNodeConfiguration(this IServiceCollection services, IConfiguration configuration)
+        {
+            var nodeConfiguration = new NodeConfiguration();
+
+            nodeConfiguration.NodeId = configuration.GetValue<string>("NodeId");
+
+            services.AddSingleton(nodeConfiguration);
         }
 
         private static void BindTenantsConfiguration(this IServiceCollection services, IConfiguration configuration)
