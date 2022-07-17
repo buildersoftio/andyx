@@ -59,7 +59,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 using (var topicStateContext = new TopicStateContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
                 {
                     subscriptionTopicData.TopicState = topicStateContext.TopicStates.Find(subscriptionId);
-                    subscriptionTopicData.LastUnackedMessageEntryPositionSent = subscriptionTopicData.TopicState.CurrentDeletedEntryOfUnacknowledgedMessage;
+                    subscriptionTopicData.LastUnackedMessageEntryPositionSent = subscriptionTopicData.TopicState.MarkDeleteEntryPosition;
                 }
 
                 _subscriptionTopicData.TryAdd(subscriptionId, subscriptionTopicData);
@@ -89,7 +89,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 using (var topicStateContext = new TopicStateContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
                 {
                     subscriptionTopicData.TopicState = topicStateContext.TopicStates.Find(subscriptionId);
-                    subscriptionTopicData.LastUnackedMessageEntryPositionSent = subscriptionTopicData.TopicState.CurrentDeletedEntryOfUnacknowledgedMessage;
+                    subscriptionTopicData.LastUnackedMessageEntryPositionSent = subscriptionTopicData.TopicState.MarkDeleteEntryPosition;
                 }
 
                 _subscriptionTopicData.TryAdd(subscriptionId, subscriptionTopicData);
@@ -222,11 +222,11 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             using (var topicStateContext = new TopicStateContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
             {
                 var state = topicStateContext.TopicStates.Find(subscriptionId);
-                if (state.CurrentEntryOfUnacknowledgedMessage != subscriptionTopicData.TopicState.CurrentEntryOfUnacknowledgedMessage ||
-                   state.CurrentDeletedEntryOfUnacknowledgedMessage != subscriptionTopicData.TopicState.CurrentDeletedEntryOfUnacknowledgedMessage)
+                if (state.CurrentEntry != subscriptionTopicData.TopicState.CurrentEntry ||
+                   state.MarkDeleteEntryPosition != subscriptionTopicData.TopicState.MarkDeleteEntryPosition)
                 {
-                    state.CurrentEntryOfUnacknowledgedMessage = subscriptionTopicData.TopicState.CurrentEntryOfUnacknowledgedMessage;
-                    state.CurrentDeletedEntryOfUnacknowledgedMessage = subscriptionTopicData.TopicState.CurrentDeletedEntryOfUnacknowledgedMessage;
+                    state.CurrentEntry = subscriptionTopicData.TopicState.CurrentEntry;
+                    state.MarkDeleteEntryPosition = subscriptionTopicData.TopicState.MarkDeleteEntryPosition;
 
                     state.UpdatedDate = DateTimeOffset.Now;
 
@@ -388,7 +388,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
         public void DeleteEntryOfUnackedMessages(string subscriptionId)
         {
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
-            subscriptionTopicData.TopicState.CurrentDeletedEntryOfUnacknowledgedMessage++;
+            subscriptionTopicData.TopicState.MarkDeleteEntryPosition++;
         }
 
         private void ReleaseMemory()

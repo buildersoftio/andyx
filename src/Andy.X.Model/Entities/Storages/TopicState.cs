@@ -11,8 +11,6 @@ namespace Buildersoft.Andy.X.Model.Entities.Storages
 
         public long CurrentEntry { get; set; }
         public long MarkDeleteEntryPosition { get; set; }
-        public long CurrentEntryOfUnacknowledgedMessage { get; set; }
-        public long CurrentDeletedEntryOfUnacknowledgedMessage { get; set; }
 
         public DateTimeOffset? UpdatedDate { get; set; }
         public DateTimeOffset CreateDate { get; set; }

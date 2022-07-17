@@ -143,9 +143,6 @@ namespace Buildersoft.Andy.X.Core.Services.App
                             CurrentEntry = 1,
                             MarkDeleteEntryPosition = 0,
 
-                            CurrentEntryOfUnacknowledgedMessage = 0,
-                            CurrentDeletedEntryOfUnacknowledgedMessage = 0,
-
                             CreateDate = System.DateTimeOffset.Now
                         };
                         topicStateContext.TopicStates.Add(currentData);
@@ -206,9 +203,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
                         currentSubscriptionData = new Model.Entities.Storages.TopicState()
                         {
                             Id = subId,
-                            CurrentEntry = -1,
-                            CurrentEntryOfUnacknowledgedMessage = 0,
-                            CurrentDeletedEntryOfUnacknowledgedMessage = 0,
+                            CurrentEntry = 0,
                             MarkDeleteEntryPosition = 0,
                             CreateDate = System.DateTimeOffset.Now
                         };

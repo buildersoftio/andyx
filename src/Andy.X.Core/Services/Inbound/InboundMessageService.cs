@@ -148,8 +148,8 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             {
                 var unacknowledgedMessage = new Model.Entities.Storages.UnacknowledgedMessage() { MessageEntry = messageAcknowledgement.EntryId };
                 var topicStateOfSubscription = _outboundMessageService.GetSubscriptionDataConnector(subscriptionId).TopicState;
-                topicStateOfSubscription.CurrentEntryOfUnacknowledgedMessage = topicStateOfSubscription.CurrentEntryOfUnacknowledgedMessage + 1;
-                _orchestratorService.GetSubscriptionUnackedDataService(subscriptionId).Put(topicStateOfSubscription.CurrentEntryOfUnacknowledgedMessage.ToString(), unacknowledgedMessage);
+                topicStateOfSubscription.CurrentEntry = topicStateOfSubscription.CurrentEntry + 1;
+                _orchestratorService.GetSubscriptionUnackedDataService(subscriptionId).Put(topicStateOfSubscription.CurrentEntry.ToString(), unacknowledgedMessage);
             }
             else
             {
