@@ -2,8 +2,8 @@
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
+using Buildersoft.Andy.X.Core.Abstractions.Service.Consumers;
+using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
@@ -26,7 +26,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         private readonly ILogger<ConsumerHub> _logger;
 
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
-        private readonly ITenantRepository _tenantRepository;
+        private readonly ITenantService _tenantRepository;
 
         private readonly ITenantFactory _tenantFactory;
         private readonly IConsumerFactory _consumerFactory;
@@ -38,7 +38,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
         public ConsumerHub(ILogger<ConsumerHub> logger,
             ISubscriptionHubRepository subscriptionHubRepository,
-            ITenantRepository tenantRepository,
+            ITenantService tenantRepository,
             ITenantFactory tenantFactory,
             IConsumerFactory consumerFactory,
             ISubscriptionFactory subscriptionFactory,

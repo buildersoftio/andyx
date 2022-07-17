@@ -4,7 +4,7 @@ using Buildersoft.Andy.X.Model.Subscriptions;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers
+namespace Buildersoft.Andy.X.Core.Abstractions.Service.Consumers
 {
     public interface ISubscriptionHubRepository
     {

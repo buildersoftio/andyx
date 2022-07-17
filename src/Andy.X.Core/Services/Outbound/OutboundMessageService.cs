@@ -1,5 +1,5 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
+using Buildersoft.Andy.X.Core.Abstractions.Service.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Subscriptions;
 using Buildersoft.Andy.X.Core.Contexts.Storages;

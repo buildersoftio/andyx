@@ -1,4 +1,4 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Producers;
 using Buildersoft.Andy.X.Router.Repositories.Producers;
 using Buildersoft.Andy.X.Router.Services.Producers;

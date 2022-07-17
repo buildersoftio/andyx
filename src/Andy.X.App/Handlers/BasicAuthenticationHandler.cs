@@ -25,7 +25,7 @@ namespace Buildersoft.Andy.X.Handlers
             this.configuration = configuration;
         }
 
-        protected async override Task<AuthenticateResult> HandleAuthenticateAsync()
+        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             string username = null;
             try
@@ -40,7 +40,7 @@ namespace Buildersoft.Andy.X.Handlers
             }
             catch (Exception ex)
             {
-                return AuthenticateResult.Fail($"Authentication failed: {ex.Message}");
+                return Task.FromResult(AuthenticateResult.Fail($"Authentication failed: {ex.Message}"));
             }
 
             var claims = new[] {
@@ -50,7 +50,7 @@ namespace Buildersoft.Andy.X.Handlers
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
-            return AuthenticateResult.Success(ticket);
+            return Task.FromResult(AuthenticateResult.Success(ticket));
         }
 
         public bool IsAuthorized(string username, string password)

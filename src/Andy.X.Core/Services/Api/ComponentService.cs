@@ -1,5 +1,4 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Api;
 using Buildersoft.Andy.X.IO.Readers;
 using Buildersoft.Andy.X.IO.Writers;
@@ -15,10 +14,10 @@ namespace Buildersoft.Andy.X.Core.Services.Api
     public class ComponentService : IComponentService
     {
         private readonly ILogger<ComponentService> _logger;
-        private readonly ITenantRepository _tenantRepository;
+        private readonly Abstractions.Services.ITenantService _tenantRepository;
         private readonly ITenantFactory _tenantFactory;
 
-        public ComponentService(ILogger<ComponentService> logger, ITenantRepository tenantRepository, ITenantFactory tenantFactory)
+        public ComponentService(ILogger<ComponentService> logger, Abstractions.Services.ITenantService tenantRepository, ITenantFactory tenantFactory)
         {
             _logger = logger;
             _tenantRepository = tenantRepository;

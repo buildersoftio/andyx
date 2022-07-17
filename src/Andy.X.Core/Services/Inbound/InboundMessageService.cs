@@ -1,5 +1,5 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
+using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Contexts.Storages;
@@ -26,11 +26,11 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
         private readonly StorageConfiguration _storageConfiguration;
         private readonly NodeConfiguration _nodeConfiguration;
 
-        private readonly ITenantRepository _tenantRepository;
+        private readonly ITenantService _tenantRepository;
 
         public InboundMessageService(ILogger<InboundMessageService> logger,
             ThreadsConfiguration threadsConfiguration,
-            ITenantRepository tenantRepository,
+            ITenantService tenantRepository,
             IOrchestratorService orchestratorService,
             IOutboundMessageService outboundMessageService,
             StorageConfiguration storageConfiguration,

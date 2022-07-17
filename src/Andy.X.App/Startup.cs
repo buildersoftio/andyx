@@ -63,10 +63,10 @@ namespace Andy.X.App
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo
+                c.SwaggerDoc("v3", new OpenApiInfo
                 {
                     Title = "Buildersoft Andy X",
-                    Version = "v2",
+                    Version = "v3",
                     Description = "Andy X is an open-source distributed streaming platform designed to deliver the best performance possible for high-performance data pipelines, streaming analytics, streaming between microservices and data integration.",
                     License = new OpenApiLicense() { Name = "Licensed under the Apache License 2.0", Url = new Uri("https://bit.ly/3DqVQbx") }
                 });
@@ -128,7 +128,7 @@ namespace Andy.X.App
                 if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS").ToLower() == "true")
                 {
                     app.UseSwagger();
-                    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Andy X v2"));
+                    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v3/swagger.json", "Andy X v3"));
                 }
             }
 

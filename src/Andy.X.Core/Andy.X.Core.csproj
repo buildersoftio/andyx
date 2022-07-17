@@ -19,7 +19,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Cortex.Collections" Version="1.0.0-preview11" />
-		<PackageReference Include="RocksDB" Version="7.2.2.30179" />
+		<PackageReference Include="RocksDB" Version="7.3.1.30723" />
 
 	</ItemGroup>
 
@@ -28,6 +28,12 @@
 		<ProjectReference Include="..\Andy.X.IO\Andy.X.IO.csproj" />
 		<ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
 		<ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <Folder Include="Abstractions\Repositories\Memory\" />
+	  <Folder Include="App\Repositories\Memory\" />
 	</ItemGroup>
 
 </Project>
