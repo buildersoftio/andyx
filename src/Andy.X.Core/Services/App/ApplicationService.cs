@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Buildersoft.Andy.X.Model.Configurations;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 
@@ -7,7 +8,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
     public class ApplicationService
     {
 
-        public ApplicationService(ILogger<ApplicationService> logger)
+        public ApplicationService(ILogger<ApplicationService> logger, NodeConfiguration nodeConfiguration)
         {
             var generalColor = Console.ForegroundColor;
 
@@ -35,6 +36,8 @@ namespace Buildersoft.Andy.X.Core.Services.App
             Console.WriteLine("\n");
             logger.LogInformation("Starting Buildersoft Andy X...");
             logger.LogInformation("Update settings");
+            logger.LogInformation($"Node_Id is '{nodeConfiguration.NodeId}'");
+
             if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS").ToLower() == "true")
                 logger.LogInformation("Configuration endpoints are exposed");
 
@@ -42,7 +45,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
         }
 
-        private void ExposePorts()
+        private static void ExposePorts()
         {
             var exposedUrls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS").Split(';');
             foreach (var url in exposedUrls)
