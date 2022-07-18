@@ -1,4 +1,4 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Producers;
 using System;
 using System.Threading.Tasks;

@@ -1,11 +1,11 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Services;
 using System;
 
 namespace Buildersoft.Andy.X.Core.Extensions.Authorization
 {
     public static class AuthorizationValidationExtensions
     {
-        public static bool ValidateTenantToken(this ITenantRepository inMemoryRepo, string tenant, string token)
+        public static bool ValidateTenantToken(this ITenantService inMemoryRepo, string tenant, string token)
         {
             var t = inMemoryRepo.GetTenant(tenant);
 
@@ -29,7 +29,7 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
             return true;
         }
 
-        public static bool ValidateComponentToken(this ITenantRepository inMemoryRepo, string tenant, string product, string componet, string token, string consumerProducerName, bool isConsumer = true)
+        public static bool ValidateComponentToken(this ITenantService inMemoryRepo, string tenant, string product, string componet, string token, string consumerProducerName, bool isConsumer = true)
         {
             var c = inMemoryRepo.GetComponent(tenant, product, componet);
 

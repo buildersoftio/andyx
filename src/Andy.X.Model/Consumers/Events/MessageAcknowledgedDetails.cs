@@ -9,6 +9,9 @@ namespace Buildersoft.Andy.X.Model.Consumers.Events
         public long EntryId { get; set; }
 
         [Key(1)]
+        public string NodeId { get; set; }
+
+        [Key(2)]
         public int Acknowledgement { get; set; }
     }
 }

@@ -1,8 +1,5 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
-using Buildersoft.Andy.X.Core.App.Repositories.Memory;
-using Buildersoft.Andy.X.Core.Contexts.Storages;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Service.Consumers;
 using Buildersoft.Andy.X.Core.Contexts.Subscriptions;
-using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Entities.Subscriptions;
@@ -11,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions

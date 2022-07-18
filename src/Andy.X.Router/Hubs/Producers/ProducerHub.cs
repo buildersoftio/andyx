@@ -1,8 +1,8 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Producers;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
+using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
+using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
 using Buildersoft.Andy.X.Model.App.Messages;
@@ -19,14 +19,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
     {
         private readonly ILogger<ProducerHub> _logger;
         private readonly IProducerHubRepository _producerHubRepository;
-        private readonly ITenantRepository _tenantRepository;
+        private readonly ITenantService _tenantRepository;
         private readonly ITenantFactory _tenantFactory;
         private readonly IProducerFactory _producerFactory;
         private readonly IInboundMessageService _inboundMessageService;
 
         public ProducerHub(ILogger<ProducerHub> logger,
             IProducerHubRepository producerHubRepository,
-            ITenantRepository tenantRepository,
+            ITenantService tenantRepository,
             ITenantFactory tenantFactory,
             IProducerFactory producerFactory,
             IInboundMessageService inboundMessageService)

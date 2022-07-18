@@ -1,8 +1,8 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
+using Buildersoft.Andy.X.Core.Abstractions.Service.Consumers;
+using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.IO.Readers;
@@ -20,11 +20,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
+namespace Buildersoft.Andy.X.Core.Services.App
 {
-    public class TenantMemoryRepository : ITenantRepository
+    public class TenantMemoryService : ITenantService
     {
-        private readonly ILogger<TenantMemoryRepository> _logger;
+        private readonly ILogger<TenantMemoryService> _logger;
         private readonly ITenantFactory _tenantFactory;
         private readonly IOrchestratorService _orchestratorService;
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
@@ -33,7 +33,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
 
         private readonly ConcurrentDictionary<string, Tenant> _tenants;
 
-        public TenantMemoryRepository(ILogger<TenantMemoryRepository> logger,
+        public TenantMemoryService(ILogger<TenantMemoryService> logger,
             List<TenantConfiguration> tenantConfigurations,
             ITenantFactory tenantFactory,
             IOrchestratorService orchestratorService,
@@ -143,9 +143,6 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                             CurrentEntry = 1,
                             MarkDeleteEntryPosition = 0,
 
-                            CurrentEntryOfUnacknowledgedMessage = 0,
-                            CurrentDeletedEntryOfUnacknowledgedMessage = 0,
-
                             CreateDate = System.DateTimeOffset.Now
                         };
                         topicStateContext.TopicStates.Add(currentData);
@@ -206,9 +203,7 @@ namespace Buildersoft.Andy.X.Core.App.Repositories.Memory
                         currentSubscriptionData = new Model.Entities.Storages.TopicState()
                         {
                             Id = subId,
-                            CurrentEntry = -1,
-                            CurrentEntryOfUnacknowledgedMessage = 0,
-                            CurrentDeletedEntryOfUnacknowledgedMessage = 0,
+                            CurrentEntry = 0,
                             MarkDeleteEntryPosition = 0,
                             CreateDate = System.DateTimeOffset.Now
                         };

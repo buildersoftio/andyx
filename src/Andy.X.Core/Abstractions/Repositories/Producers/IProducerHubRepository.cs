@@ -1,7 +1,7 @@
 ﻿using Buildersoft.Andy.X.Model.Producers;
 using System.Collections.Generic;
 
-namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers
+namespace Buildersoft.Andy.X.Core.Abstractions.Service.Producers
 {
     public interface IProducerHubRepository
     {

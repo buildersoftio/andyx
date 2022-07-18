@@ -1,5 +1,4 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Api;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Microsoft.Extensions.Logging;
@@ -11,10 +10,10 @@ namespace Buildersoft.Andy.X.Core.Services.Api
     public class TopicService : ITopicService
     {
         private readonly ILogger<TopicService> _logger;
-        private readonly ITenantRepository _tenantRepository;
+        private readonly Abstractions.Services.ITenantService _tenantRepository;
         private readonly ITenantFactory _tenantFactory;
 
-        public TopicService(ILogger<TopicService> logger, ITenantRepository tenantRepository, ITenantFactory tenantFactory)
+        public TopicService(ILogger<TopicService> logger, Abstractions.Services.ITenantService tenantRepository, ITenantFactory tenantFactory)
         {
             _logger = logger;
             _tenantRepository = tenantRepository;

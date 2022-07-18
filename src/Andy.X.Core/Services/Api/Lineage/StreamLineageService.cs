@@ -1,6 +1,6 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Service.Consumers;
+using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
+using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Api.Lineage;
 using Buildersoft.Andy.X.Model.App.Lineage;
 using Microsoft.Extensions.Logging;
@@ -12,13 +12,13 @@ namespace Buildersoft.Andy.X.Core.Services.Api.Lineage
     public class StreamLineageService : IStreamLineageService
     {
         private readonly ILogger<StreamLineageService> _logger;
-        private readonly ITenantRepository _tenantRepository;
+        private readonly ITenantService _tenantRepository;
         private readonly ISubscriptionHubRepository _consumerHubRepository;
         private readonly IProducerHubRepository _producerHubRepository;
 
         public StreamLineageService(
             ILogger<StreamLineageService> logger,
-            ITenantRepository tenantRepository,
+            ITenantService tenantRepository,
             ISubscriptionHubRepository consumerHubRepository,
             IProducerHubRepository producerHubRepository)
         {

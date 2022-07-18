@@ -7,9 +7,9 @@ using Buildersoft.Andy.X.Model.Subscriptions;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory
+namespace Buildersoft.Andy.X.Core.Abstractions.Services
 {
-    public interface ITenantRepository
+    public interface ITenantService
     {
         bool AddTenant(string tenantName, Tenant tenant);
         bool AddProduct(string tenant, string productName, Product product);

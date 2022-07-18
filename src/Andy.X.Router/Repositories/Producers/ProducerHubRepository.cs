@@ -1,4 +1,4 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.Producers;
 using Microsoft.Extensions.Logging;

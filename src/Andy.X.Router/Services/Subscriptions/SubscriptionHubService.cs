@@ -1,5 +1,5 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Consumers;
+using Buildersoft.Andy.X.Core.Abstractions.Service.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Subscriptions;
 using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Model.Entities.Storages;
@@ -61,6 +61,7 @@ namespace Buildersoft.Andy.X.Router.Services.Subscriptions
                 Topic = topic,
 
                 EntryId = message.Entry,
+                NodeId = message.NodeId,
 
                 MessageId = message.MessageId,
                 Headers = message.Headers,

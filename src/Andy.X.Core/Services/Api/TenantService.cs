@@ -1,5 +1,4 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Api;
 using Buildersoft.Andy.X.IO.Readers;
 using Buildersoft.Andy.X.IO.Writers;
@@ -13,13 +12,13 @@ using System.Linq;
 
 namespace Buildersoft.Andy.X.Core.Services.Api
 {
-    public class TenantService : ITenantService
+    public class TenantService : Abstractions.Services.Api.ITenantService
     {
         private readonly ILogger<TenantService> _logger;
-        private readonly ITenantRepository _tenantRepository;
+        private readonly Abstractions.Services.ITenantService _tenantRepository;
         private readonly ITenantFactory _tenantFactory;
 
-        public TenantService(ILogger<TenantService> logger, ITenantRepository tenantRepository, ITenantFactory tenantFactory)
+        public TenantService(ILogger<TenantService> logger, Abstractions.Services.ITenantService tenantRepository, ITenantFactory tenantFactory)
         {
             _logger = logger;
             _tenantRepository = tenantRepository;
