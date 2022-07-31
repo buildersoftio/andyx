@@ -1,4 +1,4 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Service.Consumers;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Api.Lineage;

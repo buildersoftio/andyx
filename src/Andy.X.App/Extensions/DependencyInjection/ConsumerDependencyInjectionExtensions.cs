@@ -1,4 +1,4 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Service.Consumers;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Subscriptions;
 using Buildersoft.Andy.X.Router.Repositories.Subscriptions;
 using Buildersoft.Andy.X.Router.Services.Subscriptions;

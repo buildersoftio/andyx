@@ -14,7 +14,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Serialization;
 
@@ -81,15 +80,15 @@ namespace Andy.X.App
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
-                          new OpenApiSecurityScheme
-                            {
-                                Reference = new OpenApiReference
-                                {
-                                    Type = ReferenceType.SecurityScheme,
-                                    Id = "basic"
-                                }
-                            },
-                            new string[] {}
+                         new OpenApiSecurityScheme
+                           {
+                               Reference = new OpenApiReference
+                               {
+                                   Type = ReferenceType.SecurityScheme,
+                                   Id = "basic"
+                               }
+                           },
+                           Array.Empty<string>()
                     }
                 });
             });
@@ -99,9 +98,14 @@ namespace Andy.X.App
 
             services.AddSerilogLoggingConfiguration(Configuration);
             services.AddSingleton<ApplicationService>();
+
+            services.AddClusterRepository();
+            services.AddClusterService();
+
             services.AddAppFactoryMethods();
             services.AddProducerFactoryMethods();
-            services.AddConsumerFactoryMethods();
+            services.AddClusterFactoryMethods();
+            services.AddProducerSubscriptionFactoryMethods();
 
 
             services.AddOrchestratorService();

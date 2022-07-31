@@ -12,8 +12,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Remove="Abstractions\Repositories\Memory\**" />
 		<Compile Remove="Abstractions\Services\Consumers\**" />
+		<EmbeddedResource Remove="Abstractions\Repositories\Memory\**" />
 		<EmbeddedResource Remove="Abstractions\Services\Consumers\**" />
+		<None Remove="Abstractions\Repositories\Memory\**" />
 		<None Remove="Abstractions\Services\Consumers\**" />
 	</ItemGroup>
 
@@ -28,11 +31,6 @@
 		<ProjectReference Include="..\Andy.X.IO\Andy.X.IO.csproj" />
 		<ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
 		<ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj" />
-	</ItemGroup>
-
-
-	<ItemGroup>
-	  <Folder Include="Abstractions\Repositories\Memory\" />
 	</ItemGroup>
 
 </Project>
