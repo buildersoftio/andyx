@@ -1,4 +1,6 @@
-﻿using Buildersoft.Andy.X.Model.Configurations;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
+using Buildersoft.Andy.X.Model.Configurations;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -8,7 +10,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
     public class ApplicationService
     {
 
-        public ApplicationService(ILogger<ApplicationService> logger, NodeConfiguration nodeConfiguration)
+        public ApplicationService(ILogger<ApplicationService> logger, NodeConfiguration nodeConfiguration, IServiceProvider serviceProvider)
         {
             var generalColor = Console.ForegroundColor;
 
@@ -41,7 +43,10 @@ namespace Buildersoft.Andy.X.Core.Services.App
             if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS").ToLower() == "true")
                 logger.LogInformation("Configuration endpoints are exposed");
 
+            var clusterService = serviceProvider.GetService<IClusterService>();
+
             logger.LogInformation("Andy X is ready");
+
 
         }
 

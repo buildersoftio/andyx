@@ -1,4 +1,4 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Service.Consumers;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using Microsoft.AspNetCore.Authorization;

@@ -1,8 +1,10 @@
 ﻿{
   "Name": "standalone_cluster",
-  "DistributionType": "Sync",
+  "ShardDistributionType": "Sync",
   "Shards": [
     {
+
+      "ReplicaDistributionType": "Async",
       "Replicas": [
         {
           "NodeId": "standalone_01",

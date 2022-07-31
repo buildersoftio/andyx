@@ -4,6 +4,7 @@ using Buildersoft.Andy.X.Model.Configurations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -93,6 +94,7 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
             }
 
             clusterConfiguration = JsonConvert.DeserializeObject<ClusterConfiguration>(File.ReadAllText(ConfigurationLocations.GetClustersConfigurationFile()));
+
             services.AddSingleton(clusterConfiguration);
         }
 
