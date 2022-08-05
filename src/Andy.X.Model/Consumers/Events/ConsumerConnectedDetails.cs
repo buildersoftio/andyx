@@ -1,5 +1,4 @@
-﻿using Buildersoft.Andy.X.Model.Subscriptions;
-using MessagePack;
+﻿using MessagePack;
 using System;
 
 namespace Buildersoft.Andy.X.Model.Consumers.Events
@@ -17,8 +16,11 @@ namespace Buildersoft.Andy.X.Model.Consumers.Events
         public string Topic { get; set; }
 
         [Key(4)]
-        public Guid Id { get; set; }
+        public string Subscription { get; set; }
+
         [Key(5)]
+        public Guid Id { get; set; }
+        [Key(6)]
         public string ConsumerName { get; set; }
     }
 }

@@ -22,7 +22,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Cortex.Collections" Version="1.0.0-preview11" />
-		<PackageReference Include="RocksDB" Version="7.3.1.30723" />
+		<PackageReference Include="RocksDB" Version="7.4.5.31520" />
 
 	</ItemGroup>
 

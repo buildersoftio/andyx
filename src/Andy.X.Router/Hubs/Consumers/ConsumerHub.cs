@@ -213,10 +213,13 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             Clients.Caller.ConsumerConnected(new ConsumerConnectedDetails()
             {
                 Id = consumer.Id,
+
                 Tenant = tenant,
                 Product = product,
                 Component = component,
                 Topic = topic,
+                Subscription = subscriptionName,
+
                 ConsumerName = consumerName
             });
 
@@ -258,10 +261,10 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
         public async Task AcknowledgeMessage(MessageAcknowledgedDetails message)
         {
-            string clientConnectionId = Context.ConnectionId;
+            var clientConnectionId = Context.ConnectionId;
             var subscription = _subscriptionHubRepository.GetSubscriptionByConnectionId(clientConnectionId);
-            string subscriptionId = ConnectorHelper.GetSubcriptionId(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName);
-            MessageAcknowledgement messageAcknowledgement = (MessageAcknowledgement)message.Acknowledgement;
+            var subscriptionId = ConnectorHelper.GetSubcriptionId(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName);
+            var messageAcknowledgement = (MessageAcknowledgement)message.Acknowledgement;
 
             if (subscription.SubscriptionMode == SubscriptionMode.Resilient)
             {

@@ -41,7 +41,7 @@ namespace Buildersoft.Andy.X.Core.Services.Data
 
             // we will add settings here later from StorageConfiguration
             dbOptions = new DbOptions()
-                .SetDbLogDir(_logPath)
+                //.SetDbLogDir(_logPath)
                 .SetCreateIfMissing(true)
                 .SetKeepLogFileNum(storageConfiguration.KeepLogFileNumber)
                 .SetStatsDumpPeriodSec(storageConfiguration.DumpStatsInSeconds)

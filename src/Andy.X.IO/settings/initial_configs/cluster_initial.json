@@ -7,7 +7,7 @@
       "ReplicaDistributionType": "Async",
       "Replicas": [
         {
-          "NodeId": "standalone_01",
+          "NodeId": "andyx_standalone",
           "Host": "127.0.0.1",
           "ConnectionType": "NON_SSL",
           "Type": "Main"

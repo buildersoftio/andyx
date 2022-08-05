@@ -5,7 +5,7 @@ namespace Buildersoft.Andy.X.Model.Entities.Storages
 {
     public class TopicState
     {
-        //default id is "DEFAULT"
+        //default id is "_nodeConfiguration.NodeId"
         [Key]
         public string Id { get; set; }
 

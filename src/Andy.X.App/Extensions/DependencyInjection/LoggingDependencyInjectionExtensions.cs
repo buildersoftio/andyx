@@ -10,6 +10,7 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
         public static void AddSerilogLoggingConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
             string logFileLocatiom = ConfigurationLocations.NodeLoggingFile();
+
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .WriteTo.File(logFileLocatiom, rollingInterval: RollingInterval.Day)
