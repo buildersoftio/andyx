@@ -19,5 +19,7 @@ namespace Buildersoft.Andy.X.Model.Consumers.Events
         public Guid Id { get; set; }
         [Key(5)]
         public string ConsumerName { get; set; }
+        [Key(6)]
+        public string ConsumerConnectionId { get; set; }
     }
 }

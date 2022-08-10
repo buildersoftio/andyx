@@ -19,12 +19,23 @@ namespace Buildersoft.Andy.X.Model.Clusters
         [JsonConverter(typeof(StringEnumConverter))]
         public ReplicaTypes Type { get; set; }
 
+        public bool IsConnected { get; set; }
+        public bool IsLocal { get; set; }
+
+
+        //X509 Certs
+        public string X509CertificateFile { get; set; }
+        public string X509CertificatePassword { get; set; }
+
 
         public Replica()
         {
             NodeId = "standalone_01";
             Type = ReplicaTypes.MainOrWorker;
             ConnectionType = NodeConnectionType.NON_SSL;
+
+            IsConnected = false;
+            IsLocal = false;
         }
     }
 }

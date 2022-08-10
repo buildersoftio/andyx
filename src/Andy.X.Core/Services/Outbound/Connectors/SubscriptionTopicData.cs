@@ -20,7 +20,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound.Connectors
         public Subscription Subscription { get; set; }
         public SubscriptionPosition CurrentPosition { get; set; }
 
-        public TopicState TopicState { get; set; }
+        public TopicEntryPosition TopicState { get; set; }
 
         public ConcurrentDictionary<string, long> TemporaryUnackedMessageIds { get; set; }
 

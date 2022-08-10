@@ -120,7 +120,7 @@ namespace Buildersoft.Andy.X.IO.Locations
             return Path.Combine(GetTopicDirectory(tenantName, productName, componentName, topicName), "messages");
         }
 
-        public static string GetTopicStateFile(string tenantName, string productName, string componentName, string topicName)
+        public static string GetTopicEntryPositionFile(string tenantName, string productName, string componentName, string topicName)
         {
             return Path.Combine(GetTopicLogRootDirectory(tenantName, productName, componentName, topicName), $"{topicName.ToLower()}_current_state.andx");
         }

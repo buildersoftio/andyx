@@ -56,7 +56,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     subscriptionTopicData.LastMessageEntryPositionSent = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
                 }
 
-                using (var topicStateContext = new TopicStateContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
+                using (var topicStateContext = new TopicEntryPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
                 {
                     subscriptionTopicData.TopicState = topicStateContext.TopicStates.Find(subscriptionId);
                     subscriptionTopicData.LastUnackedMessageEntryPositionSent = subscriptionTopicData.TopicState.MarkDeleteEntryPosition;
@@ -86,7 +86,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     subscriptionTopicData.LastMessageEntryPositionSent = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
                 }
 
-                using (var topicStateContext = new TopicStateContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
+                using (var topicStateContext = new TopicEntryPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
                 {
                     subscriptionTopicData.TopicState = topicStateContext.TopicStates.Find(subscriptionId);
                     subscriptionTopicData.LastUnackedMessageEntryPositionSent = subscriptionTopicData.TopicState.MarkDeleteEntryPosition;
@@ -219,7 +219,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 }
             }
 
-            using (var topicStateContext = new TopicStateContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
+            using (var topicStateContext = new TopicEntryPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
             {
                 var state = topicStateContext.TopicStates.Find(subscriptionId);
                 if (state.CurrentEntry != subscriptionTopicData.TopicState.CurrentEntry ||

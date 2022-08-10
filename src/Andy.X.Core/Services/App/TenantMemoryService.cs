@@ -30,6 +30,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
         private readonly IOutboundMessageService _outboundMessageService;
         private readonly ISubscriptionFactory _subscriptionFactory;
+        private readonly NodeConfiguration _nodeConfiguration;
 
         private readonly ConcurrentDictionary<string, Tenant> _tenants;
 
@@ -39,7 +40,8 @@ namespace Buildersoft.Andy.X.Core.Services.App
             IOrchestratorService orchestratorService,
             ISubscriptionHubRepository subscriptionHubRepository,
             IOutboundMessageService outboundMessageService,
-            ISubscriptionFactory subscriptionFactory)
+            ISubscriptionFactory subscriptionFactory,
+            NodeConfiguration nodeConfiguration)
         {
             _logger = logger;
             _tenantFactory = tenantFactory;
@@ -47,7 +49,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             _subscriptionHubRepository = subscriptionHubRepository;
             _outboundMessageService = outboundMessageService;
             _subscriptionFactory = subscriptionFactory;
-
+            _nodeConfiguration = nodeConfiguration;
             _tenants = new ConcurrentDictionary<string, Tenant>();
 
             AddTenantsFromConfiguration(tenantConfigurations);
@@ -131,20 +133,21 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 TenantIOService.TryCreateTopicDirectory(tenant, product, component, topicName);
 
                 // Open connection with topic log data.
-                using (var topicStateContext = new TopicStateContext(tenant, product, component, topicName))
+                using (var topicStateContext = new TopicEntryPositionContext(tenant, product, component, topicName))
                 {
                     topicStateContext.Database.EnsureCreated();
-                    var currentData = topicStateContext.TopicStates.Find("DEFAULT");
+                    var currentData = topicStateContext.TopicStates.Find(_nodeConfiguration.NodeId);
                     if (currentData == null)
                     {
-                        currentData = new Model.Entities.Storages.TopicState()
+                        currentData = new Model.Entities.Storages.TopicEntryPosition()
                         {
-                            Id = "DEFAULT",
+                            Id = _nodeConfiguration.NodeId,
                             CurrentEntry = 1,
                             MarkDeleteEntryPosition = 0,
 
                             CreateDate = System.DateTimeOffset.Now
                         };
+
                         topicStateContext.TopicStates.Add(currentData);
                         topicStateContext.SaveChanges();
                     }
@@ -195,12 +198,12 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
 
                 // check if the subscription exists in topicState
-                using (var topicStateContext = new TopicStateContext(tenant, product, component, topicName))
+                using (var topicStateContext = new TopicEntryPositionContext(tenant, product, component, topicName))
                 {
                     var currentSubscriptionData = topicStateContext.TopicStates.Find(subId);
                     if (currentSubscriptionData == null)
                     {
-                        currentSubscriptionData = new Model.Entities.Storages.TopicState()
+                        currentSubscriptionData = new Model.Entities.Storages.TopicEntryPosition()
                         {
                             Id = subId,
                             CurrentEntry = 0,
