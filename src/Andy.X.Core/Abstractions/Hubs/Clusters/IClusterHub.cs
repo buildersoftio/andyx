@@ -51,7 +51,5 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Clusters
         // only with replicas
         Task SubscriptionPositionUpdatedAsync(SubscriptionPositionUpdatedArgs subscriptionPositionUpdatedArgs);
         Task CurrentEntryPositionUpdatedAsync(CurrentEntryPositionUpdatedArgs currentEntryPositionUpdatedArgs);
-
-
     }
 }
