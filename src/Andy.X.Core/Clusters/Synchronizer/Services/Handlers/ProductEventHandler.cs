@@ -1,4 +1,6 @@
-﻿namespace Andy.X.Cluster.Sync.Services.Handlers
+﻿using System;
+
+namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 {
     public class ProductEventHandler
     {
@@ -17,17 +19,17 @@
             _nodeClusterEventService.ProductDeleted += NodeClusterEventService_ProductDeleted;
         }
 
-        private void NodeClusterEventService_ProductUpdated(Buildersoft.Andy.X.Model.Clusters.Events.ProductUpdatedArgs obj)
+        private void NodeClusterEventService_ProductUpdated(Model.Clusters.Events.ProductUpdatedArgs obj)
         {
             throw new NotImplementedException();
         }
 
-        private void NodeClusterEventService_ProductDeleted(Buildersoft.Andy.X.Model.Clusters.Events.ProductDeletedArgs obj)
+        private void NodeClusterEventService_ProductDeleted(Model.Clusters.Events.ProductDeletedArgs obj)
         {
             throw new NotImplementedException();
         }
 
-        private void NodeClusterEventService_ProductCreated(Buildersoft.Andy.X.Model.Clusters.Events.ProductCreatedArgs obj)
+        private void NodeClusterEventService_ProductCreated(Model.Clusters.Events.ProductCreatedArgs obj)
         {
             throw new NotImplementedException();
         }

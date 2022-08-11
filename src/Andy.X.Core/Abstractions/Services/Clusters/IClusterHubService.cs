@@ -49,7 +49,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Clusters
         Task ConnectProducer_AllNodes(string tenant, string product, string component, string topic, string producerConnectionId, string producer);
         Task DisconnectProducer_AllNodes(string tenant, string product, string component, string topic, string producerConnectionId);
 
-        Task ConnectConsumer_AllNodes(string tenant, string product, string component, string topic, string subscription, string consumerConnectionId, string consumer);
+        Task ConnectConsumer_AllNodes(string tenant, string product, string component, string topic, Subscription subscription, string consumerConnectionId, string consumer);
         Task DisconnectConsumer_AllNodes(string tenant, string product, string component, string topic, string subscription, string consumerConnectionId);
 
         // only between replicas

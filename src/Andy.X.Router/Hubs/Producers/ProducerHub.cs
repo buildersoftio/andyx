@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
 using Buildersoft.Andy.X.Model.App.Messages;
@@ -18,18 +19,22 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
     public class ProducerHub : Hub<IProducerHub>
     {
         private readonly ILogger<ProducerHub> _logger;
+
         private readonly IProducerHubRepository _producerHubRepository;
         private readonly ITenantService _tenantRepository;
         private readonly ITenantFactory _tenantFactory;
         private readonly IProducerFactory _producerFactory;
         private readonly IInboundMessageService _inboundMessageService;
 
+        private readonly IClusterHubService _clusterHubService;
+
         public ProducerHub(ILogger<ProducerHub> logger,
             IProducerHubRepository producerHubRepository,
             ITenantService tenantRepository,
             ITenantFactory tenantFactory,
             IProducerFactory producerFactory,
-            IInboundMessageService inboundMessageService)
+            IInboundMessageService inboundMessageService,
+            IClusterHubService clusterHubService)
         {
             _logger = logger;
             _producerHubRepository = producerHubRepository;
@@ -38,12 +43,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             _producerFactory = producerFactory;
 
             _inboundMessageService = inboundMessageService;
+
+            _clusterHubService = clusterHubService;
         }
 
         public override Task OnConnectedAsync()
         {
             Producer producerToRegister;
-            string clientConnectionId = Context.ConnectionId;
+            string producerConnectionId = Context.ConnectionId;
             var headers = Context.GetHttpContext().Request.Headers;
 
             // authorization tokens
@@ -129,7 +136,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             }
 
             producerToRegister = _producerFactory.CreateProducer(tenant, product, component, topic, producerName);
-            _producerHubRepository.AddProducer(clientConnectionId, producerToRegister);
+            _producerHubRepository.AddProducer(producerConnectionId, producerToRegister);
 
             Clients.Caller.ProducerConnected(new Model.Producers.Events.ProducerConnectedDetails()
             {
@@ -142,19 +149,24 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             });
             _logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} is connected");
 
+            // notify other nodes in the cluster
+            _clusterHubService.ConnectProducer_AllNodes(tenant, product, component, topic, producerConnectionId, producerName);
+
             return base.OnConnectedAsync();
         }
 
         public override Task OnDisconnectedAsync(Exception exception)
         {
-            string clientConnectionId = Context.ConnectionId;
-            Producer producerToRemove = _producerHubRepository.GetProducerById(clientConnectionId);
+            string producerConnectionId = Context.ConnectionId;
+            Producer producerToRemove = _producerHubRepository.GetProducerById(producerConnectionId);
 
             // When the producer with the same name try to connect more than one.
             if (producerToRemove != null)
             {
+                _clusterHubService.DisconnectProducer_AllNodes(producerToRemove.Tenant, producerToRemove.Product, producerToRemove.Component, producerToRemove.Topic, producerConnectionId);
+
                 //storageHubService.DisconnectProducerAsync(producerToRemove);
-                _producerHubRepository.RemoveProducer(clientConnectionId);
+                _producerHubRepository.RemoveProducer(producerConnectionId);
 
                 _logger.LogInformation($"Producer '{producerToRemove.ProducerName}' at {producerToRemove.Tenant}/{producerToRemove.Product}/{producerToRemove.Component}/{producerToRemove.Topic} is disconnected");
 
@@ -163,6 +175,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
                     Id = producerToRemove.Id
                 });
             }
+
             return base.OnDisconnectedAsync(exception);
         }
 

@@ -1,5 +1,10 @@
-﻿using Andy.X.Cluster.Sync.Providers;
-using Andy.X.Cluster.Sync.Services.Handlers;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Consumers;
+using Buildersoft.Andy.X.Core.Abstractions.Factories.Producers;
+using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
+using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
+using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
+using Buildersoft.Andy.X.Core.Clusters.Synchronizer.Providers;
+using Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers;
 using Buildersoft.Andy.X.Model.Clusters;
 using Buildersoft.Andy.X.Model.Clusters.Events;
 using Buildersoft.Andy.X.Model.Configurations;
@@ -7,8 +12,11 @@ using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Model.Producers.Events;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Andy.X.Cluster.Sync.Services
+namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
 {
     public class NodeClusterEventService
     {
@@ -16,6 +24,11 @@ namespace Andy.X.Cluster.Sync.Services
         private readonly Replica _replica;
         private readonly ClusterConfiguration _clusterConfiguration;
 
+        private readonly IProducerHubRepository _producerHubRepository;
+        private readonly IProducerFactory _producerFactory;
+        private readonly ISubscriptionHubRepository _subscriptionHubRepository;
+        private readonly IConsumerFactory _consumerFactory;
+        private readonly ISubscriptionFactory _subscriptionFactory;
         private HubConnection _connection;
 
         public event Action<NodeConnectedArgs>? NodeConnected;
@@ -51,11 +64,11 @@ namespace Andy.X.Cluster.Sync.Services
         public event Action<CurrentEntryPositionUpdatedArgs>? CurrentEntryPositionUpdated;
 
         // will all nodes
-        public event Action<ProducerConnectedDetails>? ProducerConnected;
-        public event Action<ProducerDisconnectedDetails>? ProducerDisconnected;
+        public event Action<ProducerConnectedArgs>? ProducerConnected;
+        public event Action<ProducerDisconnectedArgs>? ProducerDisconnected;
 
-        public event Action<ConsumerConnectedDetails>? ConsumerConnected;
-        public event Action<ConsumerDisconnectedDetails>? ConsumerDisconnected;
+        public event Action<ConsumerConnectedArgs>? ConsumerConnected;
+        public event Action<ConsumerDisconnectedArgs>? ConsumerDisconnected;
 
         private NodeEventHandler? nodeEventHandler;
         private TenantEventHandler? tenantEventHandler;
@@ -68,11 +81,22 @@ namespace Andy.X.Cluster.Sync.Services
         private ConsumerEventHandler? consumerEventHandler;
 
         public NodeClusterEventService(ILogger<NodeClusterEventService> logger, Replica replica,
-            ClusterConfiguration clusterConfiguration)
+            ClusterConfiguration clusterConfiguration,
+            IProducerHubRepository producerHubRepository,
+            IProducerFactory producerFactory,
+            ISubscriptionHubRepository subscriptionHubRepository,
+            IConsumerFactory consumerFactory,
+            ISubscriptionFactory subscriptionFactory)
         {
             _logger = logger;
             _replica = replica;
             _clusterConfiguration = clusterConfiguration;
+
+            _producerHubRepository = producerHubRepository;
+            _producerFactory = producerFactory;
+            _subscriptionHubRepository = subscriptionHubRepository;
+            _consumerFactory = consumerFactory;
+            _subscriptionFactory = subscriptionFactory;
 
 
             var provider = new NodeConnectionProvider(replica, clusterConfiguration);
@@ -113,11 +137,11 @@ namespace Andy.X.Cluster.Sync.Services
             _connection.On<SubscriptionPositionUpdatedArgs>("SubscriptionPositionUpdatedAsync", args => SubscriptionPositionUpdated?.Invoke(args));
             _connection.On<CurrentEntryPositionUpdatedArgs>("CurrentEntryPositionUpdatedAsync", args => CurrentEntryPositionUpdated?.Invoke(args));
 
-            _connection.On<ProducerConnectedDetails>("ProducerConnectedAsync", args => ProducerConnected?.Invoke(args));
-            _connection.On<ProducerDisconnectedDetails>("ProducerDisconnectedAsync", args => ProducerDisconnected?.Invoke(args));
+            _connection.On<ProducerConnectedArgs>("ProducerConnectedAsync", args => ProducerConnected?.Invoke(args));
+            _connection.On<ProducerDisconnectedArgs>("ProducerDisconnectedAsync", args => ProducerDisconnected?.Invoke(args));
 
-            _connection.On<ConsumerConnectedDetails>("ConsumerConnectedAsync", args => ConsumerConnected?.Invoke(args));
-            _connection.On<ConsumerDisconnectedDetails>("ConsumerDisconnectedAsync", args => ConsumerDisconnected?.Invoke(args));
+            _connection.On<ConsumerConnectedArgs>("ConsumerConnectedAsync", args => ConsumerConnected?.Invoke(args));
+            _connection.On<ConsumerDisconnectedArgs>("ConsumerDisconnectedAsync", args => ConsumerDisconnected?.Invoke(args));
 
 
             InitializeEventHandlers();
@@ -132,8 +156,8 @@ namespace Andy.X.Cluster.Sync.Services
             topicEventHandler = new TopicEventHandler(this);
             tokenEventHandler = new TokenEventHandler(this);
             subscriptionEventHandler = new SubscriptionEventHandler(this);
-            producerEventHandler = new ProducerEventHandler(this);
-            consumerEventHandler = new ConsumerEventHandler(this);
+            producerEventHandler = new ProducerEventHandler(this, _producerHubRepository, _producerFactory);
+            consumerEventHandler = new ConsumerEventHandler(this, _subscriptionHubRepository, _subscriptionFactory, _consumerFactory);
         }
 
 
@@ -169,7 +193,7 @@ namespace Andy.X.Cluster.Sync.Services
                 if (task.Exception != null)
                 {
                     // Details is not show for now...
-                    // logger.LogError($"Error occurred during connection. Details: {task.Exception.Message}, {string.Join(",", task.Exception.InnerExceptions
+                    _logger.LogError($"Error occurred during connection to '{_replica.NodeId}' node. Details: {task.Exception.Message}, {string.Join(",", task.Exception.InnerExceptions)}");
                     // retry connection
                     Thread.Sleep(2000);
                     ConnectAsync();

@@ -2,11 +2,14 @@
 using Buildersoft.Andy.X.Model.Configurations;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.IO;
+using System.Net.Http;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
-namespace Andy.X.Cluster.Sync.Providers
+namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Providers
 {
     public class NodeConnectionProvider
     {
@@ -62,15 +65,15 @@ namespace Andy.X.Cluster.Sync.Providers
                         };
                     }
 
-                    string encoded = System.Convert.ToBase64String(Encoding.GetEncoding("ISO-8859-1")
+                    string encodedBasicToken = Convert.ToBase64String(Encoding.GetEncoding("ISO-8859-1")
                                .GetBytes(replica.Username + ":" + replica.Password));
 
-                    // Add headers.
-                    option.Headers["x-andyx-cluster-authoriziation"] = encoded;
 
+                    // Add headers..
+                    option.Headers.Add("Authorization", "Basic " + encodedBasicToken);
                     option.Headers["x-andyx-cluster-id"] = _clusterConfiguration.Name;
                     option.Headers["x-andyx-node-id"] = replica.NodeId;
-                    option.Headers["x-andyx-hostname"] = replica.NodeId;
+                    option.Headers["x-andyx-hostname"] = replica.Host;
                     option.Headers["x-andyx-shard-id"] = "-1";
                     option.Headers["x-andyx-replica-type"] = replica.Type.ToString();
                 })
@@ -84,7 +87,7 @@ namespace Andy.X.Cluster.Sync.Providers
             if (replica.ConnectionType == Buildersoft.Andy.X.Model.NodeConnectionType.SSL)
                 endpoint = "https://";
 
-            endpoint += $":{replica.Port}/realtime/v3/cluster";
+            endpoint += $"{replica.Host}:{replica.Port}/realtime/v3/cluster";
 
             return endpoint;
         }
@@ -94,4 +97,5 @@ namespace Andy.X.Cluster.Sync.Providers
             return _connection!;
         }
     }
+
 }

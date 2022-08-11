@@ -8,9 +8,12 @@
       "Replicas": [
         {
           "NodeId": "andyx_standalone",
-          "Host": "127.0.0.1",
+          "Host": "localhost",
+          "Port": 6540,
           "ConnectionType": "NON_SSL",
-          "Type": "Main"
+          "Type": "Main",
+          "Username": "admin",
+          "Password": "admin"
         }
       ]
     }

@@ -1,4 +1,6 @@
-﻿namespace Andy.X.Cluster.Sync.Services.Handlers
+﻿using System;
+
+namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 {
     public class TenantEventHandler
     {

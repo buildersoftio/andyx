@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Hubs.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Model.Clusters;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Router.Hubs.Clusters
 {
+    //[Authorize]
     public class ClusterHub : Hub<IClusterHub>
     {
         private readonly ILogger<ClusterHub> _logger;
@@ -36,7 +38,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
             var headers = Context.GetHttpContext().Request.Headers;
 
             // authorization token
-            string token = headers["x-andyx-cluster-authoriziation"];
+            string token = headers["Authorization"];
 
             string clusterId = headers["x-andyx-cluster-id"].ToString();
             string nodeId = headers["x-andyx-node-id"].ToString();
@@ -44,14 +46,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
             int shardId = Convert.ToInt32(headers["x-andyx-shard-id"].ToString());
 
             ReplicaTypes replicaType = (ReplicaTypes)Enum.Parse(typeof(ReplicaTypes), headers["x-andyx-replica-type"].ToString());
-            _logger.LogInformation($"Node '{nodeId}' with host-name '{hostName}' requested connection");
+            _logger.LogInformation($"Node '{nodeId}' as {replicaType.ToString()} with hostname '{hostName}' requested connection");
 
 
             // check if this node is already connected here
             if (_clusterHubRepository.GetNodeClientByNodeId(nodeId) != null)
             {
                 // node exists
-                _logger.LogWarning($"Node '{nodeId}' with hostname '{hostName}' is already connected");
+                _logger.LogWarning($"Node '{nodeId}' as {replicaType.ToString()} with hostname '{hostName}' is already connected");
                 return OnDisconnectedAsync(new Exception($"There is a node with id '{nodeId}' part of cluster '{clusterId}' connected to this node"));
             }
 
@@ -65,7 +67,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
                 ReplicaType = replicaType.ToString(),
                 ShardId = shardId
             });
-            _logger.LogInformation($"Node '{nodeId}' with hostname '{hostName}' is connected");
+            _logger.LogInformation($"Node '{nodeId}' as {replicaType.ToString()} with hostname '{hostName}' is connected");
 
             return base.OnConnectedAsync();
         }

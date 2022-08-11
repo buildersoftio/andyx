@@ -1,4 +1,4 @@
-﻿namespace Andy.X.Cluster.Sync.Services.Handlers
+﻿namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 {
     public class NodeEventHandler
     {
@@ -16,12 +16,12 @@
             _nodeClusterEventService.NodeDisconnected += NodeClusterEventService_NodeDisconnected;
         }
 
-        private void NodeClusterEventService_NodeDisconnected(Buildersoft.Andy.X.Model.Clusters.Events.NodeDisconnectedArgs obj)
+        private void NodeClusterEventService_NodeDisconnected(Model.Clusters.Events.NodeDisconnectedArgs obj)
         {
             // TODO: Implement
         }
 
-        private void NodeClusterEventService_NodeConnected(Buildersoft.Andy.X.Model.Clusters.Events.NodeConnectedArgs obj)
+        private void NodeClusterEventService_NodeConnected(Model.Clusters.Events.NodeConnectedArgs obj)
         {
             // TODO: Implement
         }

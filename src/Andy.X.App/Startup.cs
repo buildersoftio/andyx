@@ -94,8 +94,8 @@ namespace Andy.X.App
                 });
             });
 
-            services.AddAuthentication("UserAuthentication")
-                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("UserAuthentication", null);
+            services.AddAuthentication("Andy.X_Authorization")
+                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Andy.X_Authorization", null);
 
             services.AddSerilogLoggingConfiguration(Configuration);
             services.AddSingleton<ApplicationService>();

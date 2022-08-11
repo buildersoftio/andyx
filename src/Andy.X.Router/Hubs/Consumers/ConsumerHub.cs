@@ -202,6 +202,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
             var consumer = _consumerFactory.CreateConsumer(subscriptionName, consumerName);
             _subscriptionHubRepository.AddConsumer(subscriptionId, clientConnectionId, consumer);
+            
             TenantIOService.TryCreateConsumerDirectory(tenant, product, component, topic, subscriptionName, consumerName);
 
             Task.Run(() => _outboundMessageService.AddSubscriptionTopicData(_subscriptionFactory.CreateSubscriptionTopicData(subscriptionToRegister,

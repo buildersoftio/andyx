@@ -44,7 +44,7 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             throw new NotImplementedException();
         }
 
-        public Task ConnectConsumer_AllNodes(string tenant, string product, string component, string topic, string subscription, string consumerConnectionId, string consumer)
+        public Task ConnectConsumer_AllNodes(string tenant, string product, string component, string topic, Subscription subscription, string consumerConnectionId, string consumer)
         {
             return _hub.Clients.All.ConsumerConnectedAsync(new Model.Clusters.Events.ConsumerConnectedArgs()
             {
@@ -52,7 +52,7 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
                 Product = product,
                 Component = component,
                 Topic = topic,
-                Subscription = subscription,
+                SubscriptionDetails = subscription,
 
                 Consumer = consumer,
                 ConsumerConnectionId = consumerConnectionId
