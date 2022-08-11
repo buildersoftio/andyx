@@ -13,6 +13,7 @@
 		<UserSecretsId>acbefa1b-f798-400c-8352-e0f54e8ee47c</UserSecretsId>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<DockerfileContext>..\..</DockerfileContext>
+		<PackAsTool>False</PackAsTool>
 	</PropertyGroup>
 
 	<ItemGroup>
