@@ -54,7 +54,7 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
 
             _tenantService = tenantService;
             _tenantFactory = tenantFactory;
-            
+
             _nodesClientServices = new ConcurrentDictionary<string, NodeClusterEventService>();
 
             // loading cluster configurations in-memory of this node.
@@ -88,6 +88,7 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
                     {
                         var key = replica.NodeId;
 
+                        _logger.LogInformation($"Initiating cluster connection to node '{replica.NodeId}'");
                         var nodeClusterEventService = new NodeClusterEventService(_loggerFactory.CreateLogger<NodeClusterEventService>(),
                             replica,
                             clusterConfiguration,
@@ -95,7 +96,8 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
                              _producerFactory,
                              _subscriptionHubRepository,
                              _tenantService,
-                             _tenantFactory);
+                             _tenantFactory,
+                             _nodeConfiguration);
 
                         _nodesClientServices.TryAdd(key, nodeClusterEventService);
                         nodeClusterEventService.ConnectAsync();

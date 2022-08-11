@@ -15,31 +15,34 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Providers
     {
         private readonly Replica _replica;
         private readonly ClusterConfiguration _clusterConfiguration;
+        private readonly NodeConfiguration _nodeConfiguration;
         private HubConnection? _connection;
 
         public NodeConnectionProvider(Replica replica,
-            ClusterConfiguration clusterConfiguration)
+            ClusterConfiguration clusterConfiguration,
+            NodeConfiguration nodeConfiguration)
         {
             _replica = replica;
             _clusterConfiguration = clusterConfiguration;
+            _nodeConfiguration = nodeConfiguration;
 
-            ConnectToNode(_replica);
+            ConnectToNode();
         }
 
-        private void ConnectToNode(Replica replica)
+        private void ConnectToNode( )
         {
-            BuildConnection(replica);
+            BuildConnection();
         }
 
-        private void BuildConnection(Replica replica)
+        private void BuildConnection()
         {
-            string nodeServiceUrl = CreateNodeEndpoint(replica);
+            string nodeServiceUrl = CreateNodeEndpoint(_replica);
             _connection = new HubConnectionBuilder()
                 .AddMessagePackProtocol()
                 .WithUrl(nodeServiceUrl, option =>
                 {
                     // here we gooo...!
-                    if (replica.ConnectionType == Buildersoft.Andy.X.Model.NodeConnectionType.NON_SSL)
+                    if (_replica.ConnectionType == Buildersoft.Andy.X.Model.NodeConnectionType.NON_SSL)
                     {
                         // skip ssl
                         option.HttpMessageHandlerFactory = (message) =>
@@ -58,24 +61,25 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Providers
                             {
                                 httpClientHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
                                 httpClientHandler.SslProtocols = SslProtocols.Tls12;
-                                var certLocation = Path.Combine(replica.X509CertificateFile);
-                                httpClientHandler.ClientCertificates.Add(new X509Certificate2(certLocation, replica.X509CertificateFile));
+                                var certLocation = Path.Combine(_replica.X509CertificateFile);
+                                httpClientHandler.ClientCertificates.Add(new X509Certificate2(certLocation, _replica.X509CertificateFile));
                             }
                             return message;
                         };
                     }
 
                     string encodedBasicToken = Convert.ToBase64String(Encoding.GetEncoding("ISO-8859-1")
-                               .GetBytes(replica.Username + ":" + replica.Password));
+                               .GetBytes(_replica.Username + ":" + _replica.Password));
 
 
                     // Add headers..
                     option.Headers.Add("Authorization", "Basic " + encodedBasicToken);
                     option.Headers["x-andyx-cluster-id"] = _clusterConfiguration.Name;
-                    option.Headers["x-andyx-node-id"] = replica.NodeId;
-                    option.Headers["x-andyx-hostname"] = replica.Host;
+                    option.Headers["x-andyx-node-id"] = _replica.NodeId;
+                    option.Headers["x-andyx-node-id-from"] = _nodeConfiguration.NodeId;
+                    option.Headers["x-andyx-hostname"] = _replica.Host;
                     option.Headers["x-andyx-shard-id"] = "-1";
-                    option.Headers["x-andyx-replica-type"] = replica.Type.ToString();
+                    option.Headers["x-andyx-replica-type"] = _replica.Type.ToString();
                 })
                 .WithAutomaticReconnect()
                 .Build();

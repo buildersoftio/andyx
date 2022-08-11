@@ -31,7 +31,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
         private readonly ISubscriptionFactory _subscriptionFactory;
         private readonly ITenantService _tenantService;
         private readonly ITenantFactory _tenantFactory;
-
+        private readonly NodeConfiguration _nodeConfiguration;
         private HubConnection _connection;
 
         public event Action<NodeConnectedArgs>? NodeConnected;
@@ -89,7 +89,8 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
             IProducerFactory producerFactory,
             ISubscriptionHubRepository subscriptionHubRepository,
             ITenantService tenantService,
-            ITenantFactory tenantFactory)
+            ITenantFactory tenantFactory,
+            NodeConfiguration nodeConfiguration)
         {
             _logger = logger;
             _replica = replica;
@@ -101,9 +102,9 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
 
             _tenantService = tenantService;
             _tenantFactory = tenantFactory;
+            _nodeConfiguration = nodeConfiguration;
 
-
-            var provider = new NodeConnectionProvider(replica, clusterConfiguration);
+            var provider = new NodeConnectionProvider(replica, clusterConfiguration, nodeConfiguration);
             _connection = provider.GetHubConnection();
 
             _connection.Closed += Connection_Closed;
@@ -197,7 +198,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
                 if (task.Exception != null)
                 {
                     // Details is not show for now...
-                    _logger.LogError($"Error occurred during connection to '{_replica.NodeId}' node. Details: {task.Exception.Message}, {string.Join(",", task.Exception.InnerExceptions)}");
+                    _logger.LogError($"Error occurred during connection to '{_replica.NodeId}' node. Details: {task.Exception.Message}");
                     // retry connection
                     Thread.Sleep(2000);
                     ConnectAsync();
