@@ -54,7 +54,7 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
 
             _tenantService = tenantService;
             _tenantFactory = tenantFactory;
-            
+
             _nodesClientServices = new ConcurrentDictionary<string, NodeClusterEventService>();
 
             // loading cluster configurations in-memory of this node.
@@ -96,7 +96,8 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
                              _producerFactory,
                              _subscriptionHubRepository,
                              _tenantService,
-                             _tenantFactory);
+                             _tenantFactory,
+                             _nodeConfiguration);
 
                         _nodesClientServices.TryAdd(key, nodeClusterEventService);
                         nodeClusterEventService.ConnectAsync();
