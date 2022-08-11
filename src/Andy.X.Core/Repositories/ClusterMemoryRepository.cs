@@ -58,6 +58,9 @@ namespace Buildersoft.Andy.X.Core.Repositories
             {
                 _currentReplica = replica;
                 _currentShard = lastShard;
+
+                replica.IsConnected = true;
+                replica.IsLocal = true;
             }
 
             return true;

@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Extensions.DependencyInjection;
 using Buildersoft.Andy.X.Handlers;
 using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Router.Hubs.Clusters;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Buildersoft.Andy.X.Router.Hubs.Producers;
 using Microsoft.AspNetCore.Authentication;
@@ -93,13 +94,14 @@ namespace Andy.X.App
                 });
             });
 
-            services.AddAuthentication("UserAuthentication")
-                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("UserAuthentication", null);
+            services.AddAuthentication("Andy.X_Authorization")
+                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Andy.X_Authorization", null);
 
             services.AddSerilogLoggingConfiguration(Configuration);
             services.AddSingleton<ApplicationService>();
 
             services.AddClusterRepository();
+            services.AddClusterHubService();
             services.AddClusterService();
 
             services.AddAppFactoryMethods();
@@ -171,6 +173,14 @@ namespace Andy.X.App
                 // Mapping Rest endpoints
                 if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS").ToLower() == "true")
                     endpoints.MapControllers();
+
+                // mapping SignaR Cluster Hub
+                endpoints.MapHub<ClusterHub>("/realtime/v3/cluster", opt =>
+                {
+                    opt.ApplicationMaxBufferSize = transportConfiguration.ApplicationMaxBufferSizeInBytes;
+                    opt.TransportMaxBufferSize = transportConfiguration.TransportMaxBufferSizeInBytes;
+                });
+
 
                 // Mapping SignalR Hubs
                 endpoints.MapHub<ProducerHub>("/realtime/v3/producer", opt =>

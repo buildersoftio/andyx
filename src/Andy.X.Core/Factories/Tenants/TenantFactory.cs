@@ -27,6 +27,15 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
                 }
             };
         }
+        public Tenant CreateTenant(Guid id, string name, TenantSettings tenantSettings)
+        {
+            return new Tenant()
+            {
+                Id = id,
+                Name = name,
+                Settings = tenantSettings
+            };
+        }
 
         public Tenant CreateTenant(string name, string digitalSignature, bool enableEncryption, bool isProductAutoCreate, bool enableAuthorization, List<TenantToken> tenantTokens, TenantLogging tenantLogging, bool enableGeoReplication, string certificatePath)
         {
@@ -53,10 +62,34 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
             return new Product() { Id = Guid.NewGuid(), Name = productName };
         }
 
+        public Product CreateProduct(string name, string description, string productOwner, List<string> productTeam, string productContact)
+        {
+            return new Product()
+            {
+                Id = Guid.NewGuid(),
+                Name = name,
+                Description = description,
+                ProductOwner = productOwner,
+                ProductTeam = productTeam,
+                ProductContact = productContact,
+            };
+        }
+
+
         public Component CreateComponent(string componentName)
         {
             return new Component() { Id = Guid.NewGuid(), Name = componentName };
         }
+        public Component CreateComponent(Guid id, string componentName, ComponentSettings componentSettings)
+        {
+            return new Component()
+            {
+                Id = id,
+                Name = componentName,
+                Settings = componentSettings
+            };
+        }
+
         public Component CreateComponent(string componentName, bool allowSchemaValidation, bool allowTopicCreation, bool enableAuthorization, List<ComponentToken> tokens)
         {
             return new Component()
@@ -73,6 +106,8 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
             };
         }
 
+
+
         public Topic CreateTopic(string topicName)
         {
             return new Topic() { Id = Guid.NewGuid(), Name = topicName };
@@ -81,6 +116,16 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
         public Topic CreateTopic(string topicName, bool isPersistent)
         {
             return new Topic() { Id = Guid.NewGuid(), Name = topicName, TopicSettings = new TopicSettings() { IsPersistent = isPersistent } };
+        }
+
+        public Topic CreateTopic(Guid id, string topicName, TopicSettings topicSettings)
+        {
+            return new Topic()
+            {
+                Id = id,
+                Name = topicName,
+                TopicSettings = topicSettings
+            };
         }
     }
 }

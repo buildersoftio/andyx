@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.IO.Readers;
@@ -30,6 +31,8 @@ namespace Buildersoft.Andy.X.Core.Services.App
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
         private readonly IOutboundMessageService _outboundMessageService;
         private readonly ISubscriptionFactory _subscriptionFactory;
+        private readonly NodeConfiguration _nodeConfiguration;
+        private readonly IClusterHubService _clusterHubService;
 
         private readonly ConcurrentDictionary<string, Tenant> _tenants;
 
@@ -39,7 +42,9 @@ namespace Buildersoft.Andy.X.Core.Services.App
             IOrchestratorService orchestratorService,
             ISubscriptionHubRepository subscriptionHubRepository,
             IOutboundMessageService outboundMessageService,
-            ISubscriptionFactory subscriptionFactory)
+            ISubscriptionFactory subscriptionFactory,
+            NodeConfiguration nodeConfiguration,
+            IClusterHubService clusterHubService)
         {
             _logger = logger;
             _tenantFactory = tenantFactory;
@@ -47,6 +52,9 @@ namespace Buildersoft.Andy.X.Core.Services.App
             _subscriptionHubRepository = subscriptionHubRepository;
             _outboundMessageService = outboundMessageService;
             _subscriptionFactory = subscriptionFactory;
+            _nodeConfiguration = nodeConfiguration;
+            _clusterHubService = clusterHubService;
+
 
             _tenants = new ConcurrentDictionary<string, Tenant>();
 
@@ -107,7 +115,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             });
         }
 
-        public bool AddTopic(string tenant, string product, string component, string topicName, Topic topic)
+        public bool AddTopic(string tenant, string product, string component, string topicName, Topic topic, bool notifyOtherNodes = true)
         {
             if (_tenants.ContainsKey(tenant))
                 if (_tenants[tenant].Products.ContainsKey(product))
@@ -128,23 +136,28 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 if (componentDetails == null)
                     return false;
 
-                TenantIOService.TryCreateTopicDirectory(tenant, product, component, topicName);
+                if (TenantIOService.TryCreateTopicDirectory(tenant, product, component, topicName) == true)
+                {
+                    if (notifyOtherNodes == true)
+                        _clusterHubService.CreateTopic_AllNodes(tenant, product, component, topic);
+                }
 
                 // Open connection with topic log data.
-                using (var topicStateContext = new TopicStateContext(tenant, product, component, topicName))
+                using (var topicStateContext = new TopicEntryPositionContext(tenant, product, component, topicName))
                 {
                     topicStateContext.Database.EnsureCreated();
-                    var currentData = topicStateContext.TopicStates.Find("DEFAULT");
+                    var currentData = topicStateContext.TopicStates.Find(_nodeConfiguration.NodeId);
                     if (currentData == null)
                     {
-                        currentData = new Model.Entities.Storages.TopicState()
+                        currentData = new Model.Entities.Storages.TopicEntryPosition()
                         {
-                            Id = "DEFAULT",
+                            Id = _nodeConfiguration.NodeId,
                             CurrentEntry = 1,
                             MarkDeleteEntryPosition = 0,
 
                             CreateDate = System.DateTimeOffset.Now
                         };
+
                         topicStateContext.TopicStates.Add(currentData);
                         topicStateContext.SaveChanges();
                     }
@@ -195,12 +208,12 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
 
                 // check if the subscription exists in topicState
-                using (var topicStateContext = new TopicStateContext(tenant, product, component, topicName))
+                using (var topicStateContext = new TopicEntryPositionContext(tenant, product, component, topicName))
                 {
                     var currentSubscriptionData = topicStateContext.TopicStates.Find(subId);
                     if (currentSubscriptionData == null)
                     {
-                        currentSubscriptionData = new Model.Entities.Storages.TopicState()
+                        currentSubscriptionData = new Model.Entities.Storages.TopicEntryPosition()
                         {
                             Id = subId,
                             CurrentEntry = 0,
@@ -233,7 +246,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
         }
 
 
-        public bool AddComponent(string tenant, string product, string componentName, Component component)
+        public bool AddComponent(string tenant, string product, string componentName, Component component, bool notifyOtherNodes = true)
         {
             if (_tenants.ContainsKey(tenant))
                 if (_tenants[tenant].Products.ContainsKey(product))
@@ -248,7 +261,11 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 if (productDetail == null)
                     return false;
 
-                TenantIOService.TryCreateComponentDirectory(tenant, product, componentName);
+                if (TenantIOService.TryCreateComponentDirectory(tenant, product, componentName) == true)
+                {
+                    if (notifyOtherNodes == true)
+                        _clusterHubService.CreateComponent_AllNodes(tenant, product, component);
+                }
 
                 var componentDetails = productDetail.Components.Find(x => x.Name == componentName);
                 if (componentDetails != null)
@@ -263,7 +280,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             return false;
         }
 
-        public bool AddProduct(string tenant, string productName, Product product)
+        public bool AddProduct(string tenant, string productName, Product product, bool notifyOtherNodes = true)
         {
             if (_tenants.ContainsKey(tenant))
                 _tenants[tenant].Products.TryAdd(productName, product);
@@ -276,7 +293,11 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 if (tenantDetail.Products == null)
                     tenantDetail.Products = new List<ProductConfiguration>();
 
-                TenantIOService.TryCreateProductDirectory(tenant, productName);
+                if (TenantIOService.TryCreateProductDirectory(tenant, productName) == true)
+                {
+                    if (notifyOtherNodes == true)
+                        _clusterHubService.CreateProduct_AllNodes(tenant, product);
+                }
 
                 var productDetail = tenantDetail.Products.Find(x => x.Name == productName);
                 if (productDetail != null)
@@ -284,6 +305,8 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
                 // register product to tenantConfiguration
                 tenantDetail.Products.Add(new ProductConfiguration() { Name = productName, Components = new List<ComponentConfiguration>() });
+
+
                 if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
                     return true;
             }
@@ -291,9 +314,14 @@ namespace Buildersoft.Andy.X.Core.Services.App
             return false;
         }
 
-        public bool AddTenant(string tenantName, Tenant tenant)
+        public bool AddTenant(string tenantName, Tenant tenant, bool notifyOtherNodes = true)
         {
-            TenantIOService.TryCreateTenantDirectory(tenantName);
+            if (TenantIOService.TryCreateTenantDirectory(tenantName) == true)
+            {
+                if (notifyOtherNodes == true)
+                    _clusterHubService.CreateTenant_AllNodes(tenant.Id, tenantName, tenant.Settings);
+            }
+
             return _tenants.TryAdd(tenantName, tenant);
         }
 

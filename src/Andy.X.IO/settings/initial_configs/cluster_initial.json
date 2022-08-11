@@ -7,10 +7,13 @@
       "ReplicaDistributionType": "Async",
       "Replicas": [
         {
-          "NodeId": "standalone_01",
-          "Host": "127.0.0.1",
+          "NodeId": "andyx_standalone",
+          "Host": "localhost",
+          "Port": 6540,
           "ConnectionType": "NON_SSL",
-          "Type": "Main"
+          "Type": "Main",
+          "Username": "admin",
+          "Password": "admin"
         }
       ]
     }

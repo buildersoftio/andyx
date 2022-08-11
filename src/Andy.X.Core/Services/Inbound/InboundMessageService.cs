@@ -125,9 +125,9 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             (string tenant, string product, string component, string topic) = topicKey.GetDetailsFromTopicKey();
             var topicDetails = _tenantRepository.GetTopic(tenant, product, component, topic);
 
-            using (var topicStateContext = new TopicStateContext(tenant, product, component, topic))
+            using (var topicStateContext = new TopicEntryPositionContext(tenant, product, component, topic))
             {
-                var currentData = topicStateContext.TopicStates.Find("DEFAULT");
+                var currentData = topicStateContext.TopicStates.Find(_nodeConfiguration.NodeId);
                 currentData.CurrentEntry = topicDetails.TopicStates.LatestEntryId;
                 currentData.MarkDeleteEntryPosition = topicDetails.TopicStates.MarkDeleteEntryPosition;
                 currentData.UpdatedDate = DateTimeOffset.Now;

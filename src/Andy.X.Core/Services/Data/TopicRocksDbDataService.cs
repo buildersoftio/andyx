@@ -40,7 +40,8 @@ namespace Buildersoft.Andy.X.Core.Services.Data
             
 
             dbOptions = new DbOptions()
-                .SetDbLogDir(_logPath)
+                // Commented for now, custom db log dir.
+                //.SetDbLogDir(_logPath)
                 .SetCreateIfMissing(true)
                 .SetMaxLogFileSize(storageConfiguration.MaxLogFileSizeInBytes)
                 .SetStatsDumpPeriodSec(storageConfiguration.DumpStatsInSeconds)

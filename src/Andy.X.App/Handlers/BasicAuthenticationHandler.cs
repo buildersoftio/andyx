@@ -14,7 +14,8 @@ namespace Buildersoft.Andy.X.Handlers
 {
     public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
-        private readonly IConfiguration configuration;
+        private readonly IConfiguration _configuration;
+
         public BasicAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
@@ -22,7 +23,7 @@ namespace Buildersoft.Andy.X.Handlers
             ISystemClock clock,
             IConfiguration configuration) : base(options, logger, encoder, clock)
         {
-            this.configuration = configuration;
+            _configuration = configuration;
         }
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -30,6 +31,7 @@ namespace Buildersoft.Andy.X.Handlers
             string username = null;
             try
             {
+                var headers = Request.Headers.Authorization;
                 var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
                 var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(authHeader.Parameter)).Split(':');
                 username = credentials.FirstOrDefault();
@@ -55,8 +57,8 @@ namespace Buildersoft.Andy.X.Handlers
 
         public bool IsAuthorized(string username, string password)
         {
-            return username == configuration.GetSection("Credentials:Username").Value
-                && password == configuration.GetSection("Credentials:Password").Value;
+            return username == _configuration.GetSection("Credentials:Username").Value
+                && password == _configuration.GetSection("Credentials:Password").Value;
         }
     }
 }

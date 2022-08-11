@@ -11,10 +11,11 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services
 {
     public interface ITenantService
     {
-        bool AddTenant(string tenantName, Tenant tenant);
-        bool AddProduct(string tenant, string productName, Product product);
-        bool AddComponent(string tenant, string product, string componentName, Component component);
-        bool AddTopic(string tenant, string product, string component, string topicName, Topic topic);
+        bool AddTenant(string tenantName, Tenant tenant, bool notifyOtherNodes = true);
+        bool AddProduct(string tenant, string productName, Product product, bool notifyOtherNodes = true);
+        bool AddComponent(string tenant, string product, string componentName, Component component, bool notifyOtherNodes = true);
+        bool AddTopic(string tenant, string product, string component, string topicName, Topic topic, bool notifyOtherNodes = true);
+
         public bool AddSubscriptionConfiguration(string tenant, string product, string component, string topicName, string subscriptionName, Subscription subscription);
 
 

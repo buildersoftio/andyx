@@ -13,7 +13,7 @@ namespace Buildersoft.Andy.X.IO.Services
                 if (Directory.Exists(TenantLocations.GetTenantDirectory(tenant)) == true)
                 {
                     // TODO Add logging later
-                    return true;
+                    return false;
                 }
 
                 Directory.CreateDirectory(TenantLocations.GetTenantDirectory(tenant));
@@ -37,7 +37,7 @@ namespace Buildersoft.Andy.X.IO.Services
                 {
                     // TODO Add logging later
 
-                    return true;
+                    return false;
                 }
 
                 Directory.CreateDirectory(TenantLocations.GetProductDirectory(tenant, product));
@@ -59,7 +59,7 @@ namespace Buildersoft.Andy.X.IO.Services
                 {
                     // TODO Add logging later
 
-                    return true;
+                    return false;
                 }
 
                 Directory.CreateDirectory(TenantLocations.GetComponentDirectory(tenant, product, component));
@@ -80,9 +80,7 @@ namespace Buildersoft.Andy.X.IO.Services
             {
                 if (Directory.Exists(TenantLocations.GetTopicDirectory(tenant, product, component, topic)) == true)
                 {
-                    // TODO Add logging later
-
-                    return true;
+                    return false;
                 }
 
                 Directory.CreateDirectory(TenantLocations.GetProducerRootDirectory(tenant, product, component, topic));
