@@ -197,7 +197,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
                 if (task.Exception != null)
                 {
                     // Details is not show for now...
-                    _logger.LogError($"Error occurred during connection to '{_replica.NodeId}' node. Details: {task.Exception.Message}, {string.Join(",", task.Exception.InnerExceptions)}");
+                    _logger.LogError($"Error occurred during connection to '{_replica.NodeId}' node. Details: {task.Exception.Message}");
                     // retry connection
                     Thread.Sleep(2000);
                     ConnectAsync();
