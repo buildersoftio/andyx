@@ -1,15 +1,15 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
+using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
+using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Clusters.Synchronizer.Providers;
 using Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers;
 using Buildersoft.Andy.X.Model.Clusters;
 using Buildersoft.Andy.X.Model.Clusters.Events;
 using Buildersoft.Andy.X.Model.Configurations;
-using Buildersoft.Andy.X.Model.Consumers.Events;
-using Buildersoft.Andy.X.Model.Producers.Events;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using System;
@@ -29,6 +29,9 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
         private readonly IConsumerFactory _consumerFactory;
         private readonly ISubscriptionFactory _subscriptionFactory;
+        private readonly ITenantService _tenantService;
+        private readonly ITenantFactory _tenantFactory;
+
         private HubConnection _connection;
 
         public event Action<NodeConnectedArgs>? NodeConnected;
@@ -85,8 +88,8 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
             IProducerHubRepository producerHubRepository,
             IProducerFactory producerFactory,
             ISubscriptionHubRepository subscriptionHubRepository,
-            IConsumerFactory consumerFactory,
-            ISubscriptionFactory subscriptionFactory)
+            ITenantService tenantService,
+            ITenantFactory tenantFactory)
         {
             _logger = logger;
             _replica = replica;
@@ -95,8 +98,9 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
             _producerHubRepository = producerHubRepository;
             _producerFactory = producerFactory;
             _subscriptionHubRepository = subscriptionHubRepository;
-            _consumerFactory = consumerFactory;
-            _subscriptionFactory = subscriptionFactory;
+
+            _tenantService = tenantService;
+            _tenantFactory = tenantFactory;
 
 
             var provider = new NodeConnectionProvider(replica, clusterConfiguration);
@@ -150,10 +154,10 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
         private void InitializeEventHandlers()
         {
             nodeEventHandler = new NodeEventHandler(this);
-            tenantEventHandler = new TenantEventHandler(this);
-            productEventHandler = new ProductEventHandler(this);
-            componentEventHandler = new ComponentEventHandler(this);
-            topicEventHandler = new TopicEventHandler(this);
+            tenantEventHandler = new TenantEventHandler(this, _tenantService, _tenantFactory);
+            productEventHandler = new ProductEventHandler(this, _tenantService, _tenantFactory);
+            componentEventHandler = new ComponentEventHandler(this, _tenantService, _tenantFactory);
+            topicEventHandler = new TopicEventHandler(this, _tenantService, _tenantFactory);
             tokenEventHandler = new TokenEventHandler(this);
             subscriptionEventHandler = new SubscriptionEventHandler(this);
             producerEventHandler = new ProducerEventHandler(this, _producerHubRepository, _producerFactory);

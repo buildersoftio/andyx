@@ -31,18 +31,32 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 
         private void NodeClusterEventService_ProducerDisconnected(ProducerDisconnectedArgs obj)
         {
-            var id = PRODUCER_KEY + obj.ProducerConnectionId;
-            Producer producerToRemove = _producerHubRepository.GetProducerById(id);
-            if (producerToRemove != null)
+            try
             {
-                _producerHubRepository.RemoveProducer(id);
+                var id = PRODUCER_KEY + obj.ProducerConnectionId;
+                Producer producerToRemove = _producerHubRepository.GetProducerById(id);
+                if (producerToRemove != null)
+                {
+                    _producerHubRepository.RemoveProducer(id);
+                }
+            }
+            catch (Exception)
+            {
+
             }
         }
 
         private void NodeClusterEventService_ProducerConnected(ProducerConnectedArgs obj)
         {
-            var id = PRODUCER_KEY + obj.ProducerConnectionId;
-            _producerHubRepository.AddProducer(id, _producerFactory.CreateProducer(obj.Tenant, obj.Product, obj.Component, obj.Topic, obj.Producer));
+            try
+            {
+                var id = PRODUCER_KEY + obj.ProducerConnectionId;
+                _producerHubRepository.AddProducer(id, _producerFactory.CreateProducer(obj.Tenant, obj.Product, obj.Component, obj.Topic, obj.Producer));
+            }
+            catch (Exception)
+            {
+
+            }
         }
     }
 }

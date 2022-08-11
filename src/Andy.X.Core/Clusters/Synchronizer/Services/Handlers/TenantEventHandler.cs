@@ -1,14 +1,20 @@
-﻿using System;
+﻿
+using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
+using Buildersoft.Andy.X.Core.Abstractions.Services;
 
 namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 {
     public class TenantEventHandler
     {
         private readonly NodeClusterEventService _nodeClusterEventService;
-        public TenantEventHandler(NodeClusterEventService nodeClusterEventService)
+        private readonly ITenantService _tenantService;
+        private readonly ITenantFactory _tenantFactory;
+
+        public TenantEventHandler(NodeClusterEventService nodeClusterEventService, ITenantService tenantService, ITenantFactory tenantFactory)
         {
             _nodeClusterEventService = nodeClusterEventService;
-
+            _tenantService = tenantService;
+            _tenantFactory = tenantFactory;
             InitializeEvents();
         }
 
@@ -19,19 +25,20 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
             _nodeClusterEventService.TenantDeleted += NodeClusterEventService_TenantDeleted;
         }
 
-        private void NodeClusterEventService_TenantUpdated(Buildersoft.Andy.X.Model.Clusters.Events.TenantUpdatedArgs obj)
+        private void NodeClusterEventService_TenantUpdated(Model.Clusters.Events.TenantUpdatedArgs obj)
         {
-            throw new NotImplementedException();
+            // TODO: Not implemented.
         }
 
-        private void NodeClusterEventService_TenantDeleted(Buildersoft.Andy.X.Model.Clusters.Events.TenantDeletedArgs obj)
+        private void NodeClusterEventService_TenantCreated(Model.Clusters.Events.TenantCreatedArgs obj)
         {
-            throw new NotImplementedException();
+            var tenantToCreate = _tenantFactory.CreateTenant(obj.Id, obj.Name, obj.Settings);
+            _tenantService.AddTenant(obj.Name, tenantToCreate, notifyOtherNodes: false);
         }
 
-        private void NodeClusterEventService_TenantCreated(Buildersoft.Andy.X.Model.Clusters.Events.TenantCreatedArgs obj)
+        private void NodeClusterEventService_TenantDeleted(Model.Clusters.Events.TenantDeletedArgs obj)
         {
-            throw new NotImplementedException();
+            // TODO: Not implemented.
         }
     }
 }

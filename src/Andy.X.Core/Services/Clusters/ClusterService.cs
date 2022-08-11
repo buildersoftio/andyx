@@ -1,9 +1,11 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
+using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
+using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services;
 using Buildersoft.Andy.X.Model.Clusters;
@@ -27,7 +29,8 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
         private readonly IConsumerFactory _consumerFactory;
         private readonly ISubscriptionFactory _subscriptionFactory;
-
+        private readonly ITenantService _tenantService;
+        private readonly ITenantFactory _tenantFactory;
 
         private readonly ConcurrentDictionary<string, NodeClusterEventService> _nodesClientServices;
 
@@ -36,10 +39,8 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
             ClusterConfiguration clusterConfiguration,
             NodeConfiguration nodeConfiguration,
             IProducerHubRepository producerHubRepository,
-            IProducerFactory producerFactory,
-            ISubscriptionHubRepository subscriptionHubRepository,
-            IConsumerFactory consumerFactory,
-            ISubscriptionFactory subscriptionFactory)
+            ITenantService tenantService,
+            ITenantFactory tenantFactory)
         {
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<ClusterService>();
@@ -50,11 +51,10 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
 
 
             _producerHubRepository = producerHubRepository;
-            _producerFactory = producerFactory;
-            _subscriptionHubRepository = subscriptionHubRepository;
-            _consumerFactory = consumerFactory;
-            _subscriptionFactory = subscriptionFactory;
 
+            _tenantService = tenantService;
+            _tenantFactory = tenantFactory;
+            
             _nodesClientServices = new ConcurrentDictionary<string, NodeClusterEventService>();
 
             // loading cluster configurations in-memory of this node.
@@ -84,8 +84,8 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
 
                     // Create connection for each node, ignore local node.
                     // TESTING
-                    //if (replica.NodeId != _nodeConfiguration.NodeId)
-                    //{
+                    if (replica.NodeId != _nodeConfiguration.NodeId)
+                    {
                         var key = replica.NodeId;
 
                         var nodeClusterEventService = new NodeClusterEventService(_loggerFactory.CreateLogger<NodeClusterEventService>(),
@@ -94,13 +94,12 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
                              _producerHubRepository,
                              _producerFactory,
                              _subscriptionHubRepository,
-                             _consumerFactory,
-                             _subscriptionFactory);
+                             _tenantService,
+                             _tenantFactory);
 
                         _nodesClientServices.TryAdd(key, nodeClusterEventService);
-                        // connect the node to cluster.
                         nodeClusterEventService.ConnectAsync();
-                    //}
+                    }
                 }
             }
 
