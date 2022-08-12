@@ -16,7 +16,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services
         bool AddComponent(string tenant, string product, string componentName, Component component, bool notifyOtherNodes = true);
         bool AddTopic(string tenant, string product, string component, string topicName, Topic topic, bool notifyOtherNodes = true);
 
-        public bool AddSubscriptionConfiguration(string tenant, string product, string component, string topicName, string subscriptionName, Subscription subscription);
+        public bool AddSubscriptionConfiguration(string tenant, string product, string component, string topicName, string subscriptionName, Subscription subscription, bool notifyOtherNodes = true);
 
 
         Tenant GetTenant(string tenant);

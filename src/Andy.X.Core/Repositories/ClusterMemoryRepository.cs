@@ -2,6 +2,7 @@
 using Buildersoft.Andy.X.Model.Clusters;
 using Buildersoft.Andy.X.Model.Configurations;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Buildersoft.Andy.X.Core.Repositories
@@ -16,6 +17,8 @@ namespace Buildersoft.Andy.X.Core.Repositories
         private Shard _currentShard;
         private Replica _currentReplica;
 
+        private readonly List<ReplicaShardConnection> _mainReplicasAsShards;
+
         public ClusterMemoryRepository(ILogger<ClusterMemoryRepository> logger,
             NodeConfiguration nodeConfiguration,
             ClusterConfiguration clusterConfiguration)
@@ -25,6 +28,8 @@ namespace Buildersoft.Andy.X.Core.Repositories
 
             _currentShard = null;
             _currentReplica = null;
+
+            _mainReplicasAsShards = new List<ReplicaShardConnection>();
 
             _cluster = new Cluster()
             {
@@ -50,6 +55,8 @@ namespace Buildersoft.Andy.X.Core.Repositories
                     _logger.LogError("Andy X is shutting down unexpectedly");
                     throw new System.Exception($"There is already a node connected in this shard that is working as main, node_id {mainReplica.NodeId}, host_name {mainReplica.Host}");
                 }
+
+                _mainReplicasAsShards[_mainReplicasAsShards.Count - 1].NodeId = replica.NodeId;
             }
 
             lastShard.Replicas.Add(replica);
@@ -81,6 +88,7 @@ namespace Buildersoft.Andy.X.Core.Repositories
                 }
             }
             _cluster.Shards.Add(shard);
+            _mainReplicasAsShards.Add(new ReplicaShardConnection());
             return shard;
         }
 
@@ -127,6 +135,32 @@ namespace Buildersoft.Andy.X.Core.Repositories
         public Cluster GetCluster()
         {
             return _cluster;
+        }
+
+        public bool AddReplicaConnectionToShard(string nodeId, string nodeConnectionId)
+        {
+            var replicaShardConnection = _mainReplicasAsShards.Where(n => n.NodeId == nodeId).FirstOrDefault();
+            if (replicaShardConnection == null)
+                return false;
+
+            var replica = GetReplica(nodeId);
+            replica.IsConnected = true;
+
+            replicaShardConnection.NodeConnectionId = nodeConnectionId;
+            return true;
+        }
+
+        public bool RemoveReplicaConnectionToShard(string nodeId)
+        {
+            var replicaShardConnection = _mainReplicasAsShards.Where(n => n.NodeId == nodeId).FirstOrDefault();
+            if (replicaShardConnection == null)
+                return false;
+
+            var replica = GetReplica(nodeId);
+            replica.IsConnected = false;
+
+            replicaShardConnection.NodeConnectionId = "";
+            return true;
         }
     }
 }

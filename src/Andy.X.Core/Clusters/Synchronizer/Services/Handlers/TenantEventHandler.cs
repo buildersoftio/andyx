@@ -1,6 +1,7 @@
 ﻿
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
+using System;
 
 namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 {
@@ -32,8 +33,15 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 
         private void NodeClusterEventService_TenantCreated(Model.Clusters.Events.TenantCreatedArgs obj)
         {
-            var tenantToCreate = _tenantFactory.CreateTenant(obj.Id, obj.Name, obj.Settings);
-            _tenantService.AddTenant(obj.Name, tenantToCreate, notifyOtherNodes: false);
+            try
+            {
+                var tenantToCreate = _tenantFactory.CreateTenant(obj.Id, obj.Name, obj.Settings);
+                _tenantService.AddTenant(obj.Name, tenantToCreate, notifyOtherNodes: false);
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
         private void NodeClusterEventService_TenantDeleted(Model.Clusters.Events.TenantDeletedArgs obj)

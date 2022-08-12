@@ -52,7 +52,7 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
                 Product = product,
                 Component = component,
                 Topic = topic,
-                SubscriptionDetails = subscription,
+                Subscription = subscription.SubscriptionName,
 
                 Consumer = consumer,
                 ConsumerConnectionId = consumerConnectionId
@@ -106,7 +106,17 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
 
         public Task CreateSubscription_AllNodes(Subscription subscription)
         {
-            return _hub.Clients.All.ClusterSynchronizationAsync();
+            return _hub.Clients.All.SubscriptionCreatedAsync(new Model.Clusters.Events.SubscriptionCreatedArgs()
+            {
+                Tenant = subscription.Tenant,
+                Product = subscription.Product,
+                Component = subscription.Component,
+                Topic = subscription.Topic,
+                SubscriptionName = subscription.SubscriptionName,
+                InitialPosition = subscription.InitialPosition,
+                SubscriptionMode = subscription.SubscriptionMode,
+                SubscriptionType = subscription.SubscriptionType
+            });
         }
 
         public Task CreateTenantToken_AllNodes(TenantToken tenantToken)

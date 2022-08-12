@@ -4,15 +4,18 @@ using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
+using Buildersoft.Andy.X.Core.Services.Clusters;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Model.Subscriptions;
+using Buildersoft.Andy.X.Router.Services.Clusters;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -35,6 +38,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         private readonly IOutboundMessageService _outboundMessageService;
         private readonly IInboundMessageService _inboundMessageService;
         private readonly StorageConfiguration _storageConfiguration;
+        private readonly NodeConfiguration _nodeConfiguration;
+        private readonly IClusterHubService _clusterHubService;
 
         public ConsumerHub(ILogger<ConsumerHub> logger,
             ISubscriptionHubRepository subscriptionHubRepository,
@@ -44,7 +49,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             ISubscriptionFactory subscriptionFactory,
             IOutboundMessageService outboundMessageService,
             IInboundMessageService inboundMessageService,
-            StorageConfiguration storageConfiguration
+            StorageConfiguration storageConfiguration,
+            NodeConfiguration nodeConfiguration,
+            IClusterHubService clusterHubService
             )
         {
             _logger = logger;
@@ -59,12 +66,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             _outboundMessageService = outboundMessageService;
             _inboundMessageService = inboundMessageService;
             _storageConfiguration = storageConfiguration;
+            _nodeConfiguration = nodeConfiguration;
+            _clusterHubService = clusterHubService;
         }
 
         public override Task OnConnectedAsync()
         {
             Subscription subscriptionToRegister;
-            string clientConnectionId = Context.ConnectionId;
+            string consumerConnectionId = Context.ConnectionId;
             var headers = Context.GetHttpContext().Request.Headers;
 
             // authorization tokens
@@ -201,15 +210,16 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             _subscriptionHubRepository.AddSubscription(subscriptionId, connectedTopic, subscriptionToRegister);
 
             var consumer = _consumerFactory.CreateConsumer(subscriptionName, consumerName);
-            _subscriptionHubRepository.AddConsumer(subscriptionId, clientConnectionId, consumer);
-            
+            _subscriptionHubRepository.AddConsumer(subscriptionId, consumerConnectionId, consumer);
+
             TenantIOService.TryCreateConsumerDirectory(tenant, product, component, topic, subscriptionName, consumerName);
 
             Task.Run(() => _outboundMessageService.AddSubscriptionTopicData(_subscriptionFactory.CreateSubscriptionTopicData(subscriptionToRegister,
                 _storageConfiguration.OutboundFlushCurrentEntryPositionInMilliseconds,
                 _storageConfiguration.OutboundBackgroundIntervalReadMessagesInMilliseconds)));
 
-            // TODO: Inform other nodes that new consumer has been created.
+            // Inform other nodes that new consumer has been connected.
+            _clusterHubService.ConnectConsumer_AllNodes(tenant, product, component, topic, subscriptionToRegister, consumerConnectionId, consumerName);
 
             Clients.Caller.ConsumerConnected(new ConsumerConnectedDetails()
             {
@@ -231,18 +241,21 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
         public override Task OnDisconnectedAsync(Exception exception)
         {
-            string clientConnectionId = Context.ConnectionId;
-            var subscription = _subscriptionHubRepository.GetSubscriptionByConnectionId(clientConnectionId);
+            string consumerConnectionId = Context.ConnectionId;
+            var subscription = _subscriptionHubRepository.GetSubscriptionByConnectionId(consumerConnectionId);
 
             // When the consumer as Exclusive with the same name try to connect
             if (subscription != null)
             {
                 string subscriptionId = ConnectorHelper.GetSubcriptionId(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName);
-                Consumer consumerToRemove = _subscriptionHubRepository.GetConsumerByConnectionId(clientConnectionId);
+                Consumer consumerToRemove = _subscriptionHubRepository.GetConsumerByConnectionId(consumerConnectionId);
+
+                // Inform other nodes that consumer has been disconencted.
+                _clusterHubService.DisconnectConsumer_AllNodes(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName, consumerConnectionId);
 
                 _outboundMessageService.StoreCurrentPositionAsync(subscriptionId);
 
-                _subscriptionHubRepository.RemoveConsumerConnection(subscriptionId, clientConnectionId);
+                _subscriptionHubRepository.RemoveConsumerConnection(subscriptionId, consumerConnectionId);
                 _logger.LogInformation($"Consumer '{consumerToRemove.Name}' is disconencted from subscription '{subscription.SubscriptionName}' at {subscription.Tenant}/{subscription.Product}/{subscription.Component}/{subscription.Topic}");
 
                 Clients.Caller.ConsumerDisconnected(new ConsumerDisconnectedDetails()

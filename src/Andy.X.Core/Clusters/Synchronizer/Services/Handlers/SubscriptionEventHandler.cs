@@ -1,13 +1,21 @@
-﻿using System;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
+using Buildersoft.Andy.X.Core.Abstractions.Services;
+using System;
+using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 {
     public class SubscriptionEventHandler
     {
         private readonly NodeClusterEventService _nodeClusterEventService;
-        public SubscriptionEventHandler(NodeClusterEventService nodeClusterEventService)
+        private readonly ITenantService _tenantService;
+        private readonly ISubscriptionFactory _subscriptionFactory;
+
+        public SubscriptionEventHandler(NodeClusterEventService nodeClusterEventService, ITenantService tenantService, ISubscriptionFactory subscriptionFactory)
         {
             _nodeClusterEventService = nodeClusterEventService;
+            _tenantService = tenantService;
+            _subscriptionFactory = subscriptionFactory;
 
             InitializeEvents();
         }
@@ -24,27 +32,37 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 
         private void NodeClusterEventService_CurrentEntryPositionUpdated(Buildersoft.Andy.X.Model.Clusters.Events.CurrentEntryPositionUpdatedArgs obj)
         {
-            throw new NotImplementedException();
+            // TODO: Not implemented.
         }
 
         private void NodeClusterEventService_SubscriptionPositionUpdated(Buildersoft.Andy.X.Model.Clusters.Events.SubscriptionPositionUpdatedArgs obj)
         {
-            throw new NotImplementedException();
+            // TODO: Not implemented.
         }
 
         private void NodeClusterEventService_SubscriptionUpdated(Buildersoft.Andy.X.Model.Clusters.Events.SubscriptionUpdatedArgs obj)
         {
-            throw new NotImplementedException();
+            // TODO: Not implemented.
         }
 
-        private void NodeClusterEventService_SubscriptionDeleted(Buildersoft.Andy.X.Model.Clusters.Events.SubscriptionDeletedArgs obj)
+        private void NodeClusterEventService_SubscriptionDeleted(Model.Clusters.Events.SubscriptionDeletedArgs obj)
         {
-            throw new NotImplementedException();
+            // TODO: Not implemented.
         }
 
-        private void NodeClusterEventService_SubscriptionCreated(Buildersoft.Andy.X.Model.Clusters.Events.SubscriptionCreatedArgs obj)
+        private void NodeClusterEventService_SubscriptionCreated(Model.Clusters.Events.SubscriptionCreatedArgs obj)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var subscriptionToAdd = _subscriptionFactory.CreateSubscription(obj.Tenant, obj.Product, obj.Component, obj.Topic, obj.SubscriptionName,
+                    obj.SubscriptionType, obj.SubscriptionMode, obj.InitialPosition);
+
+                _tenantService.AddSubscriptionConfiguration(obj.Tenant, obj.Product, obj.Component, obj.Topic, obj.SubscriptionName, subscriptionToAdd, notifyOtherNodes: false);
+            }
+            catch (Exception)
+            {
+
+            }
         }
     }
 }

@@ -8,10 +8,12 @@ using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services;
+using Buildersoft.Andy.X.Core.Factories.Producers;
 using Buildersoft.Andy.X.Model.Clusters;
 using Buildersoft.Andy.X.Model.Configurations;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Services.Clusters
 {
@@ -32,13 +34,17 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
         private readonly ITenantService _tenantService;
         private readonly ITenantFactory _tenantFactory;
 
-        private readonly ConcurrentDictionary<string, NodeClusterEventService> _nodesClientServices;
+        private readonly ConcurrentDictionary<string, Task<NodeClusterEventService>> _nodesClientServices;
 
         public ClusterService(ILoggerFactory loggerFactory,
             IClusterRepository clusterRepository,
             ClusterConfiguration clusterConfiguration,
             NodeConfiguration nodeConfiguration,
             IProducerHubRepository producerHubRepository,
+            IProducerFactory producerFactory,
+            ISubscriptionHubRepository subscriptionHubRepository,
+            IConsumerFactory consumerFactory,
+            ISubscriptionFactory subscriptionFactory,
             ITenantService tenantService,
             ITenantFactory tenantFactory)
         {
@@ -51,11 +57,14 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
 
 
             _producerHubRepository = producerHubRepository;
-
+            _producerFactory = producerFactory;
+            _subscriptionHubRepository = subscriptionHubRepository;
+            _consumerFactory = consumerFactory;
+            _subscriptionFactory = subscriptionFactory;
             _tenantService = tenantService;
             _tenantFactory = tenantFactory;
 
-            _nodesClientServices = new ConcurrentDictionary<string, NodeClusterEventService>();
+            _nodesClientServices = new ConcurrentDictionary<string, Task<NodeClusterEventService>>();
 
             // loading cluster configurations in-memory of this node.
             LoadClusterConfigurationInMemory(clusterConfiguration);
@@ -83,24 +92,28 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
                     _clusterRepository.AddReplicaInLastShard(replica);
 
                     // Create connection for each node, ignore local node.
-                    // TESTING
                     if (replica.NodeId != _nodeConfiguration.NodeId)
                     {
                         var key = replica.NodeId;
 
                         _logger.LogInformation($"Initiating cluster connection to node '{replica.NodeId}'");
-                        var nodeClusterEventService = new NodeClusterEventService(_loggerFactory.CreateLogger<NodeClusterEventService>(),
-                            replica,
-                            clusterConfiguration,
-                             _producerHubRepository,
-                             _producerFactory,
-                             _subscriptionHubRepository,
-                             _tenantService,
-                             _tenantFactory,
-                             _nodeConfiguration);
+                        var nodeClusterEventServiceTask = new Task<NodeClusterEventService>(() =>
+                        {
+                            return new NodeClusterEventService(_loggerFactory.CreateLogger<NodeClusterEventService>(),
+                                 replica,
+                                 clusterConfiguration,
+                                  _producerHubRepository,
+                                  _producerFactory,
+                                  _subscriptionHubRepository,
+                                  _tenantService,
+                                  _tenantFactory,
+                                  _nodeConfiguration,
+                                  _consumerFactory,
+                                  _subscriptionFactory);
+                        });
 
-                        _nodesClientServices.TryAdd(key, nodeClusterEventService);
-                        nodeClusterEventService.ConnectAsync();
+                        _nodesClientServices.TryAdd(key, nodeClusterEventServiceTask);
+                        nodeClusterEventServiceTask.Start();
                     }
                 }
             }

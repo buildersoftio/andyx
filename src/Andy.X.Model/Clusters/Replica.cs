@@ -38,4 +38,10 @@ namespace Buildersoft.Andy.X.Model.Clusters
             IsLocal = false;
         }
     }
+
+    public class ReplicaShardConnection
+    {
+        public string NodeId { get; set; }
+        public string NodeConnectionId { get; set; }
+    }
 }

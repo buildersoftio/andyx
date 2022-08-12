@@ -17,6 +17,7 @@ using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -182,7 +183,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             return false;
         }
 
-        public bool AddSubscriptionConfiguration(string tenant, string product, string component, string topicName, string subscriptionName, Subscription subscription)
+        public bool AddSubscriptionConfiguration(string tenant, string product, string component, string topicName, string subscriptionName, Subscription subscription, bool notifyOtherNodes = true)
         {
 
             List<TenantConfiguration> tenantsConfig = TenantIOReader.ReadTenantsFromConfigFile();
@@ -201,21 +202,26 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 if (topicDetails == null)
                     return false;
 
-                TenantIOService.TryCreateSubscriptionDirectory(tenant, product, component, topicName, subscriptionName);
+                if (TenantIOService.TryCreateSubscriptionDirectory(tenant, product, component, topicName, subscriptionName) == true)
+                {
+                    if (notifyOtherNodes == true)
+                        _clusterHubService.CreateSubscription_AllNodes(subscription);
+                }
 
                 var subId = ConnectorHelper.GetSubcriptionId(tenant, product, component, topicName, subscriptionName);
                 _subscriptionHubRepository.AddSubscription(subId, _tenants[tenant].Products[product].Components[component].Topics[topicName], subscription);
 
 
                 // check if the subscription exists in topicState
+                var nodeSubscriptionId = ConnectorHelper.GetNodeSubcriptionId(_nodeConfiguration.NodeId, subId);
                 using (var topicStateContext = new TopicEntryPositionContext(tenant, product, component, topicName))
                 {
-                    var currentSubscriptionData = topicStateContext.TopicStates.Find(subId);
+                    var currentSubscriptionData = topicStateContext.TopicStates.Find(nodeSubscriptionId);
                     if (currentSubscriptionData == null)
                     {
                         currentSubscriptionData = new Model.Entities.Storages.TopicEntryPosition()
                         {
-                            Id = subId,
+                            Id = nodeSubscriptionId,
                             CurrentEntry = 0,
                             MarkDeleteEntryPosition = 0,
                             CreateDate = System.DateTimeOffset.Now

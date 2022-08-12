@@ -25,6 +25,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
         private readonly IOrchestratorService _orchestratorService;
 
         private readonly StorageConfiguration _storageConfiguration;
+        private readonly NodeConfiguration _nodeConfiguration;
 
         private readonly ConcurrentDictionary<string, SubscriptionTopicData> _subscriptionTopicData;
 
@@ -33,7 +34,8 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             ISubscriptionHubRepository subscriptionHubRepository,
             ISubscriptionHubService subscriptionHubService,
             IOrchestratorService orchestratorService,
-            StorageConfiguration storageConfiguration)
+            StorageConfiguration storageConfiguration,
+            NodeConfiguration nodeConfiguration)
         {
             _logger = logger;
 
@@ -41,6 +43,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             _subscriptionHubService = subscriptionHubService;
             _orchestratorService = orchestratorService;
             _storageConfiguration = storageConfiguration;
+            _nodeConfiguration = nodeConfiguration;
 
             _subscriptionTopicData = new ConcurrentDictionary<string, SubscriptionTopicData>();
         }
@@ -48,6 +51,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
         public Task AddSubscriptionTopicData(SubscriptionTopicData subscriptionTopicData)
         {
             var subscriptionId = ConnectorHelper.GetSubcriptionId(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName);
+            var nodeSubscriptionId = ConnectorHelper.GetNodeSubcriptionId(_nodeConfiguration.NodeId, subscriptionId);
             if (_subscriptionTopicData.ContainsKey(subscriptionId) != true)
             {
                 using (var subDbContext = new SubscriptionPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
@@ -58,7 +62,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
 
                 using (var topicStateContext = new TopicEntryPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
                 {
-                    subscriptionTopicData.TopicState = topicStateContext.TopicStates.Find(subscriptionId);
+                    subscriptionTopicData.TopicState = topicStateContext.TopicStates.Find(nodeSubscriptionId);
                     subscriptionTopicData.LastUnackedMessageEntryPositionSent = subscriptionTopicData.TopicState.MarkDeleteEntryPosition;
                 }
 
@@ -78,6 +82,8 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
         public Task LoadSubscriptionTopicDataInMemory(SubscriptionTopicData subscriptionTopicData)
         {
             var subscriptionId = ConnectorHelper.GetSubcriptionId(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName);
+            var nodeSubscriptionId = ConnectorHelper.GetNodeSubcriptionId(_nodeConfiguration.NodeId, subscriptionId);
+
             if (_subscriptionTopicData.ContainsKey(subscriptionId) != true)
             {
                 using (var subDbContext = new SubscriptionPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
@@ -88,7 +94,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
 
                 using (var topicStateContext = new TopicEntryPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
                 {
-                    subscriptionTopicData.TopicState = topicStateContext.TopicStates.Find(subscriptionId);
+                    subscriptionTopicData.TopicState = topicStateContext.TopicStates.Find(nodeSubscriptionId);
                     subscriptionTopicData.LastUnackedMessageEntryPositionSent = subscriptionTopicData.TopicState.MarkDeleteEntryPosition;
                 }
 
@@ -204,6 +210,8 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
         {
             var subscriptionTopic = _subscriptionTopicData[subscriptionId];
             var subscriptionTopicData = _subscriptionTopicData[subscriptionId];
+            var nodeSubscriptionId = ConnectorHelper.GetNodeSubcriptionId(_nodeConfiguration.NodeId, subscriptionId);
+
 
             using (var subDbContext = new SubscriptionPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic, subscriptionTopicData.Subscription.SubscriptionName))
             {
@@ -221,7 +229,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
 
             using (var topicStateContext = new TopicEntryPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
             {
-                var state = topicStateContext.TopicStates.Find(subscriptionId);
+                var state = topicStateContext.TopicStates.Find(nodeSubscriptionId);
                 if (state.CurrentEntry != subscriptionTopicData.TopicState.CurrentEntry ||
                    state.MarkDeleteEntryPosition != subscriptionTopicData.TopicState.MarkDeleteEntryPosition)
                 {
