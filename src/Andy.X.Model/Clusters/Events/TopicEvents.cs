@@ -11,9 +11,7 @@ namespace Buildersoft.Andy.X.Model.Clusters.Events
 
         public Guid Id { get; set; }
         public string Name { get; set; }
-
-        public TopicSettings TopicSettings { get; set; }
-
+        public string Description { get; set; }
         public TopicStates TopicStates { get; set; }
 
     }
@@ -25,8 +23,7 @@ namespace Buildersoft.Andy.X.Model.Clusters.Events
         public string Component { get; set; }
 
         public string Name { get; set; }
-
-        public TopicSettings TopicSettings { get; set; }
+        public string Description { get; set; }
     }
 
     public class TopicDeletedArgs

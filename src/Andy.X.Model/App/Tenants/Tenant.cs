@@ -9,12 +9,12 @@ namespace Buildersoft.Andy.X.Model.App.Tenants
         public Guid Id { get; set; }
         public string Name { get; set; }
         public ConcurrentDictionary<string, Product> Products { get; set; }
-        public TenantSettings Settings{ get; set; }
+        public Entities.Core.Tenants.TenantSettings Settings{ get; set; }
 
         public Tenant()
         {
             Products = new ConcurrentDictionary<string, Product>();
-            Settings = new TenantSettings();
+            Settings = new Entities.Core.Tenants.TenantSettings();
         }
     }
 }

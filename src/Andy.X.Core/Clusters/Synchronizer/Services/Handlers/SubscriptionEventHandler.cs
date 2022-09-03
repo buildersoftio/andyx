@@ -8,10 +8,10 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
     public class SubscriptionEventHandler
     {
         private readonly NodeClusterEventService _nodeClusterEventService;
-        private readonly ITenantService _tenantService;
+        private readonly ITenantStateService _tenantService;
         private readonly ISubscriptionFactory _subscriptionFactory;
 
-        public SubscriptionEventHandler(NodeClusterEventService nodeClusterEventService, ITenantService tenantService, ISubscriptionFactory subscriptionFactory)
+        public SubscriptionEventHandler(NodeClusterEventService nodeClusterEventService, ITenantStateService tenantService, ISubscriptionFactory subscriptionFactory)
         {
             _nodeClusterEventService = nodeClusterEventService;
             _tenantService = tenantService;

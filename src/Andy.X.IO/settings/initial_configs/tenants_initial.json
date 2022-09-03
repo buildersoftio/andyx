@@ -2,22 +2,25 @@
   {
     "Name": "default",
     "Settings": {
-      "AllowProductCreation": true,
-      "DigitalSignature": "KWDjwhAndyjp360qwetM2DFS43BuilderSoft"
+      "IsProductAutomaticCreation": true,
+      "IsEncryptionEnabled": false,
+      "IsAuthorizationEnabled": false
     }
   },
   {
     "Name": "public",
     "Settings": {
-      "AllowProductCreation": true,
-      "DigitalSignature": "KWDjwhAndyjp360qwetM2DFS43BuilderSoft"
+      "IsProductAutomaticCreation": true,
+      "IsEncryptionEnabled": false,
+      "IsAuthorizationEnabled": false
     }
   },
   {
     "Name": "system",
     "Settings": {
-      "AllowProductCreation": true,
-      "DigitalSignature": "KWDjwhAndyjp360qwetM2DFS43BuilderSoft"
+      "IsProductAutomaticCreation": true,
+      "IsEncryptionEnabled": false,
+      "IsAuthorizationEnabled": false
     },
     "Products": [
       {
@@ -26,22 +29,25 @@
           {
             "Name": "storage",
             "Settings": {
-              "AllowTopicCreation": false,
-              "AllowSchemaValidation": false
+              "IsTopicAutomaticCreation": false,
+              "IsSchemaValidationEnabled": false,
+              "IsAuthorizationEnabled": false
             }
           },
           {
             "Name": "producer",
             "Settings": {
-              "AllowTopicCreation": false,
-              "AllowSchemaValidation": false
+              "IsTopicAutomaticCreation": false,
+              "IsSchemaValidationEnabled": false,
+              "IsAuthorizationEnabled": false
             }
           },
           {
             "Name": "consumer",
             "Settings": {
-              "AllowTopicCreation": false,
-              "AllowSchemaValidation": false
+              "IsTopicAutomaticCreation": false,
+              "IsSchemaValidationEnabled": false,
+              "IsAuthorizationEnabled": false
             }
           }
         ]
@@ -52,8 +58,9 @@
           {
             "Name": "storage",
             "Settings": {
-              "AllowTopicCreation": false,
-              "AllowSchemaValidation": false
+              "IsTopicAutomaticCreation": false,
+              "IsSchemaValidationEnabled": false,
+              "IsAuthorizationEnabled": false
             },
             "Topics": [
               {
@@ -64,8 +71,9 @@
           {
             "Name": "producer",
             "Settings": {
-              "AllowTopicCreation": false,
-              "AllowSchemaValidation": false
+              "IsTopicAutomaticCreation": false,
+              "IsSchemaValidationEnabled": false,
+              "IsAuthorizationEnabled": false
             },
             "Topics": [
               {
@@ -76,8 +84,9 @@
           {
             "Name": "consumer",
             "Settings": {
-              "AllowTopicCreation": false,
-              "AllowSchemaValidation": false
+              "IsTopicAutomaticCreation": false,
+              "IsSchemaValidationEnabled": false,
+              "IsAuthorizationEnabled": false
             },
             "Topics": [
               {

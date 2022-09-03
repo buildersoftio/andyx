@@ -21,7 +21,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         private readonly ILogger<ProducerHub> _logger;
 
         private readonly IProducerHubRepository _producerHubRepository;
-        private readonly ITenantService _tenantRepository;
+        private readonly ITenantStateService _tenantStateService;
         private readonly ITenantFactory _tenantFactory;
         private readonly IProducerFactory _producerFactory;
         private readonly IInboundMessageService _inboundMessageService;
@@ -30,7 +30,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
         public ProducerHub(ILogger<ProducerHub> logger,
             IProducerHubRepository producerHubRepository,
-            ITenantService tenantRepository,
+            ITenantStateService tenantStateService,
             ITenantFactory tenantFactory,
             IProducerFactory producerFactory,
             IInboundMessageService inboundMessageService,
@@ -38,7 +38,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         {
             _logger = logger;
             _producerHubRepository = producerHubRepository;
-            _tenantRepository = tenantRepository;
+            _tenantStateService = tenantStateService;
             _tenantFactory = tenantFactory;
             _producerFactory = producerFactory;
 
@@ -61,15 +61,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             string product = headers["x-andyx-product"].ToString();
             string component = headers["x-andyx-component"].ToString();
             string topic = headers["x-andyx-topic"].ToString();
-            bool isPersistent = Boolean.Parse(headers["x-andyx-topic-is-persistent"]);
-
+            string topicDescription = headers["x-andyx-topic-description"].ToString();
 
             string producerName = headers["x-andyx-producer-name"].ToString();
 
             _logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} requested connection");
 
             //check if the producer is already connected
-            var connectedTenant = _tenantRepository.GetTenant(tenant);
+            var connectedTenant = _tenantStateService.GetTenant(tenant);
             if (connectedTenant == null)
             {
                 _logger.LogInformation($"Producer '{producerName}' failed to connect, tenant '{tenant}' does not exists");
@@ -77,36 +76,36 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             }
 
             // check tenant token validation
-            bool isTenantTokenValidated = _tenantRepository.ValidateTenantToken(tenant, tenantToken);
+            bool isTenantTokenValidated = _tenantStateService.ValidateTenantToken(tenant, tenantToken);
             if (isTenantTokenValidated != true)
             {
                 _logger.LogInformation($"Producer '{producerName}' failed to connect, access is forbidden. Not authorized");
                 return OnDisconnectedAsync(new Exception($"Producer '{producerName}' failed to connect, access is forbidden"));
             }
 
-            var connectedProduct = _tenantRepository.GetProduct(tenant, product);
+            var connectedProduct = _tenantStateService.GetProduct(tenant, product);
             if (connectedProduct == null)
             {
-                if (connectedTenant.Settings.AllowProductCreation != true)
+                if (connectedTenant.Settings.IsProductAutomaticCreation != true)
                 {
                     _logger.LogInformation($"Producer '{producerName}' failed to connect, tenant '{tenant}' does not allow to create new product");
                     return OnDisconnectedAsync(new Exception($"There is no product registered with this name '{product}'. Tenant '{tenant}' does not allow to create new product"));
                 }
 
                 var productDetails = _tenantFactory.CreateProduct(product);
-                _tenantRepository.AddProduct(tenant, product, productDetails);
+                _tenantStateService.AddProduct(tenant, product, productDetails);
             }
 
-            var connectedComponent = _tenantRepository.GetComponent(tenant, product, component);
+            var connectedComponent = _tenantStateService.GetComponent(tenant, product, component);
             if (connectedComponent == null)
             {
                 var componentDetails = _tenantFactory.CreateComponent(component);
-                _tenantRepository.AddComponent(tenant, product, component, componentDetails);
+                _tenantStateService.AddComponent(tenant, product, component, componentDetails);
             }
             else
             {
                 // check component token validation
-                bool isComponentTokenValidated = _tenantRepository.ValidateComponentToken(tenant, product, component, componentToken, producerName, false);
+                bool isComponentTokenValidated = _tenantStateService.ValidateComponentToken(tenant, product, component, componentToken, producerName, false);
                 if (isComponentTokenValidated != true)
                 {
                     _logger.LogInformation($"Producer '{producerName}' failed to connect, access is forbidden. Not authorized, check component token");
@@ -114,19 +113,19 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
                 }
             }
 
-            var connectedTopic = _tenantRepository.GetTopic(tenant, product, component, topic);
+            var connectedTopic = _tenantStateService.GetTopic(tenant, product, component, topic);
             if (connectedTopic == null)
             {
                 // Check if the component allows to create a new topic.
-                connectedComponent = _tenantRepository.GetComponent(tenant, product, component);
-                if (connectedComponent.Settings.AllowTopicCreation != true)
+                connectedComponent = _tenantStateService.GetComponent(tenant, product, component);
+                if (connectedComponent.Settings.IsTopicAutomaticCreation != true)
                 {
                     _logger.LogInformation($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component.");
                     return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component."));
                 }
 
-                var topicDetails = _tenantFactory.CreateTopic(topic, isPersistent);
-                _tenantRepository.AddTopic(tenant, product, component, topic, topicDetails);
+                var topicDetails = _tenantFactory.CreateTopic(topic, topicDescription);
+                _tenantStateService.AddTopic(tenant, product, component, topic, topicDetails);
             }
 
             if (_producerHubRepository.GetProducerByProducerName(tenant, product, component, topic, producerName).Equals(default(KeyValuePair<string, Producer>)) != true)

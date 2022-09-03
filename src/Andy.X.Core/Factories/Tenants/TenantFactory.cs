@@ -10,121 +10,80 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
 {
     public class TenantFactory : ITenantFactory
     {
-        public Tenant CreateTenant()
-        {
-            return new Tenant();
-        }
 
-        public Tenant CreateTenant(string name, string digitalSignature)
+        public Tenant CreateTenant(string name, Model.Entities.Core.Tenants.TenantSettings tenantSettings)
         {
             return new Tenant()
             {
-                Id = Guid.NewGuid(),
-                Name = name,
-                Settings = new TenantSettings()
-                {
-                    DigitalSignature = digitalSignature,
-                }
-            };
-        }
-        public Tenant CreateTenant(Guid id, string name, TenantSettings tenantSettings)
-        {
-            return new Tenant()
-            {
-                Id = id,
                 Name = name,
                 Settings = tenantSettings
             };
         }
 
-        public Tenant CreateTenant(string name, string digitalSignature, bool enableEncryption, bool isProductAutoCreate, bool enableAuthorization, List<TenantToken> tenantTokens, TenantLogging tenantLogging, bool enableGeoReplication, string certificatePath)
+        public Tenant CreateTenant(string name, bool enableEncryption, bool isProductAutoCreate, bool enableAuthorization)
         {
             return new Tenant()
             {
                 Id = Guid.NewGuid(),
                 Name = name,
-                Settings = new TenantSettings()
+                Settings = new Model.Entities.Core.Tenants.TenantSettings()
                 {
-                    DigitalSignature = digitalSignature,
-                    EnableEncryption = enableEncryption,
-                    AllowProductCreation = isProductAutoCreate,
-                    EnableAuthorization = enableAuthorization,
-                    Logging = tenantLogging,
-                    Tokens = tenantTokens,
-                    EnableGeoReplication = enableGeoReplication,
-                    CertificatePath = certificatePath
+                    IsEncryptionEnabled = enableEncryption,
+                    IsProductAutomaticCreation = isProductAutoCreate,
+                    IsAuthorizationEnabled = enableAuthorization
                 }
             };
         }
 
         public Product CreateProduct(string productName)
         {
-            return new Product() { Id = Guid.NewGuid(), Name = productName };
+            return new Product()
+            {
+                Name = productName,
+                Description = ""
+            };
         }
 
-        public Product CreateProduct(string name, string description, string productOwner, List<string> productTeam, string productContact)
+        public Product CreateProduct(string name, string description)
         {
             return new Product()
             {
-                Id = Guid.NewGuid(),
                 Name = name,
-                Description = description,
-                ProductOwner = productOwner,
-                ProductTeam = productTeam,
-                ProductContact = productContact,
+                Description = description
             };
         }
 
 
         public Component CreateComponent(string componentName)
         {
-            return new Component() { Id = Guid.NewGuid(), Name = componentName };
-        }
-        public Component CreateComponent(Guid id, string componentName, ComponentSettings componentSettings)
-        {
             return new Component()
             {
-                Id = id,
                 Name = componentName,
-                Settings = componentSettings
-            };
-        }
-
-        public Component CreateComponent(string componentName, bool allowSchemaValidation, bool allowTopicCreation, bool enableAuthorization, List<ComponentToken> tokens)
-        {
-            return new Component()
-            {
-                Id = Guid.NewGuid(),
-                Name = componentName,
-                Settings = new ComponentSettings()
+                Settings = new Model.Entities.Core.Components.ComponentSettings
                 {
-                    AllowSchemaValidation = allowSchemaValidation,
-                    AllowTopicCreation = allowTopicCreation,
-                    EnableAuthorization = enableAuthorization,
-                    Tokens = tokens
+                    IsAuthorizationEnabled = false,
+                    IsSchemaValidationEnabled = false,
+                    IsTopicAutomaticCreation = true
                 }
             };
         }
 
-
-
-        public Topic CreateTopic(string topicName)
+        public Component CreateComponent(string componentName, string description, Model.Entities.Core.Components.ComponentSettings componentSettings)
         {
-            return new Topic() { Id = Guid.NewGuid(), Name = topicName };
+            return new Component()
+            {
+                Name = componentName,
+                Description = description,
+                Settings = componentSettings
+            };
         }
 
-        public Topic CreateTopic(string topicName, bool isPersistent)
-        {
-            return new Topic() { Id = Guid.NewGuid(), Name = topicName, TopicSettings = new TopicSettings() { IsPersistent = isPersistent } };
-        }
-
-        public Topic CreateTopic(Guid id, string topicName, TopicSettings topicSettings)
+        public Topic CreateTopic(string topicName, string description)
         {
             return new Topic()
             {
-                Id = id,
                 Name = topicName,
-                TopicSettings = topicSettings
+                Description = description
             };
         }
     }

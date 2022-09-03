@@ -7,10 +7,10 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
     public class TopicEventHandler
     {
         private readonly NodeClusterEventService _nodeClusterEventService;
-        private readonly ITenantService _tenantService;
+        private readonly ITenantStateService _tenantService;
         private readonly ITenantFactory _tenantFactory;
 
-        public TopicEventHandler(NodeClusterEventService nodeClusterEventService, ITenantService tenantService, ITenantFactory tenantFactory)
+        public TopicEventHandler(NodeClusterEventService nodeClusterEventService, ITenantStateService tenantService, ITenantFactory tenantFactory)
         {
             _nodeClusterEventService = nodeClusterEventService;
 
@@ -39,7 +39,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 
         private void NodeClusterEventService_TopicCreated(Model.Clusters.Events.TopicCreatedArgs obj)
         {
-            var topicToAdd = _tenantFactory.CreateTopic(obj.Id, obj.Name, obj.TopicSettings);
+            var topicToAdd = _tenantFactory.CreateTopic(obj.Name, obj.Description);
             _tenantService.AddTopic(obj.Tenant, obj.Product, obj.Component, obj.Name, topicToAdd, notifyOtherNodes: false);
         }
     }

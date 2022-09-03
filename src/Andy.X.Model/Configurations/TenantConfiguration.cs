@@ -10,12 +10,12 @@ namespace Buildersoft.Andy.X.Model.Configurations
     {
         public string Name { get; set; }
         public List<ProductConfiguration> Products { get; set; }
-        public TenantSettings Settings { get; set; }
+        public Entities.Core.Tenants.TenantSettings Settings { get; set; }
 
         public TenantConfiguration()
         {
             Products = new List<ProductConfiguration>();
-            Settings = new TenantSettings();
+            Settings = new Entities.Core.Tenants.TenantSettings();
         }
     }
 
@@ -34,12 +34,12 @@ namespace Buildersoft.Andy.X.Model.Configurations
     {
         public string Name { get; set; }
         public List<TopicConfiguration> Topics { get; set; }
-        public ComponentSettings Settings { get; set; }
+        public Entities.Core.Components.ComponentSettings Settings { get; set; }
 
         public ComponentConfiguration()
         {
             Topics = new List<TopicConfiguration>();
-            Settings = new ComponentSettings();
+            Settings = new Entities.Core.Components.ComponentSettings();
         }
     }
 

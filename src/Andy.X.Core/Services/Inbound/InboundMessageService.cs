@@ -26,11 +26,11 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
         private readonly StorageConfiguration _storageConfiguration;
         private readonly NodeConfiguration _nodeConfiguration;
 
-        private readonly ITenantService _tenantRepository;
+        private readonly ITenantStateService _tenantRepository;
 
         public InboundMessageService(ILogger<InboundMessageService> logger,
             ThreadsConfiguration threadsConfiguration,
-            ITenantService tenantRepository,
+            ITenantStateService tenantRepository,
             IOrchestratorService orchestratorService,
             IOutboundMessageService outboundMessageService,
             StorageConfiguration storageConfiguration,

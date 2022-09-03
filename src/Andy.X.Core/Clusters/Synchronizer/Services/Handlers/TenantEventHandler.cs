@@ -8,10 +8,10 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
     public class TenantEventHandler
     {
         private readonly NodeClusterEventService _nodeClusterEventService;
-        private readonly ITenantService _tenantService;
+        private readonly ITenantStateService _tenantService;
         private readonly ITenantFactory _tenantFactory;
 
-        public TenantEventHandler(NodeClusterEventService nodeClusterEventService, ITenantService tenantService, ITenantFactory tenantFactory)
+        public TenantEventHandler(NodeClusterEventService nodeClusterEventService, ITenantStateService tenantService, ITenantFactory tenantFactory)
         {
             _nodeClusterEventService = nodeClusterEventService;
             _tenantService = tenantService;
@@ -35,7 +35,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
         {
             try
             {
-                var tenantToCreate = _tenantFactory.CreateTenant(obj.Id, obj.Name, obj.Settings);
+                var tenantToCreate = _tenantFactory.CreateTenant(obj.Name, obj.Settings);
                 _tenantService.AddTenant(obj.Name, tenantToCreate, notifyOtherNodes: false);
             }
             catch (Exception)

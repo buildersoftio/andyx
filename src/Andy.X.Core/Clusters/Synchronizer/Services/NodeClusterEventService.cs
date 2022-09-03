@@ -29,7 +29,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
         private readonly IConsumerFactory _consumerFactory;
         private readonly ISubscriptionFactory _subscriptionFactory;
-        private readonly ITenantService _tenantService;
+        private readonly ITenantStateService _tenantService;
         private readonly ITenantFactory _tenantFactory;
         private readonly NodeConfiguration _nodeConfiguration;
         private HubConnection _connection;
@@ -88,7 +88,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
             IProducerHubRepository producerHubRepository,
             IProducerFactory producerFactory,
             ISubscriptionHubRepository subscriptionHubRepository,
-            ITenantService tenantService,
+            ITenantStateService tenantService,
             ITenantFactory tenantFactory,
             NodeConfiguration nodeConfiguration,
             IConsumerFactory consumerFactory,

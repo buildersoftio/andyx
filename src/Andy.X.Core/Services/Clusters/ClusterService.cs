@@ -31,7 +31,7 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
         private readonly IConsumerFactory _consumerFactory;
         private readonly ISubscriptionFactory _subscriptionFactory;
-        private readonly ITenantService _tenantService;
+        private readonly ITenantStateService _tenantService;
         private readonly ITenantFactory _tenantFactory;
 
         private readonly ConcurrentDictionary<string, Task<NodeClusterEventService>> _nodesClientServices;
@@ -45,7 +45,7 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
             ISubscriptionHubRepository subscriptionHubRepository,
             IConsumerFactory consumerFactory,
             ISubscriptionFactory subscriptionFactory,
-            ITenantService tenantService,
+            ITenantStateService tenantService,
             ITenantFactory tenantFactory)
         {
             _loggerFactory = loggerFactory;

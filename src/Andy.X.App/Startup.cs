@@ -97,6 +97,10 @@ namespace Andy.X.App
             services.AddAuthentication("Andy.X_Authorization")
                 .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Andy.X_Authorization", null);
 
+            // Persistency Core State
+            services.AddCoreRepository();
+            services.AddCoreService();
+
             services.AddSerilogLoggingConfiguration(Configuration);
             services.AddSingleton<ApplicationService>();
 
@@ -121,8 +125,6 @@ namespace Andy.X.App
 
             services.AddSubscriptionHubService();
             services.AddProducerHubService();
-
-            services.AddRestServices();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
