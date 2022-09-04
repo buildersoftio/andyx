@@ -14,6 +14,10 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Tenants
         public string Secret { get; set; }
 
         public bool IsActive { get; set; }
+
+        [Column(TypeName = "json")]
+        public string Roles { get; set; }
+
         public DateTimeOffset ExpireDate { get; set; }
 
         public string Description { get; set; }
@@ -27,4 +31,11 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Tenants
         [Required]
         public string CreatedBy { get; set; }
     }
+
+    public enum TenantTokenRole
+    {
+        Produce,
+        Consume
+    }
+
 }

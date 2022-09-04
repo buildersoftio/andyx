@@ -75,7 +75,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
                 TenantIOService.TryCreateConsumerDirectory(obj.Tenant, obj.Product, obj.Component,
                     obj.Topic, obj.Subscription, obj.Consumer);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
             }

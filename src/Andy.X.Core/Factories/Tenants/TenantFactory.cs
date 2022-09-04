@@ -24,7 +24,6 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
         {
             return new Tenant()
             {
-                Id = Guid.NewGuid(),
                 Name = name,
                 Settings = new Model.Entities.Core.Tenants.TenantSettings()
                 {

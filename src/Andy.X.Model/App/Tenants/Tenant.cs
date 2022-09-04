@@ -6,7 +6,6 @@ namespace Buildersoft.Andy.X.Model.App.Tenants
 {
     public class Tenant
     {
-        public Guid Id { get; set; }
         public string Name { get; set; }
         public ConcurrentDictionary<string, Product> Products { get; set; }
         public Entities.Core.Tenants.TenantSettings Settings{ get; set; }

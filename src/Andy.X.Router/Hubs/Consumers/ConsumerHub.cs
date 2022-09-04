@@ -2,20 +2,19 @@
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
-using Buildersoft.Andy.X.Core.Services.Clusters;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Model.Subscriptions;
-using Buildersoft.Andy.X.Router.Services.Clusters;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -32,6 +31,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         private readonly ITenantStateService _tenantInMemoryService;
 
         private readonly ITenantFactory _tenantFactory;
+        private readonly ICoreRepository _coreRepository;
         private readonly IConsumerFactory _consumerFactory;
         private readonly ISubscriptionFactory _subscriptionFactory;
 
@@ -45,6 +45,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             ISubscriptionHubRepository subscriptionHubRepository,
             ITenantStateService tenantService,
             ITenantFactory tenantFactory,
+            ICoreRepository coreRepository,
             IConsumerFactory consumerFactory,
             ISubscriptionFactory subscriptionFactory,
             IOutboundMessageService outboundMessageService,
@@ -60,6 +61,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             _tenantInMemoryService = tenantService;
 
             _tenantFactory = tenantFactory;
+            _coreRepository = coreRepository;
             _consumerFactory = consumerFactory;
             _subscriptionFactory = subscriptionFactory;
 
@@ -77,8 +79,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             var headers = Context.GetHttpContext().Request.Headers;
 
             // authorization tokens
-            // TODO: Implement token validation
             string tenantToken = headers["x-andyx-tenant-authoriziation"];
+            string productToken = headers["x-andyx-product-authoriziation"];
             string componentToken = headers["x-andyx-component-authoriziation"];
 
             string tenant = headers["x-andyx-tenant"].ToString();
@@ -104,7 +106,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             }
 
             // check tenant token validation
-            bool isTenantTokenValidated = _tenantInMemoryService.ValidateTenantToken(tenant, tenantToken);
+            bool isTenantTokenValidated = _tenantInMemoryService.ValidateTenantToken(_coreRepository, tenant, tenantToken, true);
             if (isTenantTokenValidated != true)
             {
                 _logger.LogInformation($"Consumer '{consumerName}' failed to connect, access is forbidden. Not authorized");
@@ -124,6 +126,15 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 _tenantInMemoryService.AddProduct(tenant, product, productDetails);
             }
 
+            // check product token validation
+            var tenantFromState = _coreRepository.GetTenant(tenant);
+            bool isProductTokenValidated = _tenantInMemoryService.ValidateProductToken(_coreRepository, tenantFromState.Id, product, productToken, true);
+            if (isProductTokenValidated != true)
+            {
+                _logger.LogInformation($"Consumer '{consumerName}' failed to connect, access is forbidden. Not authorized, check product token");
+                return OnDisconnectedAsync(new Exception($"Consumer '{consumerName}' failed to connect, access is forbidden, check product token"));
+            }
+
             var connectedComponent = _tenantInMemoryService.GetComponent(tenant, product, component);
             if (connectedComponent == null)
             {
@@ -133,7 +144,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             else
             {
                 // check component token validation
-                bool isComponentTokenValidated = _tenantInMemoryService.ValidateComponentToken(tenant, product, component, componentToken, consumerName, true);
+                var productFromState = _coreRepository.GetProduct(tenantFromState.Id, product);
+                bool isComponentTokenValidated = _tenantInMemoryService.ValidateComponentToken(_coreRepository, productFromState.Id, component, componentToken, subscriptionName, true);
                 if (isComponentTokenValidated != true)
                 {
                     _logger.LogInformation($"Consumer '{consumerName}' failed to connect, access is forbidden. Not authorized, check component token");

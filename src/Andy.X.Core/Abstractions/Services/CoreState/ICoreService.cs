@@ -1,6 +1,10 @@
 ﻿using Buildersoft.Andy.X.Model.Entities.Core;
+using Buildersoft.Andy.X.Model.Entities.Core.Components;
+using Buildersoft.Andy.X.Model.Entities.Core.Products;
+using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using System;
+using System.Collections.Generic;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Services.CoreState
 {
@@ -13,7 +17,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.CoreState
         bool CreateTenant(string tenantName, bool isProductCreation, bool isEncryptionEnabled, bool isAuthorizationEnabled);
         bool UpdateTenantSettings(string tenantName, bool isProductCreation, bool isEncryptionEnabled, bool isAuthorizationEnabled);
 
-        bool CreateTenantToken(string tenant, string description, DateTimeOffset expireDate, out Guid id, out string secret);
+        bool CreateTenantToken(string tenant, string description, DateTimeOffset expireDate, List<TenantTokenRole> tenantTokenRoles,out Guid id, out string secret);
         bool RevokeTenantToken(string tenant, Guid id);
         bool DeleteTenantToken(string tenant, Guid id);
 
@@ -27,7 +31,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.CoreState
         bool UpdateProduct(string tenant, string product, string description);
         bool UpdateProductSettings(string tenant, string product, bool isAuthorizationEnabled);
 
-        bool CreateProductToken(string tenant, string product, string description, DateTimeOffset expireDate, out Guid id, out string secret);
+        bool CreateProductToken(string tenant, string product, string description, DateTimeOffset expireDate, List<ProductTokenRole> productTokenRoles, out Guid id, out string secret);
         bool RevokeProductToken(string tenant, string product, Guid id);
         bool DeleteProductToken(string tenant, string product, Guid id);
 
@@ -41,7 +45,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.CoreState
         bool UpdateComponent(string tenant, string product, string component, string description);
         bool UpdateComponentSettings(string tenant, string product, string componentName, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled);
 
-        bool CreateComponentToken(string tenant, string product, string component, string description, DateTimeOffset expireDate, out Guid id, out string secret);
+        bool CreateComponentToken(string tenant, string product, string component, string description, string issuedFor,DateTimeOffset expireDate, List<ComponentTokenRole> componentTokenRoles, out Guid id, out string secret);
         bool RevokeComponentToken(string tenant, string product, string component, Guid id);
         bool DeleteComponentToken(string tenant, string product, string component, Guid id);
 

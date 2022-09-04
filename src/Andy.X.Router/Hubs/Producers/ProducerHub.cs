@@ -1,6 +1,7 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Producers;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
@@ -22,6 +23,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
         private readonly IProducerHubRepository _producerHubRepository;
         private readonly ITenantStateService _tenantStateService;
+        private readonly ICoreRepository _coreRepository;
         private readonly ITenantFactory _tenantFactory;
         private readonly IProducerFactory _producerFactory;
         private readonly IInboundMessageService _inboundMessageService;
@@ -31,6 +33,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         public ProducerHub(ILogger<ProducerHub> logger,
             IProducerHubRepository producerHubRepository,
             ITenantStateService tenantStateService,
+            ICoreRepository coreRepository,
             ITenantFactory tenantFactory,
             IProducerFactory producerFactory,
             IInboundMessageService inboundMessageService,
@@ -39,6 +42,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             _logger = logger;
             _producerHubRepository = producerHubRepository;
             _tenantStateService = tenantStateService;
+            _coreRepository = coreRepository;
             _tenantFactory = tenantFactory;
             _producerFactory = producerFactory;
 
@@ -55,6 +59,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
             // authorization tokens
             string tenantToken = headers["x-andyx-tenant-authoriziation"];
+            string productToken = headers["x-andyx-product-authoriziation"];
             string componentToken = headers["x-andyx-component-authoriziation"];
 
             string tenant = headers["x-andyx-tenant"].ToString();
@@ -76,7 +81,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             }
 
             // check tenant token validation
-            bool isTenantTokenValidated = _tenantStateService.ValidateTenantToken(tenant, tenantToken);
+            bool isTenantTokenValidated = _tenantStateService.ValidateTenantToken(_coreRepository, tenant, tenantToken, false);
             if (isTenantTokenValidated != true)
             {
                 _logger.LogInformation($"Producer '{producerName}' failed to connect, access is forbidden. Not authorized");
@@ -96,6 +101,15 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
                 _tenantStateService.AddProduct(tenant, product, productDetails);
             }
 
+            // check product token validation
+            var tenantFromState = _coreRepository.GetTenant(tenant);
+            bool isProductTokenValidated = _tenantStateService.ValidateProductToken(_coreRepository, tenantFromState.Id, product, productToken, false);
+            if (isProductTokenValidated != true)
+            {
+                _logger.LogInformation($"Producer '{producerName}' failed to connect, access is forbidden. Not authorized, check product token");
+                return OnDisconnectedAsync(new Exception($"Producer '{producerName}' failed to connect, access is forbidden, check product token"));
+            }
+
             var connectedComponent = _tenantStateService.GetComponent(tenant, product, component);
             if (connectedComponent == null)
             {
@@ -105,7 +119,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             else
             {
                 // check component token validation
-                bool isComponentTokenValidated = _tenantStateService.ValidateComponentToken(tenant, product, component, componentToken, producerName, false);
+                var productFromState = _coreRepository.GetProduct(tenantFromState.Id, product);
+                bool isComponentTokenValidated = _tenantStateService.ValidateComponentToken(_coreRepository, productFromState.Id, component, componentToken, producerName, false);
                 if (isComponentTokenValidated != true)
                 {
                     _logger.LogInformation($"Producer '{producerName}' failed to connect, access is forbidden. Not authorized, check component token");
@@ -164,9 +179,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             {
                 _clusterHubService.DisconnectProducer_AllNodes(producerToRemove.Tenant, producerToRemove.Product, producerToRemove.Component, producerToRemove.Topic, producerConnectionId);
 
-                //storageHubService.DisconnectProducerAsync(producerToRemove);
                 _producerHubRepository.RemoveProducer(producerConnectionId);
-
                 _logger.LogInformation($"Producer '{producerToRemove.ProducerName}' at {producerToRemove.Tenant}/{producerToRemove.Product}/{producerToRemove.Component}/{producerToRemove.Topic} is disconnected");
 
                 Clients.Caller.ProducerDisconnected(new Model.Producers.Events.ProducerDisconnectedDetails()

@@ -13,9 +13,13 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Components
         public Guid Id { get; set; }
         public string Secret { get; set; }
 
+        [Column(TypeName = "json")]
+        public string Roles { get; set; }
+
         public bool IsActive { get; set; }
         public DateTimeOffset ExpireDate { get; set; }
 
+        public string IssuedFor { get; set; }
         public string Desciption { get; set; }
         public DateTimeOffset IssuedDate { get; set; }
 
@@ -26,5 +30,11 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Components
 
         [Required]
         public string CreatedBy { get; set; }
+    }
+
+    public enum ComponentTokenRole
+    {
+        Produce,
+        Consume
     }
 }

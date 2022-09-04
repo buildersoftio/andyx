@@ -9,6 +9,7 @@ using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using Buildersoft.Andy.X.Model.Entities.Core.Subscriptions;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
 using Buildersoft.Andy.X.Model.Entities.Core.Topics;
+using Buildersoft.Andy.X.Utility.Extensions.Json;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -67,7 +68,6 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             {
                 Name = tenantName,
                 IsActive = true,
-
                 CreatedBy = "system",
                 CreatedDate = DateTimeOffset.Now
             };
@@ -246,7 +246,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
         }
 
 
-        public bool CreateTenantToken(string tenant, string description, DateTimeOffset expireDate, out Guid id, out string secret)
+        public bool CreateTenantToken(string tenant, string description, DateTimeOffset expireDate, List<TenantTokenRole> tenantTokenRoles, out Guid id, out string secret)
         {
             id = Guid.Empty;
             secret = "";
@@ -266,6 +266,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                 ExpireDate = expireDate,
                 Secret = encryptedSecret,
                 IsActive = true,
+                Roles = tenantTokenRoles.ToJson(),
 
                 CreatedBy = "system",
                 CreatedDate = DateTimeOffset.Now
@@ -424,7 +425,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             return true;
         }
 
-        public bool CreateProductToken(string tenant, string product, string description, DateTimeOffset expireDate, out Guid id, out string secret)
+        public bool CreateProductToken(string tenant, string product, string description, DateTimeOffset expireDate, List<ProductTokenRole> productTokenRoles, out Guid id, out string secret)
         {
             id = Guid.Empty;
             secret = "";
@@ -449,6 +450,8 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                 IssuedDate = DateTimeOffset.Now,
                 Secret = encryptedSecret,
                 ProductId = currentProduct.Id,
+
+                Roles = productTokenRoles.ToJson(),
 
                 CreatedBy = "system",
                 CreatedDate = DateTimeOffset.Now
@@ -719,7 +722,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             return true;
         }
 
-        public bool CreateComponentToken(string tenant, string product, string component, string description, DateTimeOffset expireDate, out Guid id, out string secret)
+        public bool CreateComponentToken(string tenant, string product, string component, string description, string issuedFor, DateTimeOffset expireDate, List<ComponentTokenRole> componentTokenRoles, out Guid id, out string secret)
         {
             id = Guid.Empty;
             secret = "";
@@ -747,6 +750,9 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                 Secret = encryptedSecret,
                 IssuedDate = DateTimeOffset.Now,
                 ExpireDate = expireDate,
+                IssuedFor = issuedFor,
+
+                Roles = componentTokenRoles.ToJson(),
 
                 CreatedDate = DateTimeOffset.UtcNow,
                 CreatedBy = "SYSTEM"
