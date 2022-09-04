@@ -91,7 +91,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             var connectedProduct = _tenantStateService.GetProduct(tenant, product);
             if (connectedProduct == null)
             {
-                if (connectedTenant.Settings.IsProductAutomaticCreation != true)
+                if (connectedTenant.Settings.IsProductAutomaticCreationAllowed != true)
                 {
                     _logger.LogInformation($"Producer '{producerName}' failed to connect, tenant '{tenant}' does not allow to create new product");
                     return OnDisconnectedAsync(new Exception($"There is no product registered with this name '{product}'. Tenant '{tenant}' does not allow to create new product"));
@@ -133,7 +133,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             {
                 // Check if the component allows to create a new topic.
                 connectedComponent = _tenantStateService.GetComponent(tenant, product, component);
-                if (connectedComponent.Settings.IsTopicAutomaticCreation != true)
+                if (connectedComponent.Settings.IsTopicAutomaticCreationAllowed != true)
                 {
                     _logger.LogInformation($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component.");
                     return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component."));

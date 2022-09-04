@@ -562,11 +562,16 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
             return _coreStateContext;
         }
 
-        public List<Tenant> GetTenants()
+        public List<Tenant> GetTenants(bool withInActive = true)
         {
-            return _coreStateContext
-                .Tenants
-                .ToList();
+            if (withInActive == true)
+                return _coreStateContext
+                    .Tenants
+                    .ToList();
+            else
+                return _coreStateContext
+                    .Tenants.Where(t => t.IsActive == true)
+                    .ToList();
         }
 
         public List<Product> GetProducts(long tenantId)

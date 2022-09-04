@@ -9,6 +9,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
+using Buildersoft.Andy.X.Core.Repositories.CoreState;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Configurations;
@@ -116,7 +117,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             var connectedProduct = _tenantInMemoryService.GetProduct(tenant, product);
             if (connectedProduct == null)
             {
-                if (connectedTenant.Settings.IsProductAutomaticCreation != true)
+                if (connectedTenant.Settings.IsProductAutomaticCreationAllowed != true)
                 {
                     _logger.LogInformation($"Consumer '{consumerName}' failed to connect, tenant '{tenant}' does not allow to create new product");
                     return OnDisconnectedAsync(new Exception($"There is no product registered with this name '{product}'. Tenant '{tenant}' does not allow to create new product"));
@@ -136,6 +137,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             }
 
             var connectedComponent = _tenantInMemoryService.GetComponent(tenant, product, component);
+            var productFromState = _coreRepository.GetProduct(tenantFromState.Id, product);
             if (connectedComponent == null)
             {
                 var componentDetails = _tenantFactory.CreateComponent(component);
@@ -144,7 +146,6 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             else
             {
                 // check component token validation
-                var productFromState = _coreRepository.GetProduct(tenantFromState.Id, product);
                 bool isComponentTokenValidated = _tenantInMemoryService.ValidateComponentToken(_coreRepository, productFromState.Id, component, componentToken, subscriptionName, true);
                 if (isComponentTokenValidated != true)
                 {
@@ -157,10 +158,10 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             if (connectedTopic == null)
             {
                 connectedComponent = _tenantInMemoryService.GetComponent(tenant, product, component);
-                if (connectedComponent.Settings.IsTopicAutomaticCreation != true)
+                if (connectedComponent.Settings.IsTopicAutomaticCreationAllowed != true)
                 {
-                    _logger.LogInformation($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component.");
-                    return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component."));
+                    _logger.LogInformation($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property IsTopicAutomaticCreationAllowed at component settings.");
+                    return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property IsTopicAutomaticCreationAllowed at component settings."));
                 }
 
                 connectedTopic = _tenantFactory.CreateTopic(topic, topicDescription);
@@ -213,6 +214,20 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                         _logger.LogWarning($"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, there are consumers connected in different nodes inside the cluster");
                         return OnDisconnectedAsync(new Exception($"There are consumers already connected to subscription '{subscriptionName}' in different nodes inside the cluster."));
                     }
+                }
+            }
+
+            // check if this is a new subscription
+            var componentFromState = _coreRepository.GetComponent(tenantFromState.Id, productFromState.Id, component);
+            var topicFromState = _coreRepository.GetTopic(componentFromState.Id, topic);
+            var subscriptionFromState = _coreRepository.GetSubscription(topicFromState.Id, subscriptionName);
+            if(subscriptionFromState is null)
+            {
+                var componentSettings = _coreRepository.GetComponentSettings(componentFromState.Id);
+                if(componentSettings.IsSubscriptionAutomaticCreationAllowed != true)
+                {
+                    _logger.LogInformation($"Component '{component}' does not allow to create a new subscription {subscriptionName} at '{tenant}/{product}/{component}'. To allow creating update property IsSubscriptionAutomaticCreationAllowed at component settings.");
+                    return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new subscription {subscriptionName} at '{tenant}/{product}/{component}'. To allow creating update property IsSubscriptionAutomaticCreationAllowed at component settings."));
                 }
             }
 

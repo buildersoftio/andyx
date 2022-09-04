@@ -28,7 +28,7 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
                 Settings = new Model.Entities.Core.Tenants.TenantSettings()
                 {
                     IsEncryptionEnabled = enableEncryption,
-                    IsProductAutomaticCreation = isProductAutoCreate,
+                    IsProductAutomaticCreationAllowed = isProductAutoCreate,
                     IsAuthorizationEnabled = enableAuthorization
                 }
             };
@@ -62,7 +62,7 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
                 {
                     IsAuthorizationEnabled = false,
                     IsSchemaValidationEnabled = false,
-                    IsTopicAutomaticCreation = true
+                    IsTopicAutomaticCreationAllowed = true
                 }
             };
         }

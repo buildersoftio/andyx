@@ -40,10 +40,10 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.CoreState
         bool DeleteProductRetention(string tenant, string product, long retentionId);
 
         bool CreateComponent(string tenant, string product, string componentName, string description);
-        bool CreateComponent(string tenant, string product, string componentName, string description, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled);
+        bool CreateComponent(string tenant, string product, string componentName, string description, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled, bool isSubscriptionAllowToCreate);
         bool DeleteComponent(string tenant, string product, string component);
         bool UpdateComponent(string tenant, string product, string component, string description);
-        bool UpdateComponentSettings(string tenant, string product, string componentName, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled);
+        bool UpdateComponentSettings(string tenant, string product, string componentName, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled, bool isSubscriptionAllowToCreate);
 
         bool CreateComponentToken(string tenant, string product, string component, string description, string issuedFor,DateTimeOffset expireDate, List<ComponentTokenRole> componentTokenRoles, out Guid id, out string secret);
         bool RevokeComponentToken(string tenant, string product, string component, Guid id);
