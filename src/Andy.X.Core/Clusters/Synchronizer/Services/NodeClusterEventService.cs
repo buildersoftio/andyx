@@ -29,68 +29,70 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
         private readonly IConsumerFactory _consumerFactory;
         private readonly ISubscriptionFactory _subscriptionFactory;
-        private readonly ITenantService _tenantService;
+        private readonly ITenantStateService _tenantService;
         private readonly ITenantFactory _tenantFactory;
         private readonly NodeConfiguration _nodeConfiguration;
         private HubConnection _connection;
 
-        public event Action<NodeConnectedArgs>? NodeConnected;
-        public event Action<NodeDisconnectedArgs>? NodeDisconnected;
+        public event Action<NodeConnectedArgs> NodeConnected;
+        public event Action<NodeDisconnectedArgs> NodeDisconnected;
 
         // tenants
-        public event Action<TenantCreatedArgs>? TenantCreated;
-        public event Action<TenantUpdatedArgs>? TenantUpdated;
-        public event Action<TenantDeletedArgs>? TenantDeleted;
+        public event Action<TenantCreatedArgs> TenantCreated;
+        public event Action<TenantUpdatedArgs> TenantUpdated;
+        public event Action<TenantDeletedArgs> TenantDeleted;
 
-        public event Action<ProductCreatedArgs>? ProductCreated;
-        public event Action<ProductUpdatedArgs>? ProductUpdated;
-        public event Action<ProductDeletedArgs>? ProductDeleted;
+        public event Action<ProductCreatedArgs> ProductCreated;
+        public event Action<ProductUpdatedArgs> ProductUpdated;
+        public event Action<ProductDeletedArgs> ProductDeleted;
 
-        public event Action<ComponentCreatedArgs>? ComponentCreated;
-        public event Action<ComponentUpdatedArgs>? ComponentUpdated;
-        public event Action<ComponentDeletedArgs>? ComponentDeleted;
+        public event Action<ComponentCreatedArgs> ComponentCreated;
+        public event Action<ComponentUpdatedArgs> ComponentUpdated;
+        public event Action<ComponentDeletedArgs> ComponentDeleted;
 
-        public event Action<TopicCreatedArgs>? TopicCreated;
-        public event Action<TopicUpdatedArgs>? TopicUpdated;
-        public event Action<TopicDeletedArgs>? TopicDeleted;
+        public event Action<TopicCreatedArgs> TopicCreated;
+        public event Action<TopicUpdatedArgs> TopicUpdated;
+        public event Action<TopicDeletedArgs> TopicDeleted;
 
-        public event Action<TokenCreatedArgs>? TokenCreated;
-        public event Action<TokenRevokedArgs>? TokenRevoked;
+        public event Action<TokenCreatedArgs> TokenCreated;
+        public event Action<TokenRevokedArgs> TokenRevoked;
 
-        public event Action<SubscriptionCreatedArgs>? SubscriptionCreated;
-        public event Action<SubscriptionUpdatedArgs>? SubscriptionUpdated;
-        public event Action<SubscriptionDeletedArgs>? SubscriptionDeleted;
+        public event Action<SubscriptionCreatedArgs> SubscriptionCreated;
+        public event Action<SubscriptionUpdatedArgs> SubscriptionUpdated;
+        public event Action<SubscriptionDeletedArgs> SubscriptionDeleted;
 
         // only with replicas
 
-        public event Action<SubscriptionPositionUpdatedArgs>? SubscriptionPositionUpdated;
-        public event Action<CurrentEntryPositionUpdatedArgs>? CurrentEntryPositionUpdated;
+        public event Action<SubscriptionPositionUpdatedArgs> SubscriptionPositionUpdated;
+        public event Action<CurrentEntryPositionUpdatedArgs> CurrentEntryPositionUpdated;
 
         // will all nodes
-        public event Action<ProducerConnectedArgs>? ProducerConnected;
-        public event Action<ProducerDisconnectedArgs>? ProducerDisconnected;
+        public event Action<ProducerConnectedArgs> ProducerConnected;
+        public event Action<ProducerDisconnectedArgs> ProducerDisconnected;
 
-        public event Action<ConsumerConnectedArgs>? ConsumerConnected;
-        public event Action<ConsumerDisconnectedArgs>? ConsumerDisconnected;
+        public event Action<ConsumerConnectedArgs> ConsumerConnected;
+        public event Action<ConsumerDisconnectedArgs> ConsumerDisconnected;
 
-        private NodeEventHandler? nodeEventHandler;
-        private TenantEventHandler? tenantEventHandler;
-        private ProductEventHandler? productEventHandler;
-        private ComponentEventHandler? componentEventHandler;
-        private TopicEventHandler? topicEventHandler;
-        private TokenEventHandler? tokenEventHandler;
-        private SubscriptionEventHandler? subscriptionEventHandler;
-        private ProducerEventHandler? producerEventHandler;
-        private ConsumerEventHandler? consumerEventHandler;
+        private NodeEventHandler nodeEventHandler;
+        private TenantEventHandler tenantEventHandler;
+        private ProductEventHandler productEventHandler;
+        private ComponentEventHandler componentEventHandler;
+        private TopicEventHandler topicEventHandler;
+        private TokenEventHandler tokenEventHandler;
+        private SubscriptionEventHandler subscriptionEventHandler;
+        private ProducerEventHandler producerEventHandler;
+        private ConsumerEventHandler consumerEventHandler;
 
         public NodeClusterEventService(ILogger<NodeClusterEventService> logger, Replica replica,
             ClusterConfiguration clusterConfiguration,
             IProducerHubRepository producerHubRepository,
             IProducerFactory producerFactory,
             ISubscriptionHubRepository subscriptionHubRepository,
-            ITenantService tenantService,
+            ITenantStateService tenantService,
             ITenantFactory tenantFactory,
-            NodeConfiguration nodeConfiguration)
+            NodeConfiguration nodeConfiguration,
+            IConsumerFactory consumerFactory,
+            ISubscriptionFactory subscriptionFactory)
         {
             _logger = logger;
             _replica = replica;
@@ -103,6 +105,8 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
             _tenantService = tenantService;
             _tenantFactory = tenantFactory;
             _nodeConfiguration = nodeConfiguration;
+            _consumerFactory = consumerFactory;
+            _subscriptionFactory = subscriptionFactory;
 
             var provider = new NodeConnectionProvider(replica, clusterConfiguration, nodeConfiguration);
             _connection = provider.GetHubConnection();
@@ -150,6 +154,10 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
 
 
             InitializeEventHandlers();
+
+            // Wait 3 seconds before connecting to the node
+            Thread.Sleep(3000);
+            ConnectAsync();
         }
 
         private void InitializeEventHandlers()
@@ -160,26 +168,26 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
             componentEventHandler = new ComponentEventHandler(this, _tenantService, _tenantFactory);
             topicEventHandler = new TopicEventHandler(this, _tenantService, _tenantFactory);
             tokenEventHandler = new TokenEventHandler(this);
-            subscriptionEventHandler = new SubscriptionEventHandler(this);
+            subscriptionEventHandler = new SubscriptionEventHandler(this, _tenantService, _subscriptionFactory);
             producerEventHandler = new ProducerEventHandler(this, _producerHubRepository, _producerFactory);
             consumerEventHandler = new ConsumerEventHandler(this, _subscriptionHubRepository, _subscriptionFactory, _consumerFactory);
         }
 
 
         #region connection general events
-        private Task Connection_Reconnecting(Exception? arg)
+        private Task Connection_Reconnecting(Exception arg)
         {
             _logger.LogWarning($"Node '{_replica.NodeId}' Sync connection is lost, reconnecting");
             return Task.CompletedTask;
         }
 
-        private Task Connection_Reconnected(string? arg)
+        private Task Connection_Reconnected(string arg)
         {
             _logger.LogInformation($"Node '{_replica.NodeId}' Sync is connected, synchronizing with other nodes.");
             return Task.CompletedTask;
         }
 
-        private Task Connection_Closed(Exception? arg)
+        private Task Connection_Closed(Exception arg)
         {
             // try to reconnect, if the connection is closed.
             // TODO: add logic to try 5 times, if not destroy the cluster if is the only main in the cluster.

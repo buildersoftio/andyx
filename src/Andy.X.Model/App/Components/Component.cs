@@ -6,18 +6,18 @@ namespace Buildersoft.Andy.X.Model.App.Components
 {
     public class Component
     {
-        public Guid Id { get; set; }
         public string Name { get; set; }
+        public string Description { get; set; }
 
         public ConcurrentDictionary<string, Topic> Topics { get; set; }
 
-        public ComponentSettings Settings { get; set; }
+        public Entities.Core.Components.ComponentSettings Settings { get; set; }
 
 
         public Component()
         {
             Topics = new ConcurrentDictionary<string, Topic>();
-            Settings = new ComponentSettings();
+            Settings = new Entities.Core.Components.ComponentSettings();
         }
     }
 }

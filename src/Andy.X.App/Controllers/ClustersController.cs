@@ -7,7 +7,7 @@ using System.Net.Mime;
 
 namespace Buildersoft.Andy.X.Controllers
 {
-    [Route("api/v1/clusters")]
+    [Route("api/v3/clusters")]
     [Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

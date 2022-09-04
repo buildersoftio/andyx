@@ -2,8 +2,10 @@
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
@@ -26,57 +28,66 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
         private readonly ILogger<ConsumerHub> _logger;
 
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
-        private readonly ITenantService _tenantRepository;
+        private readonly ITenantStateService _tenantInMemoryService;
 
         private readonly ITenantFactory _tenantFactory;
+        private readonly ICoreRepository _coreRepository;
         private readonly IConsumerFactory _consumerFactory;
         private readonly ISubscriptionFactory _subscriptionFactory;
 
         private readonly IOutboundMessageService _outboundMessageService;
         private readonly IInboundMessageService _inboundMessageService;
         private readonly StorageConfiguration _storageConfiguration;
+        private readonly NodeConfiguration _nodeConfiguration;
+        private readonly IClusterHubService _clusterHubService;
 
         public ConsumerHub(ILogger<ConsumerHub> logger,
             ISubscriptionHubRepository subscriptionHubRepository,
-            ITenantService tenantRepository,
+            ITenantStateService tenantService,
             ITenantFactory tenantFactory,
+            ICoreRepository coreRepository,
             IConsumerFactory consumerFactory,
             ISubscriptionFactory subscriptionFactory,
             IOutboundMessageService outboundMessageService,
             IInboundMessageService inboundMessageService,
-            StorageConfiguration storageConfiguration
+            StorageConfiguration storageConfiguration,
+            NodeConfiguration nodeConfiguration,
+            IClusterHubService clusterHubService
             )
         {
             _logger = logger;
 
             _subscriptionHubRepository = subscriptionHubRepository;
-            _tenantRepository = tenantRepository;
+            _tenantInMemoryService = tenantService;
 
             _tenantFactory = tenantFactory;
+            _coreRepository = coreRepository;
             _consumerFactory = consumerFactory;
             _subscriptionFactory = subscriptionFactory;
 
             _outboundMessageService = outboundMessageService;
             _inboundMessageService = inboundMessageService;
             _storageConfiguration = storageConfiguration;
+            _nodeConfiguration = nodeConfiguration;
+            _clusterHubService = clusterHubService;
         }
 
         public override Task OnConnectedAsync()
         {
             Subscription subscriptionToRegister;
-            string clientConnectionId = Context.ConnectionId;
+            string consumerConnectionId = Context.ConnectionId;
             var headers = Context.GetHttpContext().Request.Headers;
 
             // authorization tokens
-            // TODO: Implement token validation
             string tenantToken = headers["x-andyx-tenant-authoriziation"];
+            string productToken = headers["x-andyx-product-authoriziation"];
             string componentToken = headers["x-andyx-component-authoriziation"];
 
             string tenant = headers["x-andyx-tenant"].ToString();
             string product = headers["x-andyx-product"].ToString();
             string component = headers["x-andyx-component"].ToString();
             string topic = headers["x-andyx-topic"].ToString();
-            bool isPersistent = bool.Parse(headers["x-andyx-topic-is-persistent"]);
+            string topicDescription = headers["x-andyx-topic-description"].ToString();
             string consumerName = headers["x-andyx-consumer-name"].ToString();
 
             string subscriptionName = headers["x-andyx-subscription-name"].ToString();
@@ -87,7 +98,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             _logger.LogInformation($"Consumer '{consumerName}' requested connection to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}");
 
             // check if the consumer is already connected
-            var connectedTenant = _tenantRepository.GetTenant(tenant);
+            var connectedTenant = _tenantInMemoryService.GetTenant(tenant);
             if (connectedTenant == null)
             {
                 _logger.LogInformation($"Consumer '{consumerName}' failed to connect, tenant '{tenant}' does not exists");
@@ -95,36 +106,46 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             }
 
             // check tenant token validation
-            bool isTenantTokenValidated = _tenantRepository.ValidateTenantToken(tenant, tenantToken);
+            bool isTenantTokenValidated = _tenantInMemoryService.ValidateTenantToken(_coreRepository, tenant, tenantToken, true);
             if (isTenantTokenValidated != true)
             {
                 _logger.LogInformation($"Consumer '{consumerName}' failed to connect, access is forbidden. Not authorized");
                 return OnDisconnectedAsync(new Exception($"Consumer '{consumerName}' failed to connect, access is forbidden"));
             }
 
-            var connectedProduct = _tenantRepository.GetProduct(tenant, product);
+            var connectedProduct = _tenantInMemoryService.GetProduct(tenant, product);
             if (connectedProduct == null)
             {
-                if (connectedTenant.Settings.AllowProductCreation != true)
+                if (connectedTenant.Settings.IsProductAutomaticCreation != true)
                 {
                     _logger.LogInformation($"Consumer '{consumerName}' failed to connect, tenant '{tenant}' does not allow to create new product");
                     return OnDisconnectedAsync(new Exception($"There is no product registered with this name '{product}'. Tenant '{tenant}' does not allow to create new product"));
                 }
 
                 var productDetails = _tenantFactory.CreateProduct(product);
-                _tenantRepository.AddProduct(tenant, product, productDetails);
+                _tenantInMemoryService.AddProduct(tenant, product, productDetails);
             }
 
-            var connectedComponent = _tenantRepository.GetComponent(tenant, product, component);
+            // check product token validation
+            var tenantFromState = _coreRepository.GetTenant(tenant);
+            bool isProductTokenValidated = _tenantInMemoryService.ValidateProductToken(_coreRepository, tenantFromState.Id, product, productToken, true);
+            if (isProductTokenValidated != true)
+            {
+                _logger.LogInformation($"Consumer '{consumerName}' failed to connect, access is forbidden. Not authorized, check product token");
+                return OnDisconnectedAsync(new Exception($"Consumer '{consumerName}' failed to connect, access is forbidden, check product token"));
+            }
+
+            var connectedComponent = _tenantInMemoryService.GetComponent(tenant, product, component);
             if (connectedComponent == null)
             {
                 var componentDetails = _tenantFactory.CreateComponent(component);
-                _tenantRepository.AddComponent(tenant, product, component, componentDetails);
+                _tenantInMemoryService.AddComponent(tenant, product, component, componentDetails);
             }
             else
             {
                 // check component token validation
-                bool isComponentTokenValidated = _tenantRepository.ValidateComponentToken(tenant, product, component, componentToken, consumerName, true);
+                var productFromState = _coreRepository.GetProduct(tenantFromState.Id, product);
+                bool isComponentTokenValidated = _tenantInMemoryService.ValidateComponentToken(_coreRepository, productFromState.Id, component, componentToken, subscriptionName, true);
                 if (isComponentTokenValidated != true)
                 {
                     _logger.LogInformation($"Consumer '{consumerName}' failed to connect, access is forbidden. Not authorized, check component token");
@@ -132,18 +153,18 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 }
             }
 
-            var connectedTopic = _tenantRepository.GetTopic(tenant, product, component, topic);
+            var connectedTopic = _tenantInMemoryService.GetTopic(tenant, product, component, topic);
             if (connectedTopic == null)
             {
-                connectedComponent = _tenantRepository.GetComponent(tenant, product, component);
-                if (connectedComponent.Settings.AllowTopicCreation != true)
+                connectedComponent = _tenantInMemoryService.GetComponent(tenant, product, component);
+                if (connectedComponent.Settings.IsTopicAutomaticCreation != true)
                 {
                     _logger.LogInformation($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component.");
                     return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component."));
                 }
 
-                connectedTopic = _tenantFactory.CreateTopic(topic, isPersistent);
-                _tenantRepository.AddTopic(tenant, product, component, topic, connectedTopic);
+                connectedTopic = _tenantFactory.CreateTopic(topic, topicDescription);
+                _tenantInMemoryService.AddTopic(tenant, product, component, topic, connectedTopic);
             }
 
 
@@ -196,20 +217,21 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             }
 
             subscriptionToRegister = _subscriptionFactory.CreateSubscription(tenant, product, component, topic, subscriptionName, subscriptionType, subscriptionMode, initialPosition);
-            _tenantRepository.AddSubscriptionConfiguration(tenant, product, component, topic, subscriptionName, subscriptionToRegister);
+            _tenantInMemoryService.AddSubscriptionConfiguration(tenant, product, component, topic, subscriptionName, subscriptionToRegister);
 
             _subscriptionHubRepository.AddSubscription(subscriptionId, connectedTopic, subscriptionToRegister);
 
             var consumer = _consumerFactory.CreateConsumer(subscriptionName, consumerName);
-            _subscriptionHubRepository.AddConsumer(subscriptionId, clientConnectionId, consumer);
-            
+            _subscriptionHubRepository.AddConsumer(subscriptionId, consumerConnectionId, consumer);
+
             TenantIOService.TryCreateConsumerDirectory(tenant, product, component, topic, subscriptionName, consumerName);
 
             Task.Run(() => _outboundMessageService.AddSubscriptionTopicData(_subscriptionFactory.CreateSubscriptionTopicData(subscriptionToRegister,
                 _storageConfiguration.OutboundFlushCurrentEntryPositionInMilliseconds,
                 _storageConfiguration.OutboundBackgroundIntervalReadMessagesInMilliseconds)));
 
-            // TODO: Inform other nodes that new consumer has been created.
+            // Inform other nodes that new consumer has been connected.
+            _clusterHubService.ConnectConsumer_AllNodes(tenant, product, component, topic, subscriptionToRegister, consumerConnectionId, consumerName);
 
             Clients.Caller.ConsumerConnected(new ConsumerConnectedDetails()
             {
@@ -231,18 +253,21 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
         public override Task OnDisconnectedAsync(Exception exception)
         {
-            string clientConnectionId = Context.ConnectionId;
-            var subscription = _subscriptionHubRepository.GetSubscriptionByConnectionId(clientConnectionId);
+            string consumerConnectionId = Context.ConnectionId;
+            var subscription = _subscriptionHubRepository.GetSubscriptionByConnectionId(consumerConnectionId);
 
             // When the consumer as Exclusive with the same name try to connect
             if (subscription != null)
             {
                 string subscriptionId = ConnectorHelper.GetSubcriptionId(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName);
-                Consumer consumerToRemove = _subscriptionHubRepository.GetConsumerByConnectionId(clientConnectionId);
+                Consumer consumerToRemove = _subscriptionHubRepository.GetConsumerByConnectionId(consumerConnectionId);
+
+                // Inform other nodes that consumer has been disconencted.
+                _clusterHubService.DisconnectConsumer_AllNodes(subscription.Tenant, subscription.Product, subscription.Component, subscription.Topic, subscription.SubscriptionName, consumerConnectionId);
 
                 _outboundMessageService.StoreCurrentPositionAsync(subscriptionId);
 
-                _subscriptionHubRepository.RemoveConsumerConnection(subscriptionId, clientConnectionId);
+                _subscriptionHubRepository.RemoveConsumerConnection(subscriptionId, consumerConnectionId);
                 _logger.LogInformation($"Consumer '{consumerToRemove.Name}' is disconencted from subscription '{subscription.SubscriptionName}' at {subscription.Tenant}/{subscription.Product}/{subscription.Component}/{subscription.Topic}");
 
                 Clients.Caller.ConsumerDisconnected(new ConsumerDisconnectedDetails()

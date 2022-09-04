@@ -1,6 +1,10 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Consumers;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
+using Buildersoft.Andy.X.IO.Services;
+using Buildersoft.Andy.X.Model.App.Products;
+using Buildersoft.Andy.X.Model.App.Tenants;
+using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Clusters.Events;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
@@ -63,18 +67,17 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
                 var consumerKey = CONSUMER_KEY + obj.ConsumerConnectionId;
 
                 string subscriptionId = ConnectorHelper.GetSubcriptionId(obj.Tenant, obj.Product, obj.Component,
-                    obj.Topic, obj.SubscriptionDetails.SubscriptionName);
+                    obj.Topic, obj.Subscription);
 
-                _subscriptionFactory.CreateSubscription(obj.Tenant, obj.Product, obj.Component,
-                    obj.Topic, obj.SubscriptionDetails.SubscriptionName, obj.SubscriptionDetails.SubscriptionType,
-                    obj.SubscriptionDetails.SubscriptionMode, obj.SubscriptionDetails.InitialPosition);
-
-                var consumer = _consumerFactory.CreateConsumer(obj.SubscriptionDetails.SubscriptionName, obj.Consumer);
+                var consumer = _consumerFactory.CreateConsumer(obj.Subscription, obj.Consumer);
                 _subscriptionHubRepository.AddExternalConsumer(subscriptionId, consumerKey, consumer);
+
+                TenantIOService.TryCreateConsumerDirectory(obj.Tenant, obj.Product, obj.Component,
+                    obj.Topic, obj.Subscription, obj.Consumer);
             }
             catch (Exception)
             {
-                // TODO: Log later
+
             }
         }
     }

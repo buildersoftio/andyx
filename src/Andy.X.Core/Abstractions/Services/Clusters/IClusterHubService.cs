@@ -18,8 +18,8 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Clusters
 
         // to all nodes
 
-        Task CreateTenant_AllNodes(Guid id, string name, TenantSettings tenantSettings);
-        Task UpdateTenant_AllNodes(Guid id, string name, TenantSettings tenantSettings);
+        Task CreateTenant_AllNodes(string name, Model.Entities.Core.Tenants.TenantSettings tenantSettings);
+        Task UpdateTenant_AllNodes(string name, Model.Entities.Core.Tenants.TenantSettings tenantSettings);
         Task DeleteTenant_AllNodes(string name);
 
 

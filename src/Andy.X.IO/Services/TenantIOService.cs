@@ -105,8 +105,7 @@ namespace Buildersoft.Andy.X.IO.Services
             {
                 if (Directory.Exists(TenantLocations.GetSubscriptionDirectory(tenant, product, component, topic, subscription)) == true)
                 {
-                    // TODO: Add logging later
-                    return true;
+                    return false;
                 }
 
                 Directory.CreateDirectory(TenantLocations.GetSubscriptionDirectory(tenant, product, component, topic, subscription));

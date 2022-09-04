@@ -7,10 +7,10 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
     public class ComponentEventHandler
     {
         private readonly NodeClusterEventService _nodeClusterEventService;
-        private readonly ITenantService _tenantService;
+        private readonly ITenantStateService _tenantService;
         private readonly ITenantFactory _tenantFactory;
 
-        public ComponentEventHandler(NodeClusterEventService nodeClusterEventService, ITenantService tenantService, ITenantFactory tenantFactory)
+        public ComponentEventHandler(NodeClusterEventService nodeClusterEventService, ITenantStateService tenantService, ITenantFactory tenantFactory)
         {
             _nodeClusterEventService = nodeClusterEventService;
             this._tenantService = tenantService;
@@ -38,7 +38,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 
         private void NodeClusterEventService_ComponentCreated(Model.Clusters.Events.ComponentCreatedArgs obj)
         {
-            var componentToAdd = _tenantFactory.CreateComponent(obj.Id, obj.Name, obj.Settings);
+            var componentToAdd = _tenantFactory.CreateComponent(obj.Name, obj.Description, obj.Settings);
             _tenantService.AddComponent(obj.Tenant, obj.Product, obj.Name, componentToAdd, notifyOtherNodes: false);
         }
     }

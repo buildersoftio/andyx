@@ -65,7 +65,7 @@ namespace Andy.X.App
             {
                 c.SwaggerDoc("v3", new OpenApiInfo
                 {
-                    Title = "Buildersoft Andy X",
+                    Title = "Andy X",
                     Version = "v3",
                     Description = "Andy X is an open-source distributed streaming platform designed to deliver the best performance possible for high-performance data pipelines, streaming analytics, streaming between microservices and data integration.",
                     License = new OpenApiLicense() { Name = "Licensed under the Apache License 2.0", Url = new Uri("https://bit.ly/3DqVQbx") }
@@ -97,6 +97,10 @@ namespace Andy.X.App
             services.AddAuthentication("Andy.X_Authorization")
                 .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Andy.X_Authorization", null);
 
+            // Persistency Core State
+            services.AddCoreRepository();
+            services.AddCoreService();
+
             services.AddSerilogLoggingConfiguration(Configuration);
             services.AddSingleton<ApplicationService>();
 
@@ -121,8 +125,6 @@ namespace Andy.X.App
 
             services.AddSubscriptionHubService();
             services.AddProducerHubService();
-
-            services.AddRestServices();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

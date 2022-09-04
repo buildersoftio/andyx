@@ -52,7 +52,7 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
                 Product = product,
                 Component = component,
                 Topic = topic,
-                SubscriptionDetails = subscription,
+                Subscription = subscription.SubscriptionName,
 
                 Consumer = consumer,
                 ConsumerConnectionId = consumerConnectionId
@@ -81,7 +81,6 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
         {
             return _hub.Clients.All.ComponentCreatedAsync(new Model.Clusters.Events.ComponentCreatedArgs()
             {
-                Id = component.Id,
                 Name = component.Name,
                 Tenant = tenant,
                 Product = product,
@@ -95,18 +94,24 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             {
                 Tenant = tenant,
 
-                Id = product.Id,
                 Description = product.Description,
-                Name = product.Name,
-                ProductContact = product.ProductContact,
-                ProductOwner = product.ProductOwner,
-                ProductTeam = product.ProductTeam
+                Name = product.Name
             });
         }
 
         public Task CreateSubscription_AllNodes(Subscription subscription)
         {
-            return _hub.Clients.All.ClusterSynchronizationAsync();
+            return _hub.Clients.All.SubscriptionCreatedAsync(new Model.Clusters.Events.SubscriptionCreatedArgs()
+            {
+                Tenant = subscription.Tenant,
+                Product = subscription.Product,
+                Component = subscription.Component,
+                Topic = subscription.Topic,
+                SubscriptionName = subscription.SubscriptionName,
+                InitialPosition = subscription.InitialPosition,
+                SubscriptionMode = subscription.SubscriptionMode,
+                SubscriptionType = subscription.SubscriptionType
+            });
         }
 
         public Task CreateTenantToken_AllNodes(TenantToken tenantToken)
@@ -114,11 +119,10 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             throw new NotImplementedException();
         }
 
-        public Task CreateTenant_AllNodes(Guid id, string name, TenantSettings tenantSettings)
+        public Task CreateTenant_AllNodes(string name, Model.Entities.Core.Tenants.TenantSettings tenantSettings)
         {
             return _hub.Clients.All.TenantCreatedAsync(new Model.Clusters.Events.TenantCreatedArgs()
             {
-                Id = id,
                 Name = name,
                 Settings = tenantSettings
             });
@@ -132,9 +136,7 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
                 Product = product,
                 Component = component,
 
-                Id = topic.Id,
                 Name = topic.Name,
-                TopicSettings = topic.TopicSettings,
                 TopicStates = topic.TopicStates
             });
         }
@@ -254,11 +256,10 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             });
         }
 
-        public Task UpdateTenant_AllNodes(Guid id, string name, TenantSettings tenantSettings)
+        public Task UpdateTenant_AllNodes(string name, Model.Entities.Core.Tenants.TenantSettings tenantSettings)
         {
             return _hub.Clients.All.TenantUpdatedAsync(new Model.Clusters.Events.TenantUpdatedArgs()
             {
-                Id = id,
                 Name = name,
                 Settings = tenantSettings
             });
@@ -271,8 +272,7 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
                 Tenant = tenant,
                 Product = product,
                 Component = component,
-                Name = topic.Name,
-                TopicSettings = topic.TopicSettings
+                Name = topic.Name
             });
         }
 
@@ -284,10 +284,6 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
                 Name = product.Name,
 
                 Description = product.Description,
-
-                ProductContact = product.ProductContact,
-                ProductOwner = product.ProductOwner,
-                ProductTeam = product.ProductTeam,
             });
         }
 

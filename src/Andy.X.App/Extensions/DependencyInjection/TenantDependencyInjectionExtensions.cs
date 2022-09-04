@@ -10,12 +10,12 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
     {
         public static void AddTenantMemoryRepository(this IServiceCollection services)
         {
-            services.AddSingleton<ITenantService, TenantMemoryService>();
+            services.AddSingleton<ITenantStateService, TenantStateService>();
         }
 
         public static void UseTenantMemoryRepository(this IApplicationBuilder builder, IServiceProvider serviceProvider)
         {
-            var tenantRepo = serviceProvider.GetRequiredService<ITenantService>();
+            var tenantRepo = serviceProvider.GetRequiredService<ITenantStateService>();
         }
     }
 }

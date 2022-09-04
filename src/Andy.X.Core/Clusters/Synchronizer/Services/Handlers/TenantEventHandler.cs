@@ -1,16 +1,17 @@
 ﻿
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
+using System;
 
 namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 {
     public class TenantEventHandler
     {
         private readonly NodeClusterEventService _nodeClusterEventService;
-        private readonly ITenantService _tenantService;
+        private readonly ITenantStateService _tenantService;
         private readonly ITenantFactory _tenantFactory;
 
-        public TenantEventHandler(NodeClusterEventService nodeClusterEventService, ITenantService tenantService, ITenantFactory tenantFactory)
+        public TenantEventHandler(NodeClusterEventService nodeClusterEventService, ITenantStateService tenantService, ITenantFactory tenantFactory)
         {
             _nodeClusterEventService = nodeClusterEventService;
             _tenantService = tenantService;
@@ -32,8 +33,15 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 
         private void NodeClusterEventService_TenantCreated(Model.Clusters.Events.TenantCreatedArgs obj)
         {
-            var tenantToCreate = _tenantFactory.CreateTenant(obj.Id, obj.Name, obj.Settings);
-            _tenantService.AddTenant(obj.Name, tenantToCreate, notifyOtherNodes: false);
+            try
+            {
+                var tenantToCreate = _tenantFactory.CreateTenant(obj.Name, obj.Settings);
+                _tenantService.AddTenant(obj.Name, tenantToCreate, notifyOtherNodes: false);
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
         private void NodeClusterEventService_TenantDeleted(Model.Clusters.Events.TenantDeletedArgs obj)

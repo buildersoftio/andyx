@@ -9,6 +9,11 @@
             return $"{tenant}{COLON}{product}{COLON}{component}{COLON}{topic}{COLON}{subscription}";
         }
 
+        public static string GetNodeSubcriptionId(string nodeId, string subscriptionKey)
+        {
+            return $"{nodeId}{COLON}{subscriptionKey}";
+        }
+
         public static string GetTopicConnectorKey(string tenant, string product, string component, string topic)
         {
             return $"{tenant}{COLON}{product}{COLON}{component}{COLON}{topic}";

@@ -17,17 +17,20 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
         private readonly IClusterService _clusterService;
         private readonly IClusterHubRepository _clusterHubRepository;
         private readonly IClusterFactory _clusterFactory;
+        private readonly IClusterRepository _clusterRepository;
 
         public ClusterHub(ILogger<ClusterHub> logger,
             IClusterService clusterService,
             IClusterHubRepository clusterHubRepository,
-            IClusterFactory clusterFactory)
+            IClusterFactory clusterFactory,
+            IClusterRepository clusterRepository)
         {
             _logger = logger;
 
             _clusterService = clusterService;
             _clusterHubRepository = clusterHubRepository;
             _clusterFactory = clusterFactory;
+            _clusterRepository = clusterRepository;
         }
 
         public override Task OnConnectedAsync()
@@ -39,28 +42,31 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
             // authorization token
             string token = headers["Authorization"];
 
-            string clusterId = headers["x-andyx-cluster-id"].ToString();
-            string nodeId = headers["x-andyx-node-id"].ToString();
             string nodeIdFrom = headers["x-andyx-node-id-from"].ToString();
-            string hostName = headers["x-andyx-hostname"].ToString();
+            var replicaClient = _clusterRepository.GetReplica(nodeIdFrom);
+            if (replicaClient == null)
+                throw new Exception($"Invalid node {nodeIdFrom}, this node is not registered in the cluster configuration of this node., cluster is shutting down.");
+
+            string clusterId = headers["x-andyx-cluster-id"].ToString();
+            string nodeId = replicaClient.NodeId;
+            string hostName = replicaClient.Host;
             int shardId = Convert.ToInt32(headers["x-andyx-shard-id"].ToString());
 
-            ReplicaTypes replicaType = (ReplicaTypes)Enum.Parse(typeof(ReplicaTypes), headers["x-andyx-replica-type"].ToString());
-            _logger.LogInformation($"Node '{nodeId}' as {replicaType.ToString()} with hostname '{hostName}' requested connection from '{nodeIdFrom}'");
+            ReplicaTypes replicaType = replicaClient.Type;
+            _logger.LogInformation($"Node '{nodeId}' as {replicaType.ToString()} with hostname '{hostName}' requested connection");
 
 
             // check if this node is already connected here
             if (_clusterHubRepository.GetNodeClientByNodeId(nodeId) != null)
             {
                 // node exists
-                _logger.LogWarning($"Node '{nodeId}' as {replicaType.ToString()} with hostname '{hostName}' is already connected  from '{nodeIdFrom}'");
-                return OnDisconnectedAsync(new Exception($"There is a node with id '{nodeId}' part of cluster '{clusterId}' connected to this node  from '{nodeIdFrom}'"));
+                _logger.LogWarning($"Node '{nodeId}' as {replicaType.ToString()} with hostname '{hostName}' is already connected  ");
+                return OnDisconnectedAsync(new Exception($"There is a node with id '{nodeId}' part of cluster '{clusterId}' connected to this node"));
             }
 
             nodeToRegister = _clusterFactory.CreateNodeClient(nodeId, hostName, shardId, replicaType);
             _clusterHubRepository.AddNodeClient(clientConnectionId, nodeToRegister);
 
-            // BUG: Here we have registered only this node properties (should be clients from)
             Clients.Caller.NodeConnectedAsync(new Model.Clusters.Events.NodeConnectedArgs()
             {
                 HostName = hostName,
@@ -68,7 +74,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
                 ReplicaType = replicaType.ToString(),
                 ShardId = shardId
             });
-            _logger.LogInformation($"Node '{nodeId}' as {replicaType.ToString()} with hostname '{hostName}' is connected  from '{nodeIdFrom}'");
+
+            _logger.LogInformation($"Node '{nodeId}' as {replicaType.ToString()} with hostname '{hostName}' is connected");
 
             return base.OnConnectedAsync();
         }

@@ -8,6 +8,9 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Clusters
         Shard NewShard();
         bool AddReplicaInLastShard(Replica replica);
 
+        bool AddReplicaConnectionToShard(string nodeId, string nodeConnectionId);
+        bool RemoveReplicaConnectionToShard(string nodeId);
+
         Shard GetCurrentShard();
         Replica GetCurrentReplica();
 

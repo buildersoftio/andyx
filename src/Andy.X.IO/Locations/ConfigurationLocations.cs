@@ -78,6 +78,11 @@ namespace Buildersoft.Andy.X.IO.Locations
             return Path.Combine(ActiveConfigDirectory(), "tenants.json");
         }
 
+        public static string GetTenantsConfigurationLogFile()
+        {
+            return Path.Combine(ActiveConfigDirectory(), "tenants_log.andx");
+        }
+
         public static string GetTenantsInitialConfigurationFile()
         {
             return Path.Combine(Settings_InitialConfigDirectory(), "tenants_initial.json");

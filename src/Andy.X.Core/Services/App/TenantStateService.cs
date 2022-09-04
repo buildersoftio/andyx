@@ -1,9 +1,11 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
+using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.IO.Readers;
@@ -17,16 +19,19 @@ using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Buildersoft.Andy.X.Core.Services.App
 {
-    public class TenantMemoryService : ITenantService
+    public class TenantStateService : ITenantStateService
     {
-        private readonly ILogger<TenantMemoryService> _logger;
+        private readonly ILogger<TenantStateService> _logger;
         private readonly ITenantFactory _tenantFactory;
+        private readonly ICoreRepository _coreRepository;
+        private readonly ICoreService _coreService;
         private readonly IOrchestratorService _orchestratorService;
         private readonly ISubscriptionHubRepository _subscriptionHubRepository;
         private readonly IOutboundMessageService _outboundMessageService;
@@ -36,9 +41,10 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
         private readonly ConcurrentDictionary<string, Tenant> _tenants;
 
-        public TenantMemoryService(ILogger<TenantMemoryService> logger,
-            List<TenantConfiguration> tenantConfigurations,
+        public TenantStateService(ILogger<TenantStateService> logger,
             ITenantFactory tenantFactory,
+            ICoreRepository coreRepository,
+            ICoreService coreService,
             IOrchestratorService orchestratorService,
             ISubscriptionHubRepository subscriptionHubRepository,
             IOutboundMessageService outboundMessageService,
@@ -48,6 +54,8 @@ namespace Buildersoft.Andy.X.Core.Services.App
         {
             _logger = logger;
             _tenantFactory = tenantFactory;
+            _coreRepository = coreRepository;
+            _coreService = coreService;
             _orchestratorService = orchestratorService;
             _subscriptionHubRepository = subscriptionHubRepository;
             _outboundMessageService = outboundMessageService;
@@ -58,61 +66,47 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
             _tenants = new ConcurrentDictionary<string, Tenant>();
 
-            AddTenantsFromConfiguration(tenantConfigurations);
+            AddTenantsFromPersistentLog();
         }
 
-        private void AddTenantsFromConfiguration(List<TenantConfiguration> tenantConfigurations)
+        private void AddTenantsFromPersistentLog()
         {
-            foreach (var tenantConfig in tenantConfigurations)
+            var tenants = _coreRepository.GetTenants();
+            foreach (var tenant in tenants)
             {
-                AddTenantFromApi(tenantConfig);
-            }
-        }
+                // check if tenant location exits.
+                var tenantSettings = _coreRepository.GetTenantSettings(tenant.Id);
+                var tenantToAddInMemory = _tenantFactory
+                    .CreateTenant(tenant.Name, tenantSettings);
 
-        public void AddTenantFromApi(TenantConfiguration tenantConfig)
-        {
-            var tenantDetails = _tenantFactory
-                   .CreateTenant(tenantConfig.Name,
-                       tenantConfig.Settings.DigitalSignature,
-                       tenantConfig.Settings.EnableEncryption,
-                       tenantConfig.Settings.AllowProductCreation,
-                       tenantConfig.Settings.EnableAuthorization,
-                       tenantConfig.Settings.Tokens,
-                       tenantConfig.Settings.Logging,
-                       tenantConfig.Settings.EnableGeoReplication,
-                       tenantConfig.Settings.CertificatePath);
-            AddTenant(tenantConfig.Name, tenantDetails);
-
-            // add products
-            tenantConfig.Products.ForEach(product =>
-            {
-                AddProduct(tenantConfig.Name, product.Name, _tenantFactory.CreateProduct(product.Name));
-                // add components of product
-                product.Components.ForEach(component =>
+                AddTenant(tenant.Name, tenantToAddInMemory);
+                var products = _coreRepository.GetProducts(tenant.Id);
+                foreach (var product in products)
                 {
-                    AddComponent(tenantConfig.Name,
-                        product.Name,
-                        component.Name,
-                        _tenantFactory.CreateComponent(component.Name,
-                            component.Settings.AllowSchemaValidation,
-                            component.Settings.AllowTopicCreation,
-                            component.Settings.EnableAuthorization,
-                            component.Settings.Tokens));
-                    // Add topics from configuration
+                    AddProduct(tenant.Name, product.Name, _tenantFactory.CreateProduct(product.Name));
 
-                    component.Topics.ForEach(topic =>
+                    var components = _coreRepository.GetComponents(product.Id);
+                    foreach (var component in components)
                     {
-                        AddTopic(tenantConfig.Name, product.Name, component.Name, topic.Name, _tenantFactory.CreateTopic(topic.Name));
+                        var componentSettings = _coreRepository.GetComponentSettings(component.Id);
+                        AddComponent(tenant.Name, product.Name, component.Name, _tenantFactory.CreateComponent(component.Name, component.Description, componentSettings));
 
-                        foreach (var subscription in topic.Subscriptions)
+                        var topics = _coreRepository.GetTopics(component.Id);
+                        foreach (var topic in topics)
                         {
-                            AddSubscriptionConfiguration(tenantConfig.Name, product.Name, component.Name, topic.Name, subscription.Key,
-                                 _subscriptionFactory.CreateSubscription(tenantConfig.Name, product.Name, component.Name, topic.Name, subscription.Key, subscription.Value.SubscriptionType,
-                                subscription.Value.SubscriptionMode, subscription.Value.InitialPosition));
+                            AddTopic(tenant.Name, product.Name, component.Name, topic.Name, _tenantFactory.CreateTopic(topic.Name, topic.Description));
+
+                            var subscriptions = _coreRepository.GetSubscriptions(topic.Id);
+                            foreach (var subscription in subscriptions)
+                            {
+                                AddSubscriptionConfiguration(tenant.Name, product.Name, component.Name, topic.Name, subscription.Name,
+                                        _subscriptionFactory.CreateSubscription(tenant.Name, product.Name, component.Name, topic.Name, subscription.Name, subscription.SubscriptionType,
+                                        subscription.SubscriptionMode, subscription.InitialPosition));
+                            }
                         }
-                    });
-                });
-            });
+                    }
+                }
+            }
         }
 
         public bool AddTopic(string tenant, string product, string component, string topicName, Topic topic, bool notifyOtherNodes = true)
@@ -124,15 +118,14 @@ namespace Buildersoft.Andy.X.Core.Services.App
                         _tenants[tenant].Products[product].Components[component].Topics.TryAdd(topicName, topic);
                     }
 
-            List<TenantConfiguration> tenantsConfig = TenantIOReader.ReadTenantsFromConfigFile();
-            var tenantDetail = tenantsConfig.Find(x => x.Name == tenant);
+            var tenantDetail = _coreRepository.GetTenant(tenant);
             if (tenantDetail != null)
             {
-                var productDetail = tenantDetail.Products.Find(x => x.Name == product);
+                var productDetail = _coreRepository.GetProduct(tenantDetail.Id, product);
                 if (productDetail == null)
                     return false;
 
-                var componentDetails = productDetail.Components.Find(x => x.Name == component);
+                var componentDetails = _coreRepository.GetComponent(tenantDetail.Id, productDetail.Id, component);
                 if (componentDetails == null)
                     return false;
 
@@ -170,52 +163,54 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 // We are not initializing the readonly when the topic is created, beacuse of memory leak.
                 //_orchestratorService.InitializeTopicReadonlyDataService(tenant, product, component, topic);
 
-                var topicDetails = componentDetails.Topics.Find(x => x.Name == topicName);
+                var topicDetails = _coreRepository.GetTopic(componentDetails.Id, topicName);
                 if (topicDetails != null)
                     return false;
 
-                componentDetails.Topics.Add(new TopicConfiguration() { Name = topicName });
-                if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
-                    return true;
+                return _coreService.CreateTopic(tenant, product, component, topicName, topic.Description);
             }
 
             return false;
         }
 
-        public bool AddSubscriptionConfiguration(string tenant, string product, string component, string topicName, string subscriptionName, Subscription subscription)
+        public bool AddSubscriptionConfiguration(string tenant, string product, string component, string topicName, string subscriptionName, Subscription subscription, bool notifyOtherNodes = true)
         {
 
-            List<TenantConfiguration> tenantsConfig = TenantIOReader.ReadTenantsFromConfigFile();
-            var tenantDetail = tenantsConfig.Find(x => x.Name == tenant);
+            var tenantDetail = _coreRepository.GetTenant(tenant);
             if (tenantDetail != null)
             {
-                var productDetail = tenantDetail.Products.Find(x => x.Name == product);
+                var productDetail = _coreRepository.GetProduct(tenantDetail.Id, product);
                 if (productDetail == null)
                     return false;
 
-                var componentDetails = productDetail.Components.Find(x => x.Name == component);
+                var componentDetails = _coreRepository.GetComponent(tenantDetail.Id, productDetail.Id, component);
                 if (componentDetails == null)
                     return false;
 
-                var topicDetails = componentDetails.Topics.Find(x => x.Name == topicName);
+                var topicDetails = _coreRepository.GetTopic(componentDetails.Id, topicName);
                 if (topicDetails == null)
                     return false;
 
-                TenantIOService.TryCreateSubscriptionDirectory(tenant, product, component, topicName, subscriptionName);
+                if (TenantIOService.TryCreateSubscriptionDirectory(tenant, product, component, topicName, subscriptionName) == true)
+                {
+                    if (notifyOtherNodes == true)
+                        _clusterHubService.CreateSubscription_AllNodes(subscription);
+                }
 
                 var subId = ConnectorHelper.GetSubcriptionId(tenant, product, component, topicName, subscriptionName);
                 _subscriptionHubRepository.AddSubscription(subId, _tenants[tenant].Products[product].Components[component].Topics[topicName], subscription);
 
 
                 // check if the subscription exists in topicState
+                var nodeSubscriptionId = ConnectorHelper.GetNodeSubcriptionId(_nodeConfiguration.NodeId, subId);
                 using (var topicStateContext = new TopicEntryPositionContext(tenant, product, component, topicName))
                 {
-                    var currentSubscriptionData = topicStateContext.TopicStates.Find(subId);
+                    var currentSubscriptionData = topicStateContext.TopicStates.Find(nodeSubscriptionId);
                     if (currentSubscriptionData == null)
                     {
                         currentSubscriptionData = new Model.Entities.Storages.TopicEntryPosition()
                         {
-                            Id = subId,
+                            Id = nodeSubscriptionId,
                             CurrentEntry = 0,
                             MarkDeleteEntryPosition = 0,
                             CreateDate = System.DateTimeOffset.Now
@@ -227,18 +222,10 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
                 _orchestratorService.InitializeSubscriptionUnackedDataService(tenant, product, component, topicName, subscriptionName);
 
-                if (topicDetails.Subscriptions.ContainsKey(subscriptionName) != true)
+                var subscriptionDetails = _coreRepository.GetSubscription(topicDetails.Id, subscriptionName);
+                if (subscriptionDetails == null)
                 {
-                    topicDetails.Subscriptions.Add(subscriptionName, new SubscriptionConfiguration()
-                    {
-                        SubscriptionType = subscription.SubscriptionType,
-                        SubscriptionMode = subscription.SubscriptionMode,
-                        InitialPosition = subscription.InitialPosition,
-                        CreatedDate = subscription.CreatedDate,
-                    });
-
-                    if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
-                        return true;
+                    return _coreService.CreateSubscription(tenant, product, component, topicName, subscriptionName, subscription.SubscriptionType, subscription.SubscriptionMode, subscription.InitialPosition);
                 }
             }
 
@@ -252,13 +239,13 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 if (_tenants[tenant].Products.ContainsKey(product))
                     _tenants[tenant].Products[product].Components.TryAdd(componentName, component);
 
-            //add component to tenants_config.json
-            List<TenantConfiguration> tenantsConfig = TenantIOReader.ReadTenantsFromConfigFile();
-            var tenantDetail = tenantsConfig.Find(x => x.Name == tenant);
-            if (tenantDetail != null)
+            //add component to tenants log
+
+            var tenantDetails = _coreRepository.GetTenant(tenant);
+            if (tenantDetails != null)
             {
-                var productDetail = tenantDetail.Products.Find(x => x.Name == product);
-                if (productDetail == null)
+                var productDetails = _coreRepository.GetProduct(tenantDetails.Id, product);
+                if (productDetails == null)
                     return false;
 
                 if (TenantIOService.TryCreateComponentDirectory(tenant, product, componentName) == true)
@@ -267,14 +254,12 @@ namespace Buildersoft.Andy.X.Core.Services.App
                         _clusterHubService.CreateComponent_AllNodes(tenant, product, component);
                 }
 
-                var componentDetails = productDetail.Components.Find(x => x.Name == componentName);
+                var componentDetails = _coreRepository.GetComponent(tenantDetails.Id, productDetails.Id, componentName);
                 if (componentDetails != null)
                     return true;
 
 
-                productDetail.Components.Add(new ComponentConfiguration() { Name = componentName, Settings = component.Settings, Topics = new List<TopicConfiguration>() });
-                if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
-                    return true;
+                return _coreService.CreateComponent(tenant, product, componentName, component.Description, component.Settings.IsTopicAutomaticCreation, component.Settings.IsSchemaValidationEnabled, component.Settings.IsAuthorizationEnabled);
             }
 
             return false;
@@ -286,29 +271,20 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 _tenants[tenant].Products.TryAdd(productName, product);
 
             // adding product to tenants_config
-            List<TenantConfiguration> tenantsConfig = TenantIOReader.ReadTenantsFromConfigFile();
-            var tenantDetail = tenantsConfig.Find(x => x.Name == tenant);
+            var tenantDetail = _coreRepository.GetTenant(tenant);
             if (tenantDetail != null)
             {
-                if (tenantDetail.Products == null)
-                    tenantDetail.Products = new List<ProductConfiguration>();
-
                 if (TenantIOService.TryCreateProductDirectory(tenant, productName) == true)
                 {
                     if (notifyOtherNodes == true)
                         _clusterHubService.CreateProduct_AllNodes(tenant, product);
                 }
 
-                var productDetail = tenantDetail.Products.Find(x => x.Name == productName);
-                if (productDetail != null)
+                var productDetails = _coreRepository.GetProduct(tenantDetail.Id, productName);
+                if (productDetails != null)
                     return true;
 
-                // register product to tenantConfiguration
-                tenantDetail.Products.Add(new ProductConfiguration() { Name = productName, Components = new List<ComponentConfiguration>() });
-
-
-                if (TenantIOWriter.WriteTenantsConfiguration(tenantsConfig) == true)
-                    return true;
+                return _coreService.CreateProduct(tenant, productName, product.Description);
             }
 
             return false;
@@ -319,7 +295,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             if (TenantIOService.TryCreateTenantDirectory(tenantName) == true)
             {
                 if (notifyOtherNodes == true)
-                    _clusterHubService.CreateTenant_AllNodes(tenant.Id, tenantName, tenant.Settings);
+                    _clusterHubService.CreateTenant_AllNodes(tenantName, tenant.Settings);
             }
 
             return _tenants.TryAdd(tenantName, tenant);
@@ -396,100 +372,6 @@ namespace Buildersoft.Andy.X.Core.Services.App
                         return _tenants[tenant].Products[product].Components[component].Topics;
 
             return null;
-        }
-
-        public TenantToken GetTenantToken(string tenant, string token)
-        {
-            if (_tenants.ContainsKey(tenant))
-                return _tenants[tenant].Settings.Tokens.Where(t => t.Token == token).FirstOrDefault();
-
-            return null;
-        }
-
-        public ComponentToken GetComponentToken(string tenant, string product, string component, string componentToken)
-        {
-            if (_tenants.ContainsKey(tenant))
-                if (_tenants[tenant].Products.ContainsKey(product))
-                    if (_tenants[tenant].Products[product].Components.ContainsKey(component))
-                        return _tenants[tenant].Products[product].Components[component]
-                            .Settings
-                            .Tokens
-                            .Where(t => t.Token == componentToken).FirstOrDefault();
-
-            return null;
-        }
-
-        public bool AddTenantToken(string tenant, TenantToken token)
-        {
-            var tenantDetails = GetTenant(tenant);
-            if (tenantDetails == null)
-                return false;
-
-            tenantDetails.Settings.Tokens.Add(token);
-            return true;
-        }
-
-        public bool AddComponentToken(string tenant, string product, string component, ComponentToken componentToken)
-        {
-            var componentDetail = GetComponent(tenant, product, component);
-            if (componentDetail == null)
-                return false;
-
-            componentDetail.Settings.Tokens.Add(componentToken);
-            return true;
-        }
-
-        public List<ComponentToken> GetComponentTokens(string tenant, string product, string component)
-        {
-            var componentDetail = GetComponent(tenant, product, component);
-            if (componentDetail == null)
-                return new List<ComponentToken>();
-
-            return componentDetail.Settings.Tokens;
-        }
-
-        public bool AddComponentRetention(string tenant, string product, string component, ComponentRetention componentRetention)
-        {
-            var componentDetail = GetComponent(tenant, product, component);
-            if (componentDetail == null)
-                return false;
-
-            componentDetail.Settings.RetentionPolicy = componentRetention;
-            return true;
-        }
-
-        public ComponentRetention GetComponentRetention(string tenant, string product, string component)
-        {
-            var componentDetail = GetComponent(tenant, product, component);
-            if (componentDetail == null)
-                return null;
-
-            return componentDetail.Settings.RetentionPolicy;
-        }
-
-        public bool RemoveTenantToken(string tenant, string token)
-        {
-            var tenantDetails = GetTenant(tenant);
-            if (tenantDetails == null)
-                return false;
-
-            var tenantToken = tenantDetails.Settings.Tokens.Find(x => x.Token == token);
-            if (tenantToken == null)
-                return true;
-
-            return tenantDetails.Settings.Tokens.Remove(tenantToken);
-        }
-
-        public bool RemoveComponentToken(string tenant, string product, string component, string token)
-        {
-            var componentDetail = GetComponent(tenant, product, component);
-            if (componentDetail == null)
-                return false;
-            var componentToken = componentDetail.Settings.Tokens.Find(x => x.Token == token);
-            if (componentToken == null)
-                return true;
-
-            return componentDetail.Settings.Tokens.Remove(componentToken);
         }
     }
 }
