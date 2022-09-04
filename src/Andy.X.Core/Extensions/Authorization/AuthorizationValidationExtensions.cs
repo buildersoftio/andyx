@@ -46,7 +46,7 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
             if (tenantToken.Secret != encryptedSecret)
                 return false;
 
-            var roles = tenantToken.Roles.JsonToObject<List<TenantTokenRole>>();
+            var roles = tenantToken.Roles;
 
             if (isConsumer == true)
                 if (roles.Contains(TenantTokenRole.Consume) != true)
@@ -92,7 +92,7 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
             if (productToken.Secret != encryptedSecret)
                 return false;
 
-            var roles = productToken.Roles.JsonToObject<List<ProductTokenRole>>();
+            var roles = productToken.Roles;
 
             if (isConsumer == true)
                 if (roles.Contains(ProductTokenRole.Consume) != true)
@@ -139,7 +139,7 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
             if (componentToken.Secret != encryptedSecret)
                 return false;
 
-            var roles = componentToken.Roles.JsonToObject<List<ComponentTokenRole>>();
+            var roles = componentToken.Roles;
 
             if (isConsumer == true)
                 if (roles.Contains(ComponentTokenRole.Consume) != true)

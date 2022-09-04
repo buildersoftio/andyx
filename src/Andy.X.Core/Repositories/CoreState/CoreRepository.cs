@@ -1,16 +1,12 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 using Buildersoft.Andy.X.Core.Contexts.CoreState;
-using Buildersoft.Andy.X.IO.Locations;
-using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
 using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using Buildersoft.Andy.X.Model.Entities.Core.Subscriptions;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
 using Buildersoft.Andy.X.Model.Entities.Core.Topics;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -602,6 +598,14 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
             return _coreStateContext
                 .Subscriptions
                 .Where(s => s.TopicId == topicId)
+                .ToList();
+        }
+
+        public List<TenantToken> GetTenantToken(long tenantId)
+        {
+            return _coreStateContext
+                .TenantTokens
+                .Where(t => t.TenantId == tenantId)
                 .ToList();
         }
     }

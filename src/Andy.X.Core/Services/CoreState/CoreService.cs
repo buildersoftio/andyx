@@ -266,7 +266,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                 ExpireDate = expireDate,
                 Secret = encryptedSecret,
                 IsActive = true,
-                Roles = tenantTokenRoles.ToJson(),
+                _Roles = tenantTokenRoles.ToJson(),
 
                 CreatedBy = "system",
                 CreatedDate = DateTimeOffset.Now
@@ -451,7 +451,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                 Secret = encryptedSecret,
                 ProductId = currentProduct.Id,
 
-                Roles = productTokenRoles.ToJson(),
+                _Roles = productTokenRoles.ToJson(),
 
                 CreatedBy = "system",
                 CreatedDate = DateTimeOffset.Now
@@ -752,7 +752,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                 ExpireDate = expireDate,
                 IssuedFor = issuedFor,
 
-                Roles = componentTokenRoles.ToJson(),
+                _Roles = componentTokenRoles.ToJson(),
 
                 CreatedDate = DateTimeOffset.UtcNow,
                 CreatedBy = "SYSTEM"

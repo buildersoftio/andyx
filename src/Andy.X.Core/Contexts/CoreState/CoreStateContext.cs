@@ -25,6 +25,10 @@ namespace Buildersoft.Andy.X.Core.Contexts.CoreState
         {
             modelBuilder.Entity<Tenant>()
             .HasIndex(p => new { p.Name }).IsUnique();
+
+            modelBuilder.Entity<TenantToken>().Ignore(t => t.Roles);
+            modelBuilder.Entity<ProductToken>().Ignore(t => t.Roles);
+            modelBuilder.Entity<ComponentToken>().Ignore(t => t.Roles);
         }
 
         // Tenant Related Tables

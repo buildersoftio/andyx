@@ -29,6 +29,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState
         void EditTenantToken(TenantToken tenantToken);
         void DeleteTenantToken(Guid id);
         TenantToken GetTenantToken(Guid id);
+        List<TenantToken> GetTenantToken(long tenantId);
 
         void AddTenantRetention(TenantRetention tenantRetention);
         void EditTenantRetention(TenantRetention tenantRetention);

@@ -33,8 +33,6 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Tenants
         public string UpdatedBy { get; set; }
 
         [JsonIgnore]
-        [Required]
         public string CreatedBy { get; set; }
-
     }
 }

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Buildersoft.Andy.X.Model.Entities.Core.Tenants
 {
     public class TenantRetention
     {
+        [JsonIgnore]
         [ForeignKey("Tenants")]
         public long TenantId { get; set; }
 
@@ -21,8 +23,6 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Tenants
         public DateTimeOffset CreatedDate { get; set; }
 
         public string UpdatedBy { get; set; }
-
-        [Required]
         public string CreatedBy { get; set; }
     }
 }
