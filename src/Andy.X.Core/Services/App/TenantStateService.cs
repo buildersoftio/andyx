@@ -71,7 +71,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
         private void AddTenantsFromPersistentLog()
         {
-            var tenants = _coreRepository.GetTenants();
+            var tenants = _coreRepository.GetTenants(withInActive: false);
             foreach (var tenant in tenants)
             {
                 // check if tenant location exits.
@@ -259,7 +259,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
                     return true;
 
 
-                return _coreService.CreateComponent(tenant, product, componentName, component.Description, component.Settings.IsTopicAutomaticCreation, component.Settings.IsSchemaValidationEnabled, component.Settings.IsAuthorizationEnabled);
+                return _coreService.CreateComponent(tenant, product, componentName, component.Description, component.Settings.IsTopicAutomaticCreationAllowed, component.Settings.IsSchemaValidationEnabled, component.Settings.IsAuthorizationEnabled, component.Settings.IsSubscriptionAutomaticCreationAllowed);
             }
 
             return false;

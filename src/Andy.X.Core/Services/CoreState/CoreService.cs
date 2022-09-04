@@ -37,13 +37,13 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                 var tenantsFromSettings = JsonConvert.DeserializeObject<List<TenantConfiguration>>(File.ReadAllText(ConfigurationLocations.GetTenantsInitialConfigurationFile()));
                 foreach (var tenant in tenantsFromSettings)
                 {
-                    CreateTenant(tenant.Name, tenant.Settings.IsProductAutomaticCreation, tenant.Settings.IsEncryptionEnabled, tenant.Settings.IsAuthorizationEnabled);
+                    CreateTenant(tenant.Name, tenant.Settings.IsProductAutomaticCreationAllowed, tenant.Settings.IsEncryptionEnabled, tenant.Settings.IsAuthorizationEnabled);
                     foreach (var product in tenant.Products)
                     {
                         CreateProduct(tenant.Name, product.Name, "initial");
                         foreach (var component in product.Components)
                         {
-                            CreateComponent(tenant.Name, product.Name, component.Name, "initial", component.Settings.IsTopicAutomaticCreation, component.Settings.IsSchemaValidationEnabled, component.Settings.IsAuthorizationEnabled);
+                            CreateComponent(tenant.Name, product.Name, component.Name, "initial", component.Settings.IsTopicAutomaticCreationAllowed, component.Settings.IsSchemaValidationEnabled, component.Settings.IsAuthorizationEnabled, component.Settings.IsSubscriptionAutomaticCreationAllowed);
                             foreach (var topic in component.Topics)
                             {
                                 CreateTopic(tenant.Name, product.Name, component.Name, topic.Name, "initial");
@@ -80,7 +80,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             {
                 TenantId = tenantToRegister.Id,
                 IsAuthorizationEnabled = isAuthorizationEnabled,
-                IsProductAutomaticCreation = isProductCreation,
+                IsProductAutomaticCreationAllowed = isProductCreation,
                 IsEncryptionEnabled = isEncryptionEnabled,
 
                 CreatedBy = "system",
@@ -161,7 +161,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             currentTenantSettings.IsEncryptionEnabled = isEncryptionEnabled;
             currentTenantSettings.IsAuthorizationEnabled = isAuthorizationEnabled;
-            currentTenantSettings.IsProductAutomaticCreation = isProductCreation;
+            currentTenantSettings.IsProductAutomaticCreationAllowed = isProductCreation;
             currentTenantSettings.UpdatedDate = DateTimeOffset.Now;
             currentTenantSettings.UpdatedBy = "SYSTEM";
 
@@ -596,9 +596,9 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
         public bool CreateComponent(string tenant, string product, string componentName, string description)
         {
-            return CreateComponent(tenant, product, componentName, description, true, false, false);
+            return CreateComponent(tenant, product, componentName, description, true, false, false, true);
         }
-        public bool CreateComponent(string tenant, string product, string componentName, string description, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled)
+        public bool CreateComponent(string tenant, string product, string componentName, string description, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled, bool isSubscriptionAllowToCreate)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -630,9 +630,10 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             var defaultSettings = new ComponentSettings()
             {
                 ComponentId = componentToRegister.Id,
-                IsTopicAutomaticCreation = isTopicAutomaticCreation,
+                IsTopicAutomaticCreationAllowed = isTopicAutomaticCreation,
                 IsSchemaValidationEnabled = isSchemaValidationEnabled,
                 IsAuthorizationEnabled = isAuthorizationEnabled,
+                IsSubscriptionAutomaticCreationAllowed = isSubscriptionAllowToCreate,
 
                 CreatedBy = "system",
                 CreatedDate = DateTimeOffset.Now
@@ -691,7 +692,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             return true;
         }
-        public bool UpdateComponentSettings(string tenant, string product, string componentName, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled)
+        public bool UpdateComponentSettings(string tenant, string product, string componentName, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled, bool isSubscriptionAllowToCreate)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -710,8 +711,9 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                 return false; // settings doesnot exists, something is really wrong.!
 
             currentSettings.IsSchemaValidationEnabled = isSchemaValidationEnabled;
-            currentSettings.IsTopicAutomaticCreation = isTopicAutomaticCreation;
+            currentSettings.IsTopicAutomaticCreationAllowed = isTopicAutomaticCreation;
             currentSettings.IsAuthorizationEnabled = isAuthorizationEnabled;
+            currentSettings.IsSubscriptionAutomaticCreationAllowed = isSubscriptionAllowToCreate;
 
             currentSettings.UpdatedDate = DateTimeOffset.UtcNow;
             currentSettings.UpdatedBy = "SYSTEM";

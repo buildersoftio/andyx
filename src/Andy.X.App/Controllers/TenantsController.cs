@@ -68,6 +68,53 @@ namespace Buildersoft.Andy.X.Controllers
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpPut("{tenant}/activate")]
+        public ActionResult<Tenant> ActiveTenant(string tenant)
+        {
+            var tenantDetails = _coreRepository.GetTenant(tenant);
+            if (tenantDetails is null)
+                return NotFound($"Tenant {tenant} does not exists in this cluster");
+
+            if (_coreService.ActivateTenant(tenant))
+                return Ok(_coreRepository.GetTenant(tenant));
+
+            return BadRequest("Tenant couldn't activate at this moment");
+        }
+
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpPut("{tenant}/deactivate")]
+        public ActionResult<Tenant> DeactivateTenant(string tenant)
+        {
+            var tenantDetails = _coreRepository.GetTenant(tenant);
+            if (tenantDetails is null)
+                return NotFound($"Tenant {tenant} does not exists in this cluster");
+
+            if (_coreService.DeactivateTenant(tenant))
+                return Ok(_coreRepository.GetTenant(tenant));
+
+            return BadRequest("Tenant couldn't deactivate at this moment");
+        }
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpDelete("{tenant}/delete")]
+        public ActionResult<Tenant> DeleteTenant(string tenant)
+        {
+            var tenantDetails = _coreRepository.GetTenant(tenant);
+            if (tenantDetails is null)
+                return NotFound($"Tenant {tenant} does not exists in this cluster");
+
+            var settings = _coreRepository.GetTenantSettings(tenantDetails.Id);
+            if (_coreService.DeleteTenant(tenant))
+                return Ok("Tenant is marked for deletion, this is an async process, andy will disconnect connections to this tenant, if you try to create a new tenant with the same name it may not work for now");
+
+            return BadRequest("Tenant couldn't delete at this moment");
+        }
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{tenant}/settings")]
         public ActionResult<TenantSettings> GetTenantSettings(string tenant)
         {
@@ -90,7 +137,7 @@ namespace Buildersoft.Andy.X.Controllers
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
 
             bool isUpdated = _coreService
-                .UpdateTenantSettings(tenant, tenantSettings.IsProductAutomaticCreation, tenantSettings.IsEncryptionEnabled, tenantSettings.IsAuthorizationEnabled);
+                .UpdateTenantSettings(tenant, tenantSettings.IsProductAutomaticCreationAllowed, tenantSettings.IsEncryptionEnabled, tenantSettings.IsAuthorizationEnabled);
             if (isUpdated)
                 return Ok("Settings have been updated, tenant in the cluster is marked to refresh settings, this may take a while");
 
@@ -106,12 +153,12 @@ namespace Buildersoft.Andy.X.Controllers
             if (tenantDetails is not null)
                 return BadRequest($"Tenant {tenant} already exists in the cluster");
 
-            bool isTenantCreated = _coreService.CreateTenant(tenant, tenantSettings.IsProductAutomaticCreation, tenantSettings.IsEncryptionEnabled, tenantSettings.IsAuthorizationEnabled);
+            bool isTenantCreated = _coreService.CreateTenant(tenant, tenantSettings.IsProductAutomaticCreationAllowed, tenantSettings.IsEncryptionEnabled, tenantSettings.IsAuthorizationEnabled);
             if (isTenantCreated)
             {
                 // update in memory
 
-                _tenantStateService.AddTenant(tenant, _tenantFactory.CreateTenant(tenant, tenantSettings.IsEncryptionEnabled, tenantSettings.IsProductAutomaticCreation, tenantSettings.IsAuthorizationEnabled));
+                _tenantStateService.AddTenant(tenant, _tenantFactory.CreateTenant(tenant, tenantSettings.IsEncryptionEnabled, tenantSettings.IsProductAutomaticCreationAllowed, tenantSettings.IsAuthorizationEnabled));
                 var tenantName = tenant;
                 return Ok("Tenant has been created");
             }

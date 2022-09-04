@@ -12,7 +12,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState
 {
     public interface ICoreRepository
     {
-        List<Tenant> GetTenants();
+        List<Tenant> GetTenants(bool withInActive = true);
         void AddTenant(Tenant tenant);
         void EditTenant(Tenant tenant);
         void SoftDeleteTenant(long tenantId);

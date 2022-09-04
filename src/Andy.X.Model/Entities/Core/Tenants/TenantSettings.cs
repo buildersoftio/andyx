@@ -15,7 +15,7 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Tenants
         [ForeignKey("Tenants")]
         public long TenantId { get; set; }
 
-        public bool IsProductAutomaticCreation { get; set; }
+        public bool IsProductAutomaticCreationAllowed { get; set; }
         public bool IsEncryptionEnabled { get; set; }
         public bool IsAuthorizationEnabled { get; set; }
 
