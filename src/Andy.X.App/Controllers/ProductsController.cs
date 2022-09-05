@@ -86,14 +86,14 @@ namespace Buildersoft.Andy.X.Controllers
             if (productDetails is not null)
                 return BadRequest($"Product already exists");
 
-            bool isCreated = _coreService.CreateProduct(tenant, product, description, productSettings.IsAuthorizationEnabled);
+            var isCreated = _coreService.CreateProduct(tenant, product, description, productSettings.IsAuthorizationEnabled);
             if (isCreated == true)
             {
                 _tenantStateService.AddProduct(tenant, product, _tenantFactory.CreateProduct(product, description));
                 return Ok("Product has been created");
             }
 
-            return BadRequest("Something went wrong, Product couldnot be created");
+            return BadRequest("Something went wrong, product couldnot be created");
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -115,7 +115,7 @@ namespace Buildersoft.Andy.X.Controllers
                 return Ok(_coreRepository.GetProduct(tenantDetails.Id, product));
             }
 
-            return BadRequest("Something went wrong, Product couldnot be created");
+            return BadRequest("Something went wrong, product couldnot be created");
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -172,9 +172,9 @@ namespace Buildersoft.Andy.X.Controllers
 
             bool isUpdated = _coreService.UpdateProductSettings(tenant, product, productSettings.IsAuthorizationEnabled);
             if (isUpdated == true)
-                return Ok("Settings have been updated, product in the tenant is marked to refresh settings, this may take a while");
+                return Ok("Product settings have been updated, product in the tenant is marked to refresh settings, this may take a while");
 
-            return BadRequest("Something went wrong, Product couldnot be created");
+            return BadRequest("Something went wrong, product settings couldnot be updated");
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -294,7 +294,7 @@ namespace Buildersoft.Andy.X.Controllers
 
             var isCreated = _coreService.CreateProductRetention(tenant, product, productRetention.Name, productRetention.Type, productRetention.TimeToLiveInMinutes);
             if (isCreated)
-                return Ok("Product Retention has been created, this is async process, it will take some time to start reflecting");
+                return Ok("Product retention has been created, this is async process, it will take some time to start reflecting");
 
             return BadRequest("Retention with the same type exists already, please update the stored one");
         }
@@ -302,7 +302,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{product}/retentions/{id}")]
-        public ActionResult<string> AddProductRetention(string tenant, string product, long id, [FromBody] ProductRetention productRetention)
+        public ActionResult<string> UpdateProductRetention(string tenant, string product, long id, [FromBody] ProductRetention productRetention)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
@@ -314,9 +314,29 @@ namespace Buildersoft.Andy.X.Controllers
 
             var isUpdated = _coreService.UpdateProductRetention(tenant, product, id, productRetention.Name, productRetention.TimeToLiveInMinutes);
             if (isUpdated)
-                return Ok("Product Retention has been updated, this is async process, it will take some time to start reflecting");
+                return Ok("Product retention has been updated, this is async process, it will take some time to start reflecting");
 
-            return BadRequest("Update of Product Retention couldnot happend, please try again");
+            return BadRequest("Update of Product retention couldnot happend, please try again");
+        }
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpDelete("{product}/retentions/{id}")]
+        public ActionResult<string> DeleteProductRetention(string tenant, string product, long id)
+        {
+            var tenantDetails = _coreRepository.GetTenant(tenant);
+            if (tenantDetails is null)
+                return NotFound($"Tenant {tenant} does not exists in this cluster");
+
+            var productDetails = _coreRepository.GetProduct(tenantDetails.Id, product);
+            if (productDetails is null)
+                return NotFound($"Product {product} does not exists in {tenant}");
+
+            var isDeleted = _coreService.DeleteProductRetention(tenant, product, id);
+            if (isDeleted)
+                return Ok("Product retention has been deleted, this is async process, it will take some time to start reflecting");
+
+            return BadRequest("Delete of Product retention couldnot happend, please try again");
         }
     }
 }

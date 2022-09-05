@@ -75,6 +75,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState
         void EditComponentToken(ComponentToken componentToken);
         void DeleteComponentToken(Guid id);
         ComponentToken GetComponentToken(Guid id);
+        List<ComponentToken> GetComponentToken(long componentId);
 
         void AddComponentSettings(ComponentSettings componentSettings);
         void EditComponentSettings(ComponentSettings componentSettings);

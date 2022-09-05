@@ -22,8 +22,6 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Products
         public DateTimeOffset CreatedDate { get; set; }
 
         public string UpdatedBy { get; set; }
-
-        [Required]
         public string CreatedBy { get; set; }
     }
 }

@@ -1,11 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using System;
+using System.Text.Json.Serialization;
 
 namespace Buildersoft.Andy.X.Model.Entities.Core.Components
 {
     public class ComponentRetention
     {
+        [JsonIgnore]
         [ForeignKey("Components")]
         public long ComponentId { get; set; }
 
@@ -21,9 +23,6 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Components
         public DateTimeOffset CreatedDate { get; set; }
 
         public string UpdatedBy { get; set; }
-
-        [Required]
         public string CreatedBy { get; set; }
-
     }
 }
