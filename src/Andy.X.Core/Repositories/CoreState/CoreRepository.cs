@@ -613,5 +613,13 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
                 .Where(t => t.TenantId == tenantId)
                 .ToList();
         }
+
+        public List<ProductToken> GetProductToken(long productId)
+        {
+            return _coreStateContext
+             .ProductTokens
+             .Where(t => t.ProductId == productId)
+             .ToList();
+        }
     }
 }

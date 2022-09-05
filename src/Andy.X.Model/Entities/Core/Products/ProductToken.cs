@@ -39,7 +39,7 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Products
         public bool IsActive { get; set; }
         public DateTimeOffset ExpireDate { get; set; }
 
-        public string Desciption { get; set; }
+        public string Description { get; set; }
         public DateTimeOffset IssuedDate { get; set; }
 
         public DateTimeOffset? UpdatedDate { get; set; }

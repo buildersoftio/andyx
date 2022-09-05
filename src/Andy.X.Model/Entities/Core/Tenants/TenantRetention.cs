@@ -18,7 +18,6 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Tenants
         public RetentionType Type { get; set; }
         public long TimeToLiveInMinutes { get; set; }
 
-
         public DateTimeOffset? UpdatedDate { get; set; }
         public DateTimeOffset CreatedDate { get; set; }
 

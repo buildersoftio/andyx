@@ -3,8 +3,6 @@ using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
-using Buildersoft.Andy.X.Utility.Extensions.Json;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -100,7 +98,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete("{tenant}/delete")]
-        public ActionResult<Tenant> DeleteTenant(string tenant)
+        public ActionResult<string> DeleteTenant(string tenant)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
@@ -205,7 +203,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{tenant}/tokens/{key}/revoke")]
-        public ActionResult<TenantToken> RevokeTenantToken(string tenant, Guid key)
+        public ActionResult<string> RevokeTenantToken(string tenant, Guid key)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
@@ -225,7 +223,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost("{tenant}/tokens")]
-        public ActionResult<List<string>> PostTenantTokens(string tenant, [FromBody] TenantToken tenantToken)
+        public ActionResult<string> PostTenantTokens(string tenant, [FromBody] TenantToken tenantToken)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
@@ -235,7 +233,7 @@ namespace Buildersoft.Andy.X.Controllers
             if (tenantTokenCreated)
                 return Ok(new { Key = key, Secret = secret });
 
-            return BadRequest("Something went wrong, token has not been created");
+            return BadRequest("Something went wrong, token couldnot be created");
         }
 
 
@@ -256,7 +254,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPost("{tenant}/retentions")]
-        public ActionResult<List<TenantRetention>> PostTenantRetentions(string tenant, [FromBody] TenantRetention tenantRetention)
+        public ActionResult<string> PostTenantRetentions(string tenant, [FromBody] TenantRetention tenantRetention)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
@@ -274,7 +272,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{tenant}/retentions/id")]
-        public ActionResult<List<TenantRetention>> PostTenantRetentions(string tenant, long id, [FromBody] TenantRetention tenantRetention)
+        public ActionResult<string> PutTenantRetentions(string tenant, long id, [FromBody] TenantRetention tenantRetention)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
