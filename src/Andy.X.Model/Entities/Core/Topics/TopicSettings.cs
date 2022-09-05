@@ -3,5 +3,6 @@
     public class TopicSettings
     {
         // TODO...
+        // Add rocksdb settings, config memory properties for topic.
     }
 }

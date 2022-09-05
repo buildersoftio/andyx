@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Buildersoft.Andy.X.Model.Entities.Core.Components
 {
@@ -9,6 +10,7 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Components
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
 
+        [JsonIgnore]
         [ForeignKey("Products")]
         public long ProductId { get; set; }
 
@@ -19,8 +21,6 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Components
         public DateTimeOffset CreatedDate { get; set; }
 
         public string UpdatedBy { get; set; }
-
-        [Required]
         public string CreatedBy { get; set; }
     }
 }

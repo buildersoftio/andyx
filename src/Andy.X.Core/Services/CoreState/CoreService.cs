@@ -747,7 +747,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             var newToken = new ComponentToken()
             {
                 ComponentId = currentComponent.Id,
-                Desciption = description,
+                Description = description,
                 IsActive = true,
                 Secret = encryptedSecret,
                 IssuedDate = DateTimeOffset.Now,

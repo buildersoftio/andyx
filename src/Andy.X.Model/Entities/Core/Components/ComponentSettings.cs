@@ -34,7 +34,6 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Components
         public string UpdatedBy { get; set; }
 
         [JsonIgnore]
-        [Required]
         public string CreatedBy { get; set; }
     }
 }

@@ -286,5 +286,23 @@ namespace Buildersoft.Andy.X.Controllers
 
             return BadRequest("Update of Tenant Retention couldnot happend, please try again");
         }
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpDelete("{tenant}/retentions/id")]
+        public ActionResult<string> DeleteTenantRetentions(string tenant, long id)
+        {
+            var tenantDetails = _coreRepository.GetTenant(tenant);
+            if (tenantDetails is null)
+                return NotFound($"Tenant {tenant} does not exists in this cluster");
+
+            var retentionDeleted = _coreService.DeleteTenantRetention(tenant, id);
+            if (retentionDeleted)
+            {
+                return Ok("Tenant Retention has been deleted, this is async process, it will take some time to start reflecting");
+            }
+
+            return BadRequest("Update of tenant retention deleted couldnot happend, please try again");
+        }
     }
 }

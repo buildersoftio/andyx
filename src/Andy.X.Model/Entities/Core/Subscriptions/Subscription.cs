@@ -28,8 +28,6 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Subscriptions
         public DateTimeOffset CreatedDate { get; set; }
 
         public string UpdatedBy { get; set; }
-
-        [Required]
         public string CreatedBy { get; set; }
     }
 }

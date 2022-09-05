@@ -621,5 +621,13 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
              .Where(t => t.ProductId == productId)
              .ToList();
         }
+
+        public List<ComponentToken> GetComponentToken(long componentId)
+        {
+            return _coreStateContext
+                .ComponentTokens
+                .Where(t => t.ComponentId == componentId)
+                .ToList();
+        }
     }
 }
