@@ -76,7 +76,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPost("{product}")]
-        public ActionResult<Product> CreateProduct(string tenant, string product, [FromQuery] string description, [FromBody] ProductSettings productSettings)
+        public ActionResult<string> CreateProduct(string tenant, string product, [FromQuery] string description, [FromBody] ProductSettings productSettings)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
