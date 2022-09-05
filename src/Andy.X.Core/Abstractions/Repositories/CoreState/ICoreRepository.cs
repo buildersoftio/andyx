@@ -49,6 +49,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState
         void EditProductToken(ProductToken productToken);
         void DeleteProductToken(Guid id);
         ProductToken GetProductToken(Guid id);
+        List<ProductToken> GetProductToken(long productId);
 
 
         void AddProductSettings(ProductSettings productSettings);

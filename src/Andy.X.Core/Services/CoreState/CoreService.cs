@@ -444,7 +444,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             var tokenToRegister = new ProductToken()
             {
 
-                Desciption = description,
+                Description = description,
                 ExpireDate = expireDate,
                 IsActive = true,
                 IssuedDate = DateTimeOffset.Now,

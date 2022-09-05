@@ -1,11 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Buildersoft.Andy.X.Model.Entities.Core.Products
 {
     public class ProductRetention
     {
+        [JsonIgnore]
         [ForeignKey("Products")]
         public long ProductId { get; set; }
 
@@ -16,13 +18,10 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Products
         public RetentionType Type { get; set; }
         public long TimeToLiveInMinutes { get; set; }
 
-
         public DateTimeOffset? UpdatedDate { get; set; }
         public DateTimeOffset CreatedDate { get; set; }
 
         public string UpdatedBy { get; set; }
-
-        [Required]
         public string CreatedBy { get; set; }
     }
 }
