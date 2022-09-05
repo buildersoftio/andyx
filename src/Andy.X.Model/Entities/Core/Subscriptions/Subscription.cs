@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using Buildersoft.Andy.X.Model.Subscriptions;
+using System.Text.Json.Serialization;
 
 namespace Buildersoft.Andy.X.Model.Entities.Core.Subscriptions
 {
@@ -10,6 +11,7 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Subscriptions
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
 
+        [JsonIgnore]
         [ForeignKey("Topics")]
         public long TopicId { get; set; }
 
@@ -21,6 +23,7 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Subscriptions
 
 
         // internal settings
+        [JsonIgnore]
         public bool IsMarkedForDeletion { get; set; }
 
 
