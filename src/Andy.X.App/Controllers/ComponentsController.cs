@@ -6,15 +6,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Net.Mime;
-using Buildersoft.Andy.X.Core.Factories.Tenants;
-using Buildersoft.Andy.X.Core.Repositories.CoreState;
-using Buildersoft.Andy.X.Core.Services.App;
-using Buildersoft.Andy.X.Core.Services.CoreState;
-using Serilog.Core;
 using System.Collections.Generic;
 using System.Linq;
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
-using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using System;
 
 namespace Buildersoft.Andy.X.Controllers
@@ -32,6 +26,7 @@ namespace Buildersoft.Andy.X.Controllers
         private readonly ICoreService _coreService;
         private readonly ITenantStateService _tenantStateService;
         private readonly ITenantFactory _tenantFactory;
+
         public ComponentsController(ILogger<ComponentsController> logger,
             ICoreRepository coreRepository,
             ICoreService coreService,
@@ -100,7 +95,7 @@ namespace Buildersoft.Andy.X.Controllers
 
             var componentDetails = _coreRepository.GetComponent(tenantDetails.Id, productDetails.Id, component);
             if (componentDetails is not null)
-                return BadRequest($"Product already exists");
+                return BadRequest($"Component already exists");
 
             var isCreated = _coreService.CreateComponent(tenant, product, component, description, componentSettings.IsTopicAutomaticCreationAllowed, componentSettings.IsSchemaValidationEnabled, componentSettings.IsAuthorizationEnabled, componentSettings.IsSubscriptionAutomaticCreationAllowed);
             if (isCreated == true)
