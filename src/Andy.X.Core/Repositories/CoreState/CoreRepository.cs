@@ -171,6 +171,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
             if (componentSettings is not null)
             {
                 componentSettings.IsMarkedForDeletion = true;
+                componentSettings.UpdatedDate = DateTimeOffset.Now;
+                componentSettings.UpdatedBy = "SYSTEM";
                 EditComponentSettings(componentSettings);
             }
         }
@@ -180,6 +182,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
             var productSettings = GetProductSettings(productId);
             if (productSettings is not null)
             {
+                productSettings.UpdatedDate = DateTimeOffset.Now;
+                productSettings.UpdatedBy = "SYSTEM";
                 productSettings.IsMarkedForDeletion = true;
                 EditProductSettings(productSettings);
             }
@@ -203,6 +207,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
             if (tenantSettings is not null)
             {
                 tenantSettings.IsMarkedForDeletion = true;
+                tenantSettings.UpdatedDate = DateTimeOffset.Now;
+                tenantSettings.UpdatedBy = "SYSTEM";
                 EditTenantSettings(tenantSettings);
             }
         }
@@ -214,6 +220,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
             if (topic is not null)
             {
                 topic.IsMarkedForDeletion = true;
+                topic.UpdatedDate = DateTimeOffset.Now;
+                topic.UpdatedBy = "SYSTEM";
                 EditTopic(topic);
             }
         }
@@ -628,6 +636,50 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
                 .ComponentTokens
                 .Where(t => t.ComponentId == componentId)
                 .ToList();
+        }
+
+        public void AddTopicSettings(TopicSettings topicSettings)
+        {
+            _coreStateContext
+                .TopicSettings
+                .Add(topicSettings);
+        }
+
+        public void EditTopicSettings(TopicSettings topicSettings)
+        {
+
+            _coreStateContext
+                .TopicSettings
+                .Update(topicSettings);
+
+        }
+
+        public void DeleteTopicSettings(long topicId)
+        {
+            var topicSettings = GetTopicSettings(topicId);
+            if (topicSettings is null)
+                return;
+
+            _coreStateContext.TopicSettings.Remove(null);
+        }
+
+        public TopicSettings GetTopicSettings(long topicId)
+        {
+            return _coreStateContext
+                .TopicSettings
+                .Where(t => t.TopicId == topicId)
+                .FirstOrDefault();
+        }
+
+        public TopicSettings GetTopicSettings(string tenant, string product, string component, string topic)
+        {
+            var tenantDetails = GetTenant(tenant);
+            var productDetails = GetProduct(tenantDetails.Id, product);
+            var componentDetails = GetComponent(tenantDetails.Id, productDetails.Id, component);
+            var topicDetails = GetTopic(componentDetails.Id, topic);
+
+
+            return GetTopicSettings(topicDetails.Id);
         }
     }
 }

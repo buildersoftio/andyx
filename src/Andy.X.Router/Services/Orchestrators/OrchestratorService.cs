@@ -8,6 +8,7 @@ using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
 using Buildersoft.Andy.X.Core.Services.Data;
 using Buildersoft.Andy.X.Model.Entities.Storages;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 
 namespace Buildersoft.Andy.X.Router.Services.Orchestrators
 {
@@ -17,6 +18,7 @@ namespace Buildersoft.Andy.X.Router.Services.Orchestrators
         private readonly ILoggerFactory _loggerFactory;
         private readonly IProducerHubService _producerHubService;
         private readonly StorageConfiguration _storageConfiguration;
+        private readonly ICoreRepository _coreRepository;
 
         private readonly ConcurrentDictionary<string, ITopicDataService<Message>> _topicDataServices;
         private readonly ConcurrentDictionary<string, ITopicReadonlyDataService<Message>> _topicReadonlyDataServices;
@@ -24,21 +26,23 @@ namespace Buildersoft.Andy.X.Router.Services.Orchestrators
         private readonly ConcurrentDictionary<string, ITopicDataService<UnacknowledgedMessage>> _subscriptionUnackedDataServices;
         private readonly ConcurrentDictionary<string, ITopicReadonlyDataService<UnacknowledgedMessage>> _subscriptionUnackedReadonlyDataServices;
 
-        public OrchestratorService(ILoggerFactory logger, IProducerHubService producerHubService, StorageConfiguration storageConfiguration)
+        public OrchestratorService(ILoggerFactory logger,
+            IProducerHubService producerHubService,
+            StorageConfiguration storageConfiguration,
+            ICoreRepository coreRepository)
         {
             _logger = logger.CreateLogger<OrchestratorService>();
 
             _loggerFactory = logger;
             _producerHubService = producerHubService;
             _storageConfiguration = storageConfiguration;
-
+            _coreRepository = coreRepository;
             _topicDataServices = new ConcurrentDictionary<string, ITopicDataService<Message>>();
             _topicReadonlyDataServices = new ConcurrentDictionary<string, ITopicReadonlyDataService<Message>>();
 
             _subscriptionUnackedDataServices = new ConcurrentDictionary<string, ITopicDataService<UnacknowledgedMessage>>();
             _subscriptionUnackedReadonlyDataServices = new ConcurrentDictionary<string, ITopicReadonlyDataService<UnacknowledgedMessage>>();
         }
-
 
         public ITopicDataService<Message> GetTopicDataService(string topicKey)
         {
@@ -62,7 +66,8 @@ namespace Buildersoft.Andy.X.Router.Services.Orchestrators
             if (_topicDataServices.ContainsKey(topicKey))
                 return false;
 
-            return _topicDataServices.TryAdd(topicKey, new TopicRocksDbDataService(tenant, product, component, topic.Name, _storageConfiguration));
+            var topicSettings = _coreRepository.GetTopicSettings(tenant, product, component, topic.Name);
+            return _topicDataServices.TryAdd(topicKey, new TopicRocksDbDataService(tenant, product, component, topic.Name, _storageConfiguration, topicSettings));
         }
 
         public bool InitializeTopicReadonlyDataService(string tenant, string product, string component, Topic topic)
@@ -71,7 +76,8 @@ namespace Buildersoft.Andy.X.Router.Services.Orchestrators
             if (_topicReadonlyDataServices.ContainsKey(topicKey))
                 return false;
 
-            return _topicReadonlyDataServices.TryAdd(topicKey, new TopicRocksDbReadonlyDataService(tenant, product, component, topic.Name, _storageConfiguration));
+            var topicSettings = _coreRepository.GetTopicSettings(tenant, product, component, topic.Name);
+            return _topicReadonlyDataServices.TryAdd(topicKey, new TopicRocksDbReadonlyDataService(tenant, product, component, topic.Name, _storageConfiguration, topicSettings));
         }
 
 

@@ -1,6 +1,7 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
 using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Model.Entities.Core.Topics;
 using Buildersoft.Andy.X.Model.Entities.Storages;
 using Buildersoft.Andy.X.Utility.Extensions.Packs;
 using MessagePack;
@@ -21,11 +22,17 @@ namespace Buildersoft.Andy.X.Core.Services.Data
         private readonly string _logPath;
 
         private readonly StorageConfiguration _storageConfiguration;
+        private readonly TopicSettings _topicSettings;
 
         private readonly OptionsHandle dbOptions;
         private readonly RocksDb rocksDb;
 
-        public TopicRocksDbDataService(string tenant, string product, string component, string topic, StorageConfiguration storageConfiguration)
+        public TopicRocksDbDataService(string tenant,
+            string product,
+            string component,
+            string topic,
+            StorageConfiguration storageConfiguration,
+            TopicSettings topicSettings)
         {
             _tenant = tenant;
             _product = product;
@@ -33,11 +40,10 @@ namespace Buildersoft.Andy.X.Core.Services.Data
             _topic = topic;
 
             _storageConfiguration = storageConfiguration;
+            _topicSettings = topicSettings;
 
             _dataPath = TenantLocations.GetMessageRootDirectory(tenant, product, component, topic);
             _logPath = TenantLocations.GetTopicLogRootDirectory(tenant, product, component, topic);
-
-            
 
             dbOptions = new DbOptions()
                 // Commented for now, custom db log dir.
@@ -46,13 +52,13 @@ namespace Buildersoft.Andy.X.Core.Services.Data
                 .SetMaxLogFileSize(storageConfiguration.MaxLogFileSizeInBytes)
                 .SetStatsDumpPeriodSec(storageConfiguration.DumpStatsInSeconds)
                 .SetKeepLogFileNum(storageConfiguration.KeepLogFileNumber)
-                .SetMaxBackgroundCompactions(storageConfiguration.MaxBackgroundCompactionsThreads)
                 .EnableStatistics()
-                .SetMaxBackgroundFlushes(storageConfiguration.MaxBackgroundFlushesThreads)
-                .SetWriteBufferSize(storageConfiguration.WriteBufferSizeInBytes)
-                .SetMaxWriteBufferNumber(storageConfiguration.MaxWriteBufferNumber)
-                .SetMaxWriteBufferNumberToMaintain(storageConfiguration.MaxWriteBufferSizeToMaintain)
-                .SetMinWriteBufferNumberToMerge(storageConfiguration.MinWriteBufferNumberToMerge);
+                .SetMaxBackgroundCompactions(_topicSettings.MaxBackgroundCompactionsThreads)
+                .SetMaxBackgroundFlushes(_topicSettings.MaxBackgroundFlushesThreads)
+                .SetWriteBufferSize(_topicSettings.WriteBufferSizeInBytes)
+                .SetMaxWriteBufferNumber(_topicSettings.MaxWriteBufferNumber)
+                .SetMaxWriteBufferNumberToMaintain(_topicSettings.MaxWriteBufferSizeToMaintain)
+                .SetMinWriteBufferNumberToMerge(_topicSettings.MinWriteBufferNumberToMerge);
 
             rocksDb = RocksDb.Open(dbOptions, _dataPath);
         }
@@ -64,10 +70,7 @@ namespace Buildersoft.Andy.X.Core.Services.Data
 
         public void PutAll(WriteBatch writeBatch)
         {
-            using (var db = RocksDb.Open(dbOptions, _dataPath))
-            {
-                db.Write(writeBatch);
-            }
+            rocksDb.Write(writeBatch);
         }
 
 

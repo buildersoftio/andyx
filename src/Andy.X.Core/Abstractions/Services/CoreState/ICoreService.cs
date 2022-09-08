@@ -2,6 +2,7 @@
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
 using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
+using Buildersoft.Andy.X.Model.Entities.Core.Topics;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using System;
 using System.Collections.Generic;
@@ -54,6 +55,8 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.CoreState
         bool DeleteComponentRetention(string tenant, string product, string component, long retentionId);
 
         bool CreateTopic(string tenant, string product, string component, string topic, string description);
+        bool CreateTopic(string tenant, string product, string component, string topic, string description, TopicSettings topicSettings);
+        bool UpdateTopicSettings(string tenant, string product, string component, string topic, TopicSettings topicSettings);
         bool UpdateTopic(string tenant, string product, string component, string topic, string description);
         bool DeleteTopic(string tenant, string product, string component, string topic);
 

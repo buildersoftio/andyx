@@ -1,6 +1,5 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
-using Buildersoft.Andy.X.Core.Contexts.CoreState;
 using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Entities.Core;
@@ -16,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static RocksDbSharp.ColumnFamilies;
 
 namespace Buildersoft.Andy.X.Core.Services.CoreState
 {
@@ -23,11 +23,13 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
     {
         private readonly ILogger<CoreService> _logger;
         private readonly ICoreRepository _coreRepository;
+        private readonly StorageConfiguration _storageConfiguration;
 
-        public CoreService(ILogger<CoreService> logger, ICoreRepository coreRepository)
+        public CoreService(ILogger<CoreService> logger, ICoreRepository coreRepository, StorageConfiguration storageConfiguration)
         {
             _logger = logger;
             _coreRepository = coreRepository;
+            _storageConfiguration = storageConfiguration;
 
             if (_coreRepository.GetCoreStateContext().Database.EnsureCreated())
             {
@@ -98,15 +100,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             if (tenant is null)
                 return false;  // tenant doesnot exists
 
-            var currentTenantSettings = _coreRepository.GetTenantSettings(tenant.Id);
-            if (currentTenantSettings is null)
-                return false;   // if is here, something is really wrong...
-
-            currentTenantSettings.IsMarkedForDeletion = true;
-            currentTenantSettings.UpdatedDate = DateTimeOffset.Now;
-            currentTenantSettings.UpdatedBy = "SYSTEM";
-
-            _coreRepository.EditTenantSettings(currentTenantSettings);
+            _coreRepository.SoftDeleteTenant(tenant.Id);
             _coreRepository.SaveChanges();
 
             return true;
@@ -373,13 +367,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             if (currentProduct is null)
                 return false; // product exists
 
-            var currentSettings = _coreRepository.GetProductSettings(currentProduct.Id);
-
-            currentSettings.IsMarkedForDeletion = true;
-            currentSettings.UpdatedDate = DateTimeOffset.Now;
-            currentSettings.UpdatedBy = "SYSTEM";
-
-            _coreRepository.EditProductSettings(currentSettings);
+            _coreRepository.SoftDeleteProduct(currentProduct.Id);
             _coreRepository.SaveChanges();
 
             return true;
@@ -923,36 +911,20 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
         public bool CreateTopic(string tenant, string product, string component, string topic, string description)
         {
-            var currentTenant = _coreRepository.GetTenant(tenant);
-            if (currentTenant is null)
-                return false;  // tenant doesnot exists
-
-            var currentProduct = _coreRepository.GetProduct(currentTenant.Id, product);
-            if (currentProduct is null)
-                return false; // product doesnot exists
-
-            var currentComponent = _coreRepository.GetComponent(currentTenant.Id, currentProduct.Id, component);
-            if (currentComponent is null)
-                return false; // component doesnot exists
-
-            var currentTopic = _coreRepository.GetTopic(currentComponent.Id, topic);
-            if (currentTopic is not null)
-                return false; // topic already exists
-
-            var newTopic = new Topic()
+            var topicSettings = new TopicSettings()
             {
-                Name = topic,
-                Description = description,
-                ComponentId = currentComponent.Id,
+                WriteBufferSizeInBytes = _storageConfiguration.DefaultWriteBufferSizeInBytes,
+                MaxWriteBufferNumber = _storageConfiguration.DefaultMaxWriteBufferNumber,
+                MaxWriteBufferSizeToMaintain = _storageConfiguration.DefaultMaxWriteBufferSizeToMaintain,
+                MinWriteBufferNumberToMerge = _storageConfiguration.DefaultMinWriteBufferNumberToMerge,
+                MaxBackgroundCompactionsThreads = _storageConfiguration.DefaultMaxBackgroundCompactionsThreads,
+                MaxBackgroundFlushesThreads = _storageConfiguration.DefaultMaxBackgroundFlushesThreads,
 
+                CreatedBy = "SYSTEM",
                 CreatedDate = DateTimeOffset.UtcNow,
-                CreatedBy = "SYSTEM"
             };
 
-            _coreRepository.AddTopic(newTopic);
-            _coreRepository.SaveChanges();
-
-            return true;
+            return CreateTopic(tenant, product, component, topic, description, topicSettings);
         }
         public bool UpdateTopic(string tenant, string product, string component, string topic, string description)
         {
@@ -1081,6 +1053,84 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             currentSubscription.UpdatedBy = "SYSTEM";
 
             _coreRepository.EditSubscription(currentSubscription);
+            _coreRepository.SaveChanges();
+
+            return true;
+        }
+
+        public bool CreateTopic(string tenant, string product, string component, string topic, string description, TopicSettings topicSettings)
+        {
+            var currentTenant = _coreRepository.GetTenant(tenant);
+            if (currentTenant is null)
+                return false;  // tenant doesnot exists
+
+            var currentProduct = _coreRepository.GetProduct(currentTenant.Id, product);
+            if (currentProduct is null)
+                return false; // product doesnot exists
+
+            var currentComponent = _coreRepository.GetComponent(currentTenant.Id, currentProduct.Id, component);
+            if (currentComponent is null)
+                return false; // component doesnot exists
+
+            var currentTopic = _coreRepository.GetTopic(currentComponent.Id, topic);
+            if (currentTopic is not null)
+                return false; // topic already exists
+
+            var newTopic = new Topic()
+            {
+                Name = topic,
+                Description = description,
+                ComponentId = currentComponent.Id,
+
+                CreatedDate = DateTimeOffset.UtcNow,
+                CreatedBy = "SYSTEM"
+            };
+
+            _coreRepository.AddTopic(newTopic);
+            _coreRepository.SaveChanges();
+
+            // Adding Topic Settings
+            topicSettings.TopicId = newTopic.Id;
+            _coreRepository.AddTopicSettings(topicSettings);
+            _coreRepository.SaveChanges();
+
+            return true;
+        }
+
+        public bool UpdateTopicSettings(string tenant, string product, string component, string topic, TopicSettings topicSettings)
+        {
+            var currentTenant = _coreRepository.GetTenant(tenant);
+            if (currentTenant is null)
+                return false;  // tenant doesnot exists
+
+            var currentProduct = _coreRepository.GetProduct(currentTenant.Id, product);
+            if (currentProduct is null)
+                return false; // product doesnot exists
+
+            var currentComponent = _coreRepository.GetComponent(currentTenant.Id, currentProduct.Id, component);
+            if (currentComponent is null)
+                return false; // component doesnot exists
+
+            var currentTopic = _coreRepository.GetTopic(currentComponent.Id, topic);
+            if (currentTopic is null)
+                return false; // topic doesnot exists
+
+            if (currentTopic.ComponentId != currentComponent.Id)
+                return false; // this topic is not part of the component
+
+            var currentTopicSettings = _coreRepository.GetTopicSettings(currentTopic.Id);
+
+            currentTopicSettings.WriteBufferSizeInBytes = topicSettings.WriteBufferSizeInBytes;
+            currentTopicSettings.MaxWriteBufferNumber = topicSettings.MaxWriteBufferNumber;
+            currentTopicSettings.MaxWriteBufferSizeToMaintain = topicSettings.MaxWriteBufferSizeToMaintain;
+            currentTopicSettings.MinWriteBufferNumberToMerge = topicSettings.MinWriteBufferNumberToMerge;
+            currentTopicSettings.MaxBackgroundCompactionsThreads = topicSettings.MaxBackgroundCompactionsThreads;
+            currentTopicSettings.MaxBackgroundFlushesThreads = topicSettings.MaxBackgroundFlushesThreads;
+
+            currentTopicSettings.UpdatedDate = DateTimeOffset.UtcNow;
+            currentTopicSettings.UpdatedBy = "SYSTEM";
+
+            _coreRepository.EditTopic(currentTopic);
             _coreRepository.SaveChanges();
 
             return true;

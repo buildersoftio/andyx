@@ -91,7 +91,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPost("{topic}")]
-        public ActionResult<string> CreateTopic(string tenant, string product, string component, string topic, [FromQuery] string description)
+        public ActionResult<string> CreateTopic(string tenant, string product, string component, string topic, [FromQuery] string description, [FromBody] TopicSettings topicSettings)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
@@ -109,7 +109,7 @@ namespace Buildersoft.Andy.X.Controllers
             if (topicDetails is not null)
                 return BadRequest($"Topic {topic} already exists");
 
-            var isCreated = _coreService.CreateTopic(tenant, product, component, topic, description);
+            var isCreated = _coreService.CreateTopic(tenant, product, component, topic, description, topicSettings);
             if (isCreated == true)
             {
                 _tenantStateService.AddTopic(tenant, product, component, topic, _tenantFactory.CreateTopic(topic, description));
@@ -179,5 +179,62 @@ namespace Buildersoft.Andy.X.Controllers
 
             return BadRequest("Something went wrong, topic couldnot be deleted");
         }
+
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpGet("{topic}/settings")]
+        public ActionResult<TopicSettings> GetTopicSettings(string tenant, string product, string component, string topic)
+        {
+            var tenantDetails = _coreRepository.GetTenant(tenant);
+            if (tenantDetails is null)
+                return NotFound($"Tenant {tenant} does not exists in this cluster");
+
+            var productDetails = _coreRepository.GetProduct(tenantDetails.Id, product);
+            if (productDetails is null)
+                return NotFound($"Product {product} does not exists in {tenant}");
+
+            var componentDetails = _coreRepository.GetComponent(tenantDetails.Id, productDetails.Id, component);
+            if (componentDetails is null)
+                return NotFound($"Component {component} does not exists in {tenant}/{product}");
+
+            var topicDetails = _coreRepository.GetTopic(componentDetails.Id, topic);
+            if (topicDetails is null)
+                return NotFound($"Topic {topic} does not exists in {tenant}/{product}/{component}");
+
+            var settings = _coreRepository.GetTopicSettings(topicDetails.Id);
+
+            return Ok(settings);
+        }
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpPut("{topic}/settings")]
+        public ActionResult<string> UpdateTopicSettings(string tenant, string product, string component, string topic, [FromBody] TopicSettings topicSettings)
+        {
+            var tenantDetails = _coreRepository.GetTenant(tenant);
+            if (tenantDetails is null)
+                return NotFound($"Tenant {tenant} does not exists in this cluster");
+
+            var productDetails = _coreRepository.GetProduct(tenantDetails.Id, product);
+            if (productDetails is null)
+                return NotFound($"Product {product} does not exists in {tenant}");
+
+            var componentDetails = _coreRepository.GetComponent(tenantDetails.Id, productDetails.Id, component);
+            if (componentDetails is null)
+                return NotFound($"Component {component} does not exists in {tenant}/{product}");
+
+            var topicDetails = _coreRepository.GetTopic(componentDetails.Id, topic);
+            if (topicDetails is null)
+                return NotFound($"Topic {topic} does not exists in {tenant}/{product}/{component}");
+
+            var isUpdated = _coreService.UpdateTopicSettings(tenant, product, component, topic, topicSettings);
+            if (isUpdated == true)
+                return Ok("Topic settings have been updated, this topic is marked to refresh settings, this may take a while. It also can disconnect clients connected to this topic");
+
+
+            return BadRequest("Something went wrong, topic settings couldnot be updated");
+        }
+
     }
 }
