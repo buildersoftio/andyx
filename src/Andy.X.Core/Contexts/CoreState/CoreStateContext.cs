@@ -54,6 +54,7 @@ namespace Buildersoft.Andy.X.Core.Contexts.CoreState
 
         // Topic Related Tables
         public DbSet<Topic> Topics { get; set; }
+        public DbSet<TopicSettings> TopicSettings { get; set; }
 
 
         // Subscription Related Tables

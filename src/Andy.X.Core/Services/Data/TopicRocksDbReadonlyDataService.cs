@@ -1,6 +1,7 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
 using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Model.Entities.Core.Topics;
 using Buildersoft.Andy.X.Model.Entities.Storages;
 using Buildersoft.Andy.X.Utility.Extensions.Packs;
 using RocksDbSharp;
@@ -20,14 +21,21 @@ namespace Buildersoft.Andy.X.Core.Services.Data
         private readonly string _logPath;
 
         private readonly StorageConfiguration _storageConfiguration;
+        private readonly TopicSettings _topicSettings;
 
-        private readonly DbOptions dbOptions;
+        private readonly OptionsHandle dbOptions;
         private readonly RocksDb rocksDb;
 
         private long readBytes = 0;
         private long readKeys = 0;
 
-        public TopicRocksDbReadonlyDataService(string tenant, string product, string component, string topic, StorageConfiguration storageConfiguration)
+        public TopicRocksDbReadonlyDataService(
+            string tenant,
+            string product,
+            string component,
+            string topic,
+            StorageConfiguration storageConfiguration,
+            TopicSettings topicSettings)
         {
             _tenant = tenant;
             _product = product;
@@ -35,20 +43,26 @@ namespace Buildersoft.Andy.X.Core.Services.Data
             _topic = topic;
 
             _storageConfiguration = storageConfiguration;
-
+            _topicSettings = topicSettings;
             _dataPath = TenantLocations.GetMessageRootDirectory(tenant, product, component, topic);
             _logPath = TenantLocations.GetTopicLogRootDirectory(tenant, product, component, topic);
 
-            // we will add settings here later from StorageConfiguration
             dbOptions = new DbOptions()
-                .SetDbLogDir("dev/null")
+                // Commented for now, custom db log dir.
+                //.SetDbLogDir(_logPath)
                 .SetCreateIfMissing(true)
-                .SetKeepLogFileNum(storageConfiguration.KeepLogFileNumber)
+                .SetMaxLogFileSize(storageConfiguration.MaxLogFileSizeInBytes)
                 .SetStatsDumpPeriodSec(storageConfiguration.DumpStatsInSeconds)
-                .SetDeleteObsoleteFilesPeriodMicros(storageConfiguration.DeleteObsoleteFilesPeriodMilliseconds)
-                .EnableStatistics();
+                .SetKeepLogFileNum(storageConfiguration.KeepLogFileNumber)
+                .EnableStatistics()
+                .SetMaxBackgroundCompactions(_topicSettings.MaxBackgroundCompactionsThreads)
+                .SetMaxBackgroundFlushes(_topicSettings.MaxBackgroundFlushesThreads)
+                .SetWriteBufferSize(_topicSettings.WriteBufferSizeInBytes)
+                .SetMaxWriteBufferNumber(_topicSettings.MaxWriteBufferNumber)
+                .SetMaxWriteBufferNumberToMaintain(_topicSettings.MaxWriteBufferSizeToMaintain)
+                .SetMinWriteBufferNumberToMerge(_topicSettings.MinWriteBufferNumberToMerge);
 
-             rocksDb = RocksDb.OpenReadOnly(dbOptions, _dataPath, true);
+            rocksDb = RocksDb.OpenReadOnly(dbOptions, _dataPath, true);
         }
 
         public Message Get(long entryId)
@@ -122,7 +136,7 @@ namespace Buildersoft.Andy.X.Core.Services.Data
         private long GetCurrentReadKeysStatistics()
         {
             //41-> "rocksdb.number.keys.read COUNT : 0"
-            var statistics = dbOptions.GetStatisticsString().Split("\n");
+            var statistics = (dbOptions as DbOptions).GetStatisticsString().Split("\n");
             string readKeys = statistics[41].Split(":")[1].Replace(" ", "");
 
             return Convert.ToInt64(readKeys);
@@ -131,7 +145,7 @@ namespace Buildersoft.Andy.X.Core.Services.Data
         private long GetCurrentReadBytesStatistics()
         {
             //44 -> "rocksdb.bytes.read COUNT : 2584"
-            var statistics = dbOptions.GetStatisticsString().Split("\n");
+            var statistics = (dbOptions as DbOptions).GetStatisticsString().Split("\n");
             string readBytes = statistics[44].Split(":")[1].Replace(" ", "");
 
             return Convert.ToInt64(readBytes);

@@ -96,6 +96,12 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState
         Topic GetTopic(long topicId);
         Topic GetTopic(long componentId, string topic);
 
+        void AddTopicSettings(TopicSettings topicSettings);
+        void EditTopicSettings(TopicSettings topicSettings);
+        void DeleteTopicSettings(long topicId);
+        TopicSettings GetTopicSettings(long topicId);
+        TopicSettings GetTopicSettings(string tenant, string product, string component, string topic);
+
         List<Subscription> GetSubscriptions(long topicId);  
         void AddSubscription(Subscription subscription);
         void EditSubscription(Subscription subscription);
