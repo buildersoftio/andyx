@@ -3,9 +3,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
 using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
-using Buildersoft.Andy.X.Utility.Extensions.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -17,14 +15,17 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
         {
             var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(token)).Split(':');
 
-            var key = Guid.Parse(credentials.FirstOrDefault());
-            var encryptedSecret = credentials.LastOrDefault();
 
             var tenantDetails = coreRepository.GetTenant(tenant);
             var tenantSettings = coreRepository.GetTenantSettings(tenantDetails.Id);
             if (tenantSettings.IsAuthorizationEnabled != true)
                 return true;
 
+            var isParsed = Guid.TryParse(credentials.FirstOrDefault(), out Guid key);
+            if (isParsed == false)
+                return false;
+
+            var encryptedSecret = credentials.LastOrDefault();
 
             var tenantToken = coreRepository.GetTenantToken(key);
             if (tenantToken == null)
@@ -63,14 +64,16 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
         {
             var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(token)).Split(':');
 
-            var key = Guid.Parse(credentials.FirstOrDefault());
-            var encryptedSecret = credentials.LastOrDefault();
-
             var productDetails = coreRepository.GetProduct(tenantId, product);
             var productSettings = coreRepository.GetProductSettings(productDetails.Id);
             if (productSettings.IsAuthorizationEnabled != true)
                 return true;
 
+            var isParsed = Guid.TryParse(credentials.FirstOrDefault(), out Guid key);
+            if (isParsed == false)
+                return false;
+
+            var encryptedSecret = credentials.LastOrDefault();
 
             var productToken = coreRepository.GetProductToken(key);
             if (productToken == null)
@@ -109,14 +112,17 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
         {
             var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(token)).Split(':');
 
-            var key = Guid.Parse(credentials.FirstOrDefault());
-            var encryptedSecret = credentials.LastOrDefault();
-
             // tenantId = -1, this property is not being used in GetComponent
             var componentDetails = coreRepository.GetComponent(-1, productId, component);
             var componentSettings = coreRepository.GetComponentSettings(componentDetails.Id);
             if (componentSettings.IsAuthorizationEnabled != true)
                 return true;
+
+            var isParsed = Guid.TryParse(credentials.FirstOrDefault(), out Guid key);
+            if (isParsed == false)
+                return false;
+
+            var encryptedSecret = credentials.LastOrDefault();
 
 
             var componentToken = coreRepository.GetComponentToken(key);

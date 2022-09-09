@@ -3,11 +3,13 @@ using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Net.Mime;
 
@@ -18,7 +20,6 @@ namespace Buildersoft.Andy.X.Controllers
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ApiController]
-    //[Authorize]
     public class TenantsController : ControllerBase
     {
         private readonly ILogger<TenantsController> _logger;
@@ -43,6 +44,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<string>> GetTenants()
         {
             var tenants = _coreRepository
@@ -55,6 +57,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{tenant}")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<Tenant> GetTenant(string tenant)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -67,6 +70,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{tenant}/activate")]
+        [Authorize(Roles = "admin")]
         public ActionResult<Tenant> ActiveTenant(string tenant)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -83,6 +87,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{tenant}/deactivate")]
+        [Authorize(Roles = "admin")]
         public ActionResult<Tenant> DeactivateTenant(string tenant)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -98,6 +103,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete("{tenant}/delete")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> DeleteTenant(string tenant)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -114,6 +120,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{tenant}/settings")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<TenantSettings> GetTenantSettings(string tenant)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -128,6 +135,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut("{tenant}/settings")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> UpdateTenantSettings(string tenant, [FromBody] TenantSettings tenantSettings)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -145,6 +153,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost("{tenant}")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> CreateTenant(string tenant, [FromBody] TenantSettings tenantSettings)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -167,6 +176,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{tenant}/tokens")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<string>> GetTenantTokens(string tenant)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -187,6 +197,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{tenant}/tokens/{key}")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<TenantToken> GetTenantToken(string tenant, Guid key)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -203,6 +214,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{tenant}/tokens/{key}/revoke")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> RevokeTenantToken(string tenant, Guid key)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -223,6 +235,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost("{tenant}/tokens")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> PostTenantTokens(string tenant, [FromBody] TenantToken tenantToken)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -240,6 +253,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{tenant}/retentions")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<TenantRetention>> GetTenantRetentions(string tenant)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -254,6 +268,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPost("{tenant}/retentions")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> PostTenantRetentions(string tenant, [FromBody] TenantRetention tenantRetention)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -272,6 +287,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{tenant}/retentions/id")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> PutTenantRetentions(string tenant, long id, [FromBody] TenantRetention tenantRetention)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -290,6 +306,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete("{tenant}/retentions/id")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> DeleteTenantRetentions(string tenant, long id)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);

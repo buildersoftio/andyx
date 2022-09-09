@@ -9,6 +9,8 @@ using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
 using Buildersoft.Andy.X.Core.Services.Data;
 using Buildersoft.Andy.X.Model.Entities.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
+using Buildersoft.Andy.X.Core.Abstractions.Services;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories;
 
 namespace Buildersoft.Andy.X.Router.Services.Orchestrators
 {
@@ -19,6 +21,7 @@ namespace Buildersoft.Andy.X.Router.Services.Orchestrators
         private readonly IProducerHubService _producerHubService;
         private readonly StorageConfiguration _storageConfiguration;
         private readonly ICoreRepository _coreRepository;
+        private readonly ITenantStateRepository _tenantStateRepository;
 
         private readonly ConcurrentDictionary<string, ITopicDataService<Message>> _topicDataServices;
         private readonly ConcurrentDictionary<string, ITopicReadonlyDataService<Message>> _topicReadonlyDataServices;
@@ -26,10 +29,12 @@ namespace Buildersoft.Andy.X.Router.Services.Orchestrators
         private readonly ConcurrentDictionary<string, ITopicDataService<UnacknowledgedMessage>> _subscriptionUnackedDataServices;
         private readonly ConcurrentDictionary<string, ITopicReadonlyDataService<UnacknowledgedMessage>> _subscriptionUnackedReadonlyDataServices;
 
-        public OrchestratorService(ILoggerFactory logger,
+        public OrchestratorService(
+            ILoggerFactory logger,
             IProducerHubService producerHubService,
             StorageConfiguration storageConfiguration,
-            ICoreRepository coreRepository)
+            ICoreRepository coreRepository,
+            ITenantStateRepository tenantStateRepository)
         {
             _logger = logger.CreateLogger<OrchestratorService>();
 
@@ -37,6 +42,8 @@ namespace Buildersoft.Andy.X.Router.Services.Orchestrators
             _producerHubService = producerHubService;
             _storageConfiguration = storageConfiguration;
             _coreRepository = coreRepository;
+            _tenantStateRepository = tenantStateRepository;
+
             _topicDataServices = new ConcurrentDictionary<string, ITopicDataService<Message>>();
             _topicReadonlyDataServices = new ConcurrentDictionary<string, ITopicReadonlyDataService<Message>>();
 
@@ -67,7 +74,16 @@ namespace Buildersoft.Andy.X.Router.Services.Orchestrators
                 return false;
 
             var topicSettings = _coreRepository.GetTopicSettings(tenant, product, component, topic.Name);
-            return _topicDataServices.TryAdd(topicKey, new TopicRocksDbDataService(tenant, product, component, topic.Name, _storageConfiguration, topicSettings));
+            return _topicDataServices.TryAdd(topicKey, new TopicRocksDbDataService(
+                _loggerFactory,
+                tenant,
+                product,
+                component,
+                topic.Name,
+                _storageConfiguration,
+                topicSettings,
+                _tenantStateRepository,
+                _coreRepository));
         }
 
         public bool InitializeTopicReadonlyDataService(string tenant, string product, string component, Topic topic)

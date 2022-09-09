@@ -62,7 +62,8 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
                 {
                     IsAuthorizationEnabled = false,
                     IsSchemaValidationEnabled = false,
-                    IsTopicAutomaticCreationAllowed = true
+                    IsTopicAutomaticCreationAllowed = true,
+                    IsSubscriptionAutomaticCreationAllowed = true
                 }
             };
         }

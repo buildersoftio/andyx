@@ -2,7 +2,7 @@
   {
     "Name": "default",
     "Settings": {
-      "IsProductAutomaticCreation": true,
+      "IsProductAutomaticCreationAllowed": true,
       "IsEncryptionEnabled": false,
       "IsAuthorizationEnabled": false
     }
@@ -10,7 +10,7 @@
   {
     "Name": "public",
     "Settings": {
-      "IsProductAutomaticCreation": true,
+      "IsProductAutomaticCreationAllowed": true,
       "IsEncryptionEnabled": false,
       "IsAuthorizationEnabled": false
     }
@@ -18,7 +18,7 @@
   {
     "Name": "system",
     "Settings": {
-      "IsProductAutomaticCreation": true,
+      "IsProductAutomaticCreationAllowed": true,
       "IsEncryptionEnabled": false,
       "IsAuthorizationEnabled": false
     },

@@ -97,6 +97,14 @@ namespace Andy.X.App
             services.AddAuthentication("Andy.X_Authorization")
                 .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Andy.X_Authorization", null);
 
+            //services.AddAuthorization(options =>
+            //{
+            //    options.AddPolicy("readonly", policy =>
+            //            policy.RequireClaim("readonly"));
+            //    options.AddPolicy("admin", policy =>
+            //            policy.RequireClaim("admin"));
+            //});
+
             // Persistency Core State
             services.AddCoreRepository();
             services.AddCoreService();
@@ -118,6 +126,7 @@ namespace Andy.X.App
             services.AddInboundMessageServices();
             services.AddOutboundMessageServices();
 
+            services.AddTenantMemoryService();
             services.AddTenantMemoryRepository();
 
             services.AddConsumerRepository();

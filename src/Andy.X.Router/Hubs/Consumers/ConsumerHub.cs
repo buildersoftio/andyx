@@ -9,7 +9,6 @@ using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
-using Buildersoft.Andy.X.Core.Repositories.CoreState;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Configurations;
@@ -81,8 +80,11 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
 
             // authorization tokens
             string tenantToken = headers["x-andyx-tenant-authoriziation"];
+            tenantToken ??= "";
             string productToken = headers["x-andyx-product-authoriziation"];
+            productToken ??= "";
             string componentToken = headers["x-andyx-component-authoriziation"];
+            componentToken ??= "";
 
             string tenant = headers["x-andyx-tenant"].ToString();
             string product = headers["x-andyx-product"].ToString();
@@ -102,7 +104,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             var connectedTenant = _tenantInMemoryService.GetTenant(tenant);
             if (connectedTenant == null)
             {
-                _logger.LogInformation($"Consumer '{consumerName}' failed to connect, tenant '{tenant}' does not exists");
+                var message = $"Consumer '{consumerName}' failed to connect, tenant '{tenant}' does not exists";
+                _logger.LogInformation(message);
+                Clients.Caller.AndyOrderedDisconnect(message);
                 return OnDisconnectedAsync(new Exception($"There is no tenant registered with this name '{tenant}'"));
             }
 
@@ -110,7 +114,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             bool isTenantTokenValidated = _tenantInMemoryService.ValidateTenantToken(_coreRepository, tenant, tenantToken, true);
             if (isTenantTokenValidated != true)
             {
-                _logger.LogInformation($"Consumer '{consumerName}' failed to connect, access is forbidden. Not authorized");
+                var message = $"Consumer '{consumerName}' failed to connect, access is forbidden. Not authorized";
+                _logger.LogInformation(message);
+                Clients.Caller.AndyOrderedDisconnect(message);
                 return OnDisconnectedAsync(new Exception($"Consumer '{consumerName}' failed to connect, access is forbidden"));
             }
 
@@ -119,7 +125,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             {
                 if (connectedTenant.Settings.IsProductAutomaticCreationAllowed != true)
                 {
-                    _logger.LogInformation($"Consumer '{consumerName}' failed to connect, tenant '{tenant}' does not allow to create new product");
+                    var message = ($"Consumer '{consumerName}' failed to connect, tenant '{tenant}' does not allow to create new product");
+                    _logger.LogInformation(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"There is no product registered with this name '{product}'. Tenant '{tenant}' does not allow to create new product"));
                 }
 
@@ -132,7 +140,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
             bool isProductTokenValidated = _tenantInMemoryService.ValidateProductToken(_coreRepository, tenantFromState.Id, product, productToken, true);
             if (isProductTokenValidated != true)
             {
-                _logger.LogInformation($"Consumer '{consumerName}' failed to connect, access is forbidden. Not authorized, check product token");
+                var message = $"Consumer '{consumerName}' failed to connect, access is forbidden. Not authorized, check product token";
+                _logger.LogInformation(message);
+                Clients.Caller.AndyOrderedDisconnect(message);
                 return OnDisconnectedAsync(new Exception($"Consumer '{consumerName}' failed to connect, access is forbidden, check product token"));
             }
 
@@ -149,7 +159,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 bool isComponentTokenValidated = _tenantInMemoryService.ValidateComponentToken(_coreRepository, productFromState.Id, component, componentToken, subscriptionName, true);
                 if (isComponentTokenValidated != true)
                 {
-                    _logger.LogInformation($"Consumer '{consumerName}' failed to connect, access is forbidden. Not authorized, check component token");
+                   var message = $"Consumer '{consumerName}' failed to connect, access is forbidden. Not authorized, check component token";
+                    _logger.LogInformation(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"Consumer '{consumerName}' failed to connect, access is forbidden, check component token"));
                 }
             }
@@ -160,7 +172,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 connectedComponent = _tenantInMemoryService.GetComponent(tenant, product, component);
                 if (connectedComponent.Settings.IsTopicAutomaticCreationAllowed != true)
                 {
-                    _logger.LogInformation($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property IsTopicAutomaticCreationAllowed at component settings.");
+                    var message = $"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property IsTopicAutomaticCreationAllowed at component settings.";
+                    _logger.LogInformation(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property IsTopicAutomaticCreationAllowed at component settings."));
                 }
 
@@ -176,19 +190,25 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 // check if the consumer has different subscription configuration, if yes, do not connect
                 if (subscriptionConencted.SubscriptionMode != subscriptionMode)
                 {
-                    _logger.LogWarning($"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, because modes are different");
+                    var message = $"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, because modes are different";
+                    _logger.LogWarning(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"Modes are different with subscription '{subscriptionName}'."));
                 }
 
                 if (subscriptionConencted.SubscriptionType != subscriptionType)
                 {
-                    _logger.LogWarning($"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, because types are different");
+                    var message = $"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, because types are different";
+                    _logger.LogWarning(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"Types are different with subscription '{subscriptionName}'."));
                 }
 
                 if (subscriptionConencted.InitialPosition != initialPosition)
                 {
-                    _logger.LogWarning($"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, because initial position is different");
+                    var message = $"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, because initial position is different";
+                    _logger.LogWarning(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"Initial position is different with subscription '{subscriptionName}'."));
                 }
 
@@ -196,7 +216,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 {
                     if (subscriptionConencted.ConsumersConnected.Count > 0 || subscriptionConencted.ConsumerExternalConnected.Count > 0)
                     {
-                        _logger.LogWarning($"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, there is a consumer connected");
+                        var message = $"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, there is a consumer connected";
+                        _logger.LogWarning(message);
+                        Clients.Caller.AndyOrderedDisconnect(message);
                         return OnDisconnectedAsync(new Exception($"There is a consumer already connected to subscription '{subscriptionName}'."));
                     }
                 }
@@ -205,13 +227,17 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 {
                     if (subscriptionConencted.ConsumersConnected.Count > 0 && subscriptionConencted.ConsumerExternalConnected.Count > 0)
                     {
-                        _logger.LogWarning($"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, there are consumers connected in different nodes inside the cluster");
+                        var message = $"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, there are consumers connected in different nodes inside the cluster";
+                        _logger.LogWarning(message);
+                        Clients.Caller.AndyOrderedDisconnect(message);
                         return OnDisconnectedAsync(new Exception($"There are consumers already connected to subscription '{subscriptionName}' in different nodes inside the cluster."));
                     }
 
                     if (subscriptionConencted.ConsumersConnected.Count >= 2 || subscriptionConencted.ConsumerExternalConnected.Count >= 2)
                     {
-                        _logger.LogWarning($"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, there are consumers connected in different nodes inside the cluster");
+                        var message = $"Consumer '{consumerName}' can not connect to subscription '{subscriptionName}' at {tenant}/{product}/{component}/{topic}, there are consumers connected in different nodes inside the cluster";
+                        _logger.LogWarning(message);
+                        Clients.Caller.AndyOrderedDisconnect(message);
                         return OnDisconnectedAsync(new Exception($"There are consumers already connected to subscription '{subscriptionName}' in different nodes inside the cluster."));
                     }
                 }
@@ -226,7 +252,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Consumers
                 var componentSettings = _coreRepository.GetComponentSettings(componentFromState.Id);
                 if(componentSettings.IsSubscriptionAutomaticCreationAllowed != true)
                 {
-                    _logger.LogInformation($"Component '{component}' does not allow to create a new subscription {subscriptionName} at '{tenant}/{product}/{component}'. To allow creating update property IsSubscriptionAutomaticCreationAllowed at component settings.");
+                    var message = $"Component '{component}' does not allow to create a new subscription {subscriptionName} at '{tenant}/{product}/{component}'. To allow creating update property IsSubscriptionAutomaticCreationAllowed at component settings.";
+                    _logger.LogInformation(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new subscription {subscriptionName} at '{tenant}/{product}/{component}'. To allow creating update property IsSubscriptionAutomaticCreationAllowed at component settings."));
                 }
             }

@@ -5,6 +5,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Consumers
 {
     public interface IConsumerHub
     {
+        Task AndyOrderedDisconnect(string message);
         Task ConsumerConnected(ConsumerConnectedDetails consumerConnectedDetails);
         Task ConsumerDisconnected(ConsumerDisconnectedDetails consumerDisconnectedDetails);
         Task MessageSent(MessageSentDetails messageSentDetails);

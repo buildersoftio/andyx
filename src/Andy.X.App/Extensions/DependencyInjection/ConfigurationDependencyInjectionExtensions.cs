@@ -4,6 +4,7 @@ using Buildersoft.Andy.X.Model.Configurations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Buildersoft.Andy.X.Extensions.DependencyInjection
@@ -82,7 +83,7 @@ namespace Buildersoft.Andy.X.Extensions.DependencyInjection
 
         private static void BindCredentialsConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
-            var credentialsConfiguration = new CredentialsConfiguration();
+            var credentialsConfiguration = new List<CredentialsConfiguration>();
             configuration.Bind("Credentials", credentialsConfiguration);
             services.AddSingleton(credentialsConfiguration);
         }

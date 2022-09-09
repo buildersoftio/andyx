@@ -5,6 +5,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Services.Subscriptions;
 using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.Core.Contexts.Subscriptions;
 using Buildersoft.Andy.X.Core.Services.Outbound.Connectors;
+using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Entities.Storages;
 using Buildersoft.Andy.X.Model.Subscriptions;
@@ -64,6 +65,13 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 {
                     subscriptionTopicData.TopicState = topicStateContext.TopicStates.Find(nodeSubscriptionId);
                     subscriptionTopicData.LastUnackedMessageEntryPositionSent = subscriptionTopicData.TopicState.MarkDeleteEntryPosition;
+
+                    // RetentionBackgrounService, check if any HARD_TTL has remove messages before consuming, if yes skip deleted messages
+                    if (subscriptionTopicData.TopicState.MarkDeleteEntryPosition > subscriptionTopicData.CurrentPosition.ReadEntryPosition)
+                    {
+                        subscriptionTopicData.CurrentPosition.ReadEntryPosition = subscriptionTopicData.TopicState.MarkDeleteEntryPosition;
+                        subscriptionTopicData.LastMessageEntryPositionSent = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
+                    }
                 }
 
                 _subscriptionTopicData.TryAdd(subscriptionId, subscriptionTopicData);

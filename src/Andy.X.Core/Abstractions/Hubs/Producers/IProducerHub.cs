@@ -5,6 +5,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Producers
 {
     public interface IProducerHub
     {
+        Task AndyOrderedDisconnect(string message);
         Task ProducerConnected(ProducerConnectedDetails producerConnectedDetails);
         Task ProducerDisconnected(ProducerDisconnectedDetails producerDisconnectedDetails);
 

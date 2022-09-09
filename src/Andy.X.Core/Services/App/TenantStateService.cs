@@ -1,16 +1,17 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Contexts.Storages;
-using Buildersoft.Andy.X.IO.Readers;
+using Buildersoft.Andy.X.Core.Services.Inbound;
 using Buildersoft.Andy.X.IO.Services;
-using Buildersoft.Andy.X.IO.Writers;
 using Buildersoft.Andy.X.Model.App.Components;
 using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
@@ -19,16 +20,16 @@ using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
 
 namespace Buildersoft.Andy.X.Core.Services.App
 {
     public class TenantStateService : ITenantStateService
     {
         private readonly ILogger<TenantStateService> _logger;
+        private readonly ITenantStateRepository _tenantStateRepository;
+
         private readonly ITenantFactory _tenantFactory;
         private readonly ICoreRepository _coreRepository;
         private readonly ICoreService _coreService;
@@ -38,10 +39,10 @@ namespace Buildersoft.Andy.X.Core.Services.App
         private readonly ISubscriptionFactory _subscriptionFactory;
         private readonly NodeConfiguration _nodeConfiguration;
         private readonly IClusterHubService _clusterHubService;
-
-        private readonly ConcurrentDictionary<string, Tenant> _tenants;
+        private readonly IInboundMessageService _inboundMessageService;
 
         public TenantStateService(ILogger<TenantStateService> logger,
+            ITenantStateRepository tenantStateRepository,
             ITenantFactory tenantFactory,
             ICoreRepository coreRepository,
             ICoreService coreService,
@@ -50,9 +51,12 @@ namespace Buildersoft.Andy.X.Core.Services.App
             IOutboundMessageService outboundMessageService,
             ISubscriptionFactory subscriptionFactory,
             NodeConfiguration nodeConfiguration,
-            IClusterHubService clusterHubService)
+            IClusterHubService clusterHubService,
+            IInboundMessageService inboundMessageService)
         {
             _logger = logger;
+            _tenantStateRepository = tenantStateRepository;
+
             _tenantFactory = tenantFactory;
             _coreRepository = coreRepository;
             _coreService = coreService;
@@ -62,10 +66,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             _subscriptionFactory = subscriptionFactory;
             _nodeConfiguration = nodeConfiguration;
             _clusterHubService = clusterHubService;
-
-
-            _tenants = new ConcurrentDictionary<string, Tenant>();
-
+            this._inboundMessageService = inboundMessageService;
             AddTenantsFromPersistentLog();
         }
 
@@ -111,11 +112,11 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
         public bool AddTopic(string tenant, string product, string component, string topicName, Topic topic, bool notifyOtherNodes = true)
         {
-            if (_tenants.ContainsKey(tenant))
-                if (_tenants[tenant].Products.ContainsKey(product))
-                    if (_tenants[tenant].Products[product].Components.ContainsKey(component))
+            if (_tenantStateRepository.GetTenants().ContainsKey(tenant))
+                if (_tenantStateRepository.GetTenants()[tenant].Products.ContainsKey(product))
+                    if (_tenantStateRepository.GetTenants()[tenant].Products[product].Components.ContainsKey(component))
                     {
-                        _tenants[tenant].Products[product].Components[component].Topics.TryAdd(topicName, topic);
+                        _tenantStateRepository.GetTenants()[tenant].Products[product].Components[component].Topics.TryAdd(topicName, topic);
                     }
 
             var tenantDetail = _coreRepository.GetTenant(tenant);
@@ -158,6 +159,11 @@ namespace Buildersoft.Andy.X.Core.Services.App
                     topic.TopicStates.MarkDeleteEntryPosition = currentData.MarkDeleteEntryPosition;
                 }
 
+                string topicKey = ConnectorHelper.GetTopicConnectorKey(tenant, product, component, topicName);
+                _inboundMessageService.TryCreateTopicConnector(topicKey);
+
+                var isCreated = _coreService.CreateTopic(tenant, product, component, topicName, topic.Description);
+
                 _orchestratorService.InitializeTopicDataService(tenant, product, component, topic);
 
                 // We are not initializing the readonly when the topic is created, beacuse of memory leak.
@@ -167,7 +173,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 if (topicDetails != null)
                     return false;
 
-                return _coreService.CreateTopic(tenant, product, component, topicName, topic.Description);
+                return isCreated;
             }
 
             return false;
@@ -198,7 +204,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 }
 
                 var subId = ConnectorHelper.GetSubcriptionId(tenant, product, component, topicName, subscriptionName);
-                _subscriptionHubRepository.AddSubscription(subId, _tenants[tenant].Products[product].Components[component].Topics[topicName], subscription);
+                _subscriptionHubRepository.AddSubscription(subId, _tenantStateRepository.GetTenants()[tenant].Products[product].Components[component].Topics[topicName], subscription);
 
 
                 // check if the subscription exists in topicState
@@ -235,9 +241,9 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
         public bool AddComponent(string tenant, string product, string componentName, Component component, bool notifyOtherNodes = true)
         {
-            if (_tenants.ContainsKey(tenant))
-                if (_tenants[tenant].Products.ContainsKey(product))
-                    _tenants[tenant].Products[product].Components.TryAdd(componentName, component);
+            if (_tenantStateRepository.GetTenants().ContainsKey(tenant))
+                if (_tenantStateRepository.GetTenants()[tenant].Products.ContainsKey(product))
+                    _tenantStateRepository.GetTenants()[tenant].Products[product].Components.TryAdd(componentName, component);
 
             //add component to tenants log
 
@@ -267,8 +273,8 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
         public bool AddProduct(string tenant, string productName, Product product, bool notifyOtherNodes = true)
         {
-            if (_tenants.ContainsKey(tenant))
-                _tenants[tenant].Products.TryAdd(productName, product);
+            if (_tenantStateRepository.GetTenants().ContainsKey(tenant))
+                _tenantStateRepository.GetTenants()[tenant].Products.TryAdd(productName, product);
 
             // adding product to tenants_config
             var tenantDetail = _coreRepository.GetTenant(tenant);
@@ -298,80 +304,50 @@ namespace Buildersoft.Andy.X.Core.Services.App
                     _clusterHubService.CreateTenant_AllNodes(tenantName, tenant.Settings);
             }
 
-            return _tenants.TryAdd(tenantName, tenant);
+            return _tenantStateRepository.GetTenants().TryAdd(tenantName, tenant);
         }
 
         public Component GetComponent(string tenant, string product, string component)
         {
-            if (_tenants.ContainsKey(tenant))
-                if (_tenants[tenant].Products.ContainsKey(product))
-                    if (_tenants[tenant].Products[product].Components.ContainsKey(component))
-                        return _tenants[tenant].Products[product].Components[component];
-
-            return null;
+            return _tenantStateRepository.GetComponent(tenant, product, component);
         }
 
         public ConcurrentDictionary<string, Component> GetComponents(string tenant, string product)
         {
-            if (_tenants.ContainsKey(tenant))
-                if (_tenants[tenant].Products.ContainsKey(product))
-                    return _tenants[tenant].Products[product].Components;
-
-            return null;
+            return _tenantStateRepository.GetComponents(tenant, product);
         }
 
         public Product GetProduct(string tenant, string product)
         {
-            if (_tenants.ContainsKey(tenant))
-                if (_tenants[tenant].Products.ContainsKey(product))
-                    return _tenants[tenant].Products[product];
-
-            return null;
+            return _tenantStateRepository.GetProduct(tenant, product);
         }
 
         public ConcurrentDictionary<string, Product> GetProducts(string tenant)
         {
-            if (_tenants.ContainsKey(tenant))
-                return _tenants[tenant].Products;
-
-            return null;
+            return _tenantStateRepository.GetProducts(tenant);
         }
 
 
 
         public Tenant GetTenant(string tenant)
         {
-            if (_tenants.ContainsKey(tenant))
-                return _tenants[tenant];
-
-            return null;
+            return _tenantStateRepository.GetTenant(tenant);
         }
 
         public ConcurrentDictionary<string, Tenant> GetTenants()
         {
-            return _tenants;
+            return _tenantStateRepository.GetTenants();
         }
 
 
         public Topic GetTopic(string tenant, string product, string component, string topic)
         {
-            if (_tenants.ContainsKey(tenant))
-                if (_tenants[tenant].Products.ContainsKey(product))
-                    if (_tenants[tenant].Products[product].Components.ContainsKey(component))
-                        if (_tenants[tenant].Products[product].Components[component].Topics.ContainsKey(topic))
-                            return _tenants[tenant].Products[product].Components[component].Topics[topic];
-
-            return null;
+            return _tenantStateRepository.GetTopic(tenant, product, component, topic);
         }
 
         public ConcurrentDictionary<string, Topic> GetTopics(string tenant, string product, string component)
         {
-            if (_tenants.ContainsKey(tenant))
-                if (_tenants[tenant].Products.ContainsKey(product))
-                    if (_tenants[tenant].Products[product].Components.ContainsKey(component))
-                        return _tenants[tenant].Products[product].Components[component].Topics;
-
-            return null;
+            return _tenantStateRepository.GetTopics(tenant, product, component);
         }
     }
 }

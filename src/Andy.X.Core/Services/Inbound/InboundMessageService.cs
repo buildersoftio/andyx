@@ -1,4 +1,5 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
@@ -26,11 +27,11 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
         private readonly StorageConfiguration _storageConfiguration;
         private readonly NodeConfiguration _nodeConfiguration;
 
-        private readonly ITenantStateService _tenantRepository;
+        private readonly ITenantStateRepository _tenantStateRepository;
 
         public InboundMessageService(ILogger<InboundMessageService> logger,
             ThreadsConfiguration threadsConfiguration,
-            ITenantStateService tenantRepository,
+            ITenantStateRepository tenantStateService,
             IOrchestratorService orchestratorService,
             IOutboundMessageService outboundMessageService,
             StorageConfiguration storageConfiguration,
@@ -39,7 +40,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             _logger = logger;
 
             _threadsConfiguration = threadsConfiguration;
-            _tenantRepository = tenantRepository;
+            _tenantStateRepository = tenantStateService;
 
             _orchestratorService = orchestratorService;
             _outboundMessageService = outboundMessageService;
@@ -50,7 +51,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
 
         public void AcceptMessage(Message message)
         {
-            var topic = _tenantRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic);
+            var topic = _tenantStateRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic);
             string topicKey = ConnectorHelper.GetTopicConnectorKey(message.Tenant, message.Product, message.Component, message.Topic);
 
             TryCreateTopicConnector(topicKey);
@@ -109,7 +110,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             _topicConnectors[topicKey].MessageStoreThreadingPool.Threads[threadId].IsThreadWorking = false;
         }
 
-        private bool TryCreateTopicConnector(string topicKey)
+        public bool TryCreateTopicConnector(string topicKey)
         {
             if (_topicConnectors.ContainsKey(topicKey))
                 return true;
@@ -123,17 +124,22 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
         private void MsgTopicConnector_StoringCurrentEntryPosition(object sender, string topicKey)
         {
             (string tenant, string product, string component, string topic) = topicKey.GetDetailsFromTopicKey();
-            var topicDetails = _tenantRepository.GetTopic(tenant, product, component, topic);
+            var topicDetails = _tenantStateRepository.GetTopic(tenant, product, component, topic);
 
             using (var topicStateContext = new TopicEntryPositionContext(tenant, product, component, topic))
             {
                 var currentData = topicStateContext.TopicStates.Find(_nodeConfiguration.NodeId);
-                currentData.CurrentEntry = topicDetails.TopicStates.LatestEntryId;
-                currentData.MarkDeleteEntryPosition = topicDetails.TopicStates.MarkDeleteEntryPosition;
-                currentData.UpdatedDate = DateTimeOffset.Now;
 
-                topicStateContext.TopicStates.Update(currentData);
-                topicStateContext.SaveChanges();
+                if (currentData.CurrentEntry != topicDetails.TopicStates.LatestEntryId ||
+                    currentData.MarkDeleteEntryPosition != topicDetails.TopicStates.MarkDeleteEntryPosition)
+                {
+                    currentData.CurrentEntry = topicDetails.TopicStates.LatestEntryId;
+                    currentData.MarkDeleteEntryPosition = topicDetails.TopicStates.MarkDeleteEntryPosition;
+                    currentData.UpdatedDate = DateTimeOffset.Now;
+
+                    topicStateContext.TopicStates.Update(currentData);
+                    topicStateContext.SaveChanges();
+                }
             }
         }
 

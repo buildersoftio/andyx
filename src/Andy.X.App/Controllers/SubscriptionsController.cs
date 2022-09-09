@@ -11,6 +11,8 @@ using System.Linq;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using Subscription = Buildersoft.Andy.X.Model.Entities.Core.Subscriptions.Subscription;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
+using Microsoft.AspNetCore.Authorization;
+using System.Data;
 
 namespace Buildersoft.Andy.X.Controllers
 {
@@ -19,7 +21,6 @@ namespace Buildersoft.Andy.X.Controllers
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ApiController]
-    //[Authorize]
     public class SubscriptionsController : ControllerBase
     {
         private readonly ILogger<SubscriptionsController> _logger;
@@ -48,6 +49,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<string>> GetSubscriptions(string tenant, string product, string component, string topic)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -76,6 +78,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{subscription}")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<Subscription> GetSubscription(string tenant, string product, string component, string topic, string subscription)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -104,6 +107,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPost("{subscription}")]
+        [Authorize(Roles = "admin")]
         public ActionResult<Subscription> CreateSubscription(string tenant,
             string product,
             string component,
@@ -148,6 +152,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete("{subscription}")]
+        [Authorize(Roles = "admin")]
         public ActionResult<Subscription> CreateSubscription(string tenant, string product, string component, string topic, string subscription)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);

@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
 using System;
+using Microsoft.AspNetCore.Authorization;
+using System.Data;
 
 namespace Buildersoft.Andy.X.Controllers
 {
@@ -18,7 +20,6 @@ namespace Buildersoft.Andy.X.Controllers
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ApiController]
-    //[Authorize]
     public class ComponentsController : ControllerBase
     {
         private readonly ILogger<ComponentsController> _logger;
@@ -43,6 +44,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<string>> GetComponents(string tenant, string product)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -63,6 +65,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{component}")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<Component> GetComponent(string tenant, string product, string component)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -83,6 +86,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPost("{component}")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> CreateComponent(string tenant, string product, string component, [FromQuery] string description, [FromBody] ComponentSettings componentSettings)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -110,6 +114,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{component}")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> UpdateComponent(string tenant, string product, string component, [FromQuery] string description)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -136,6 +141,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete("{component}")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> DeleteComponent(string tenant, string product, string component)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -160,6 +166,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{component}/settings")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<ComponentSettings> GetComponentSettings(string tenant, string product, string component)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -183,6 +190,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{component}/settings")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> UpdateComponentSettings(string tenant, string product, string component, [FromBody] ComponentSettings componentSettings)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -208,6 +216,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPost("{component}/tokens")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> CreateComponentToken(string tenant, string product, string component, [FromBody] ComponentToken componentToken)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -232,6 +241,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPost("{component}/tokens/{key}/revoke")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> CreateComponentToken(string tenant, string product, string component, Guid key)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -256,6 +266,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{component}/tokens")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<ComponentToken>> GetComponentTokens(string tenant, string product, string component)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -284,6 +295,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{component}/tokens/{key}")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<ComponentToken> GetComponentToken(string tenant, string product, string component, Guid key)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -305,10 +317,10 @@ namespace Buildersoft.Andy.X.Controllers
             return Ok(token);
         }
 
-
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{component}/retentions")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<ComponentRetention>> GetComponentRetentions(string tenant, string product, string component)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -328,10 +340,10 @@ namespace Buildersoft.Andy.X.Controllers
             return Ok(retentions);
         }
 
-
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPost("{component}/retentions")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> AddComponentRetention(string tenant, string product, string component, [FromBody] ComponentRetention componentRetention)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -357,6 +369,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{component}/retentions/{id}")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> UpdateComponentRetention(string tenant, string product, string component, long id,[FromBody] ComponentRetention componentRetention)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -381,6 +394,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete("{component}/retentions/{id}")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> DeleteComponentRetention(string tenant, string product, string component, long id)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -401,6 +415,5 @@ namespace Buildersoft.Andy.X.Controllers
 
             return BadRequest("Delete of Component retention couldnot happend, please try again");
         }
-
     }
 }
