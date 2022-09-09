@@ -59,8 +59,11 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
             // authorization tokens
             string tenantToken = headers["x-andyx-tenant-authoriziation"];
+            tenantToken ??= "";
             string productToken = headers["x-andyx-product-authoriziation"];
+            productToken ??= "";
             string componentToken = headers["x-andyx-component-authoriziation"];
+            componentToken ??= "";
 
             string tenant = headers["x-andyx-tenant"].ToString();
             string product = headers["x-andyx-product"].ToString();
@@ -76,7 +79,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             var connectedTenant = _tenantStateService.GetTenant(tenant);
             if (connectedTenant == null)
             {
-                _logger.LogInformation($"Producer '{producerName}' failed to connect, tenant '{tenant}' does not exists");
+                var message = $"Producer '{producerName}' failed to connect, tenant '{tenant}' does not exists";
+                _logger.LogInformation(message);
+                Clients.Caller.AndyOrderedDisconnect(message);
                 return OnDisconnectedAsync(new Exception($"There is no tenant registered with this name '{tenant}'"));
             }
 
@@ -84,7 +89,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             bool isTenantTokenValidated = _tenantStateService.ValidateTenantToken(_coreRepository, tenant, tenantToken, false);
             if (isTenantTokenValidated != true)
             {
-                _logger.LogInformation($"Producer '{producerName}' failed to connect, access is forbidden. Not authorized");
+                var message = $"Producer '{producerName}' failed to connect, access is forbidden. Not authorized";
+                _logger.LogInformation(message);
+                Clients.Caller.AndyOrderedDisconnect(message);
                 return OnDisconnectedAsync(new Exception($"Producer '{producerName}' failed to connect, access is forbidden"));
             }
 
@@ -93,7 +100,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             {
                 if (connectedTenant.Settings.IsProductAutomaticCreationAllowed != true)
                 {
-                    _logger.LogInformation($"Producer '{producerName}' failed to connect, tenant '{tenant}' does not allow to create new product");
+                    var message = $"Producer '{producerName}' failed to connect, tenant '{tenant}' does not allow to create new product";
+                    _logger.LogInformation(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"There is no product registered with this name '{product}'. Tenant '{tenant}' does not allow to create new product"));
                 }
 
@@ -106,7 +115,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             bool isProductTokenValidated = _tenantStateService.ValidateProductToken(_coreRepository, tenantFromState.Id, product, productToken, false);
             if (isProductTokenValidated != true)
             {
-                _logger.LogInformation($"Producer '{producerName}' failed to connect, access is forbidden. Not authorized, check product token");
+                string message = $"Producer '{producerName}' failed to connect, access is forbidden. Not authorized, check product token";
+                _logger.LogInformation(message);
+                Clients.Caller.AndyOrderedDisconnect(message);
                 return OnDisconnectedAsync(new Exception($"Producer '{producerName}' failed to connect, access is forbidden, check product token"));
             }
 
@@ -123,7 +134,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
                 bool isComponentTokenValidated = _tenantStateService.ValidateComponentToken(_coreRepository, productFromState.Id, component, componentToken, producerName, false);
                 if (isComponentTokenValidated != true)
                 {
-                    _logger.LogInformation($"Producer '{producerName}' failed to connect, access is forbidden. Not authorized, check component token");
+                    string message = $"Producer '{producerName}' failed to connect, access is forbidden. Not authorized, check component token";
+                    _logger.LogInformation(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"Producer '{producerName}' failed to connect, access is forbidden, check component token"));
                 }
             }
@@ -135,7 +148,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
                 connectedComponent = _tenantStateService.GetComponent(tenant, product, component);
                 if (connectedComponent.Settings.IsTopicAutomaticCreationAllowed != true)
                 {
-                    _logger.LogInformation($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component.");
+                    string message = $"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component.";
+                    _logger.LogInformation(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component."));
                 }
 
@@ -145,7 +160,9 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
             if (_producerHubRepository.GetProducerByProducerName(tenant, product, component, topic, producerName).Equals(default(KeyValuePair<string, Producer>)) != true)
             {
-                _logger.LogWarning($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} is already connected");
+                string message = $"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} is already connected";
+                _logger.LogWarning(message);
+                Clients.Caller.AndyOrderedDisconnect(message);
                 return OnDisconnectedAsync(new Exception($"There is a producer with name '{producerName}' at {tenant}/{product}/{component}/{topic} connected to this node"));
             }
 

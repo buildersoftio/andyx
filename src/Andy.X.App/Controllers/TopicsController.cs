@@ -9,6 +9,8 @@ using System.Net.Mime;
 using System.Collections.Generic;
 using System.Linq;
 using Buildersoft.Andy.X.Model.Entities.Core.Topics;
+using Microsoft.AspNetCore.Authorization;
+using System.Data;
 
 namespace Buildersoft.Andy.X.Controllers
 {
@@ -17,7 +19,6 @@ namespace Buildersoft.Andy.X.Controllers
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ApiController]
-    //[Authorize]
     public class TopicsController : ControllerBase
     {
         private readonly ILogger<TopicsController> _logger;
@@ -42,6 +43,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<string>> GetTopics(string tenant, string product, string component)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -66,6 +68,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{topic}")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<Topic> GetTopic(string tenant, string product, string component, string topic)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -91,6 +94,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPost("{topic}")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> CreateTopic(string tenant, string product, string component, string topic, [FromQuery] string description, [FromBody] TopicSettings topicSettings)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -122,6 +126,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{topic}")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> UpdateTopic(string tenant, string product, string component, string topic, [FromQuery] string description)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -153,6 +158,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete("{topic}")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> DeleteTopic(string tenant, string product, string component, string topic)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -184,6 +190,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{topic}/settings")]
+        [Authorize(Roles = "admin,readonly")]
         public ActionResult<TopicSettings> GetTopicSettings(string tenant, string product, string component, string topic)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);
@@ -210,6 +217,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{topic}/settings")]
+        [Authorize(Roles = "admin")]
         public ActionResult<string> UpdateTopicSettings(string tenant, string product, string component, string topic, [FromBody] TopicSettings topicSettings)
         {
             var tenantDetails = _coreRepository.GetTenant(tenant);

@@ -35,5 +35,8 @@
   "InboundFlushCurrentEntryPositionInMilliseconds": 5000,
 
   "OutboundBackgroundIntervalReadMessagesInMilliseconds": 500,
-  "OutboundFlushCurrentEntryPositionInMilliseconds": 5000
+  "OutboundFlushCurrentEntryPositionInMilliseconds": 5000,
+
+  "RetentionBackgroundServiceIntervalInMinutes": 30,
+  "RetentionBulkMessagesCountToAnalyze": 1000
 }

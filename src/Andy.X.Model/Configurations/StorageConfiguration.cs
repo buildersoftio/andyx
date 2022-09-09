@@ -35,6 +35,9 @@
         public int DefaultMaxBackgroundCompactionsThreads { get; set; }
         public int DefaultMaxBackgroundFlushesThreads { get; set; }
 
+        public int RetentionBackgroundServiceIntervalInMinutes { get; set; }
+        public int RetentionBulkMessagesCountToAnalyze { get; set; }
+
 
         public StorageConfiguration()
         {
@@ -62,6 +65,10 @@
 
             DefaultMaxBackgroundCompactionsThreads = 1;
             DefaultMaxBackgroundFlushesThreads = 1;
+
+            //default interval for retention background service
+            RetentionBackgroundServiceIntervalInMinutes = 30;
+            RetentionBulkMessagesCountToAnalyze = 1000;
         }
     }
 }

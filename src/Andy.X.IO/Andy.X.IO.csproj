@@ -45,4 +45,6 @@
 		<Folder Include="data\store\" />
 	</ItemGroup>
 
+	<ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
+
 </Project>

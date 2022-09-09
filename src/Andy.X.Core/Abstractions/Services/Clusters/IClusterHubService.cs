@@ -1,11 +1,11 @@
-﻿using Buildersoft.Andy.X.Model.App.Components;
-using Buildersoft.Andy.X.Model.App.Products;
-using Buildersoft.Andy.X.Model.App.Tenants;
+﻿using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Topics;
+using Buildersoft.Andy.X.Model.Entities.Core.Components;
+using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
 using Buildersoft.Andy.X.Model.Entities.Subscriptions;
 using Buildersoft.Andy.X.Model.Subscriptions;
-using System;
 using System.Threading.Tasks;
+using Component = Buildersoft.Andy.X.Model.App.Components.Component;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Services.Clusters
 {

@@ -1,10 +1,16 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
+using Buildersoft.Andy.X.Core.Abstractions.Services;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Background;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
+using Buildersoft.Andy.X.Core.Services.Background;
 using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Entities.Core.Topics;
 using Buildersoft.Andy.X.Model.Entities.Storages;
 using Buildersoft.Andy.X.Utility.Extensions.Packs;
 using MessagePack;
+using Microsoft.Extensions.Logging;
 using RocksDbSharp;
 using System;
 using System.Collections.Generic;
@@ -13,6 +19,7 @@ namespace Buildersoft.Andy.X.Core.Services.Data
 {
     public class TopicRocksDbDataService : ITopicDataService<Message>
     {
+        private readonly ILoggerFactory _loggerFactory;
         private readonly string _tenant;
         private readonly string _product;
         private readonly string _component;
@@ -23,17 +30,26 @@ namespace Buildersoft.Andy.X.Core.Services.Data
 
         private readonly StorageConfiguration _storageConfiguration;
         private readonly TopicSettings _topicSettings;
+        private readonly ITenantStateRepository _tenantStateRepository;
+        private readonly ICoreRepository _coreRepository;
 
         private readonly OptionsHandle dbOptions;
         private readonly RocksDb rocksDb;
 
-        public TopicRocksDbDataService(string tenant,
+        private readonly IRetentionService retentionService;
+
+        public TopicRocksDbDataService(
+            ILoggerFactory loggerFactory,
+            string tenant,
             string product,
             string component,
             string topic,
             StorageConfiguration storageConfiguration,
-            TopicSettings topicSettings)
+            TopicSettings topicSettings,
+            ITenantStateRepository tenantStateRepository,
+            ICoreRepository coreRepository)
         {
+            _loggerFactory = loggerFactory;
             _tenant = tenant;
             _product = product;
             _component = component;
@@ -41,6 +57,8 @@ namespace Buildersoft.Andy.X.Core.Services.Data
 
             _storageConfiguration = storageConfiguration;
             _topicSettings = topicSettings;
+            _tenantStateRepository = tenantStateRepository;
+            _coreRepository = coreRepository;
 
             _dataPath = TenantLocations.GetMessageRootDirectory(tenant, product, component, topic);
             _logPath = TenantLocations.GetTopicLogRootDirectory(tenant, product, component, topic);
@@ -61,6 +79,18 @@ namespace Buildersoft.Andy.X.Core.Services.Data
                 .SetMinWriteBufferNumberToMerge(_topicSettings.MinWriteBufferNumberToMerge);
 
             rocksDb = RocksDb.Open(dbOptions, _dataPath);
+
+            // initialize retentionbackground service for this topic
+            retentionService = new RetentionBackgroundService(
+                loggerFactory.CreateLogger<RetentionBackgroundService>(),
+                tenant,
+                product,
+                component,
+                topic,
+                coreRepository: coreRepository,
+                storageConfiguration,
+                tenantStateRepository: _tenantStateRepository,
+                topicDataService: this);
         }
 
         public void Put(string key, Message message)

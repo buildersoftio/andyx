@@ -59,6 +59,7 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
         {
             var component = GetComponent(componentId);
 
+            using var coreStateContext = new CoreStateContext();
             if (component is not null)
                 _coreStateContext.Components.Remove(component);
         }
@@ -132,35 +133,40 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public Component GetComponent(long componentId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .Components
                 .Find(componentId);
         }
 
         public Product GetProduct(long productId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .Products
                 .Find(productId);
         }
 
         public Subscription GetSubscription(long subscriptionId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .Subscriptions
                 .Find(subscriptionId);
         }
 
         public Tenant GetTenant(long tenantId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .Tenants
                 .Find(tenantId);
         }
 
         public Topic GetTopic(long topicId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .Topics
                 .Find(topicId);
         }
@@ -250,7 +256,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public TenantSettings GetTenantSettings(long tenantId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .TenantSettings
                 .Where(t => t.TenantId == tenantId)
                 .FirstOrDefault();
@@ -281,7 +288,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public TenantToken GetTenantToken(Guid id)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .TenantTokens
                 .Find(id);
         }
@@ -310,14 +318,16 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public TenantRetention GetTenantRetention(long retentionId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                  .TenantRetentions
                  .Find(retentionId);
         }
 
         public List<TenantRetention> GetTenantRetentions(long tenantId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .TenantRetentions
                 .Where(t => t.TenantId == tenantId)
                 .ToList();
@@ -325,14 +335,16 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public void AddProductToken(ProductToken productToken)
         {
-            _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            coreStateContext
                 .ProductTokens
                 .Add(productToken);
         }
 
         public void EditProductToken(ProductToken productToken)
         {
-            _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            coreStateContext
                 .ProductTokens
                 .Update(productToken);
         }
@@ -341,13 +353,15 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
         {
             var productToken = GetProductToken(id);
 
+            using var coreStateContext = new CoreStateContext();
             if (productToken is not null)
-                _coreStateContext.ProductTokens.Remove(productToken);
+                coreStateContext.ProductTokens.Remove(productToken);
         }
 
         public ProductToken GetProductToken(Guid id)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .ProductTokens
                 .Find(id);
         }
@@ -376,7 +390,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public ProductSettings GetProductSettings(long productId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .ProductSettings
                 .Where(p => p.ProductId == productId)
                 .FirstOrDefault();
@@ -406,14 +421,16 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public ProductRetention GetProductRetention(long retentionId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .ProductRetentions
                 .Find(retentionId);
         }
 
         public List<ProductRetention> GetProductRetentions(long productId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .ProductRetentions
                 .Where(p => p.ProductId == productId)
                 .ToList();
@@ -443,7 +460,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public ComponentToken GetComponentToken(Guid id)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .ComponentTokens
                 .Find(id);
         }
@@ -472,7 +490,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public ComponentSettings GetComponentSettings(long componentId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .ComponentSettings
                 .Where(c => c.ComponentId == componentId)
                 .FirstOrDefault();
@@ -502,14 +521,16 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public ComponentRetention GetComponentRetention(long retentionId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .ComponentRetentions
                 .Find(retentionId);
         }
 
         public List<ComponentRetention> GetComponentRetentions(long componentId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .ComponentRetentions
                 .Where(c => c.ComponentId == componentId)
                 .ToList();
@@ -517,7 +538,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public Tenant GetTenant(string tenantName)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .Tenants
                 .Where(t => t.Name == tenantName)
                 .FirstOrDefault();
@@ -525,17 +547,20 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public int SaveChanges()
         {
-            return _coreStateContext.SaveChanges();
+            return _coreStateContext
+                .SaveChanges();
         }
 
         public Task<int> SaveChangesAsync()
         {
-            return _coreStateContext.SaveChangesAsync();
+            return _coreStateContext
+                .SaveChangesAsync();
         }
 
         public Product GetProduct(long tenantId, string productName)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .Products
                 .Where(p => p.TenantId == tenantId && p.Name == productName)
                 .FirstOrDefault();
@@ -543,7 +568,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public Component GetComponent(long tenantId, long productId, string componentName)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .Components
                 .Where(c => c.ProductId == productId && c.Name == componentName)
                 .FirstOrDefault();
@@ -551,18 +577,20 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public Topic GetTopic(long componentId, string topic)
         {
-            return _coreStateContext
-            .Topics
-            .Where(c => c.ComponentId == componentId && c.Name == topic)
-            .FirstOrDefault();
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
+                .Topics
+                .Where(c => c.ComponentId == componentId && c.Name == topic)
+                .FirstOrDefault();
         }
 
         public Subscription GetSubscription(long topicId, string subscriptionName)
         {
-            return _coreStateContext
-              .Subscriptions
-              .Where(c => c.TopicId == topicId && c.Name == subscriptionName)
-              .FirstOrDefault();
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
+                .Subscriptions
+                .Where(c => c.TopicId == topicId && c.Name == subscriptionName)
+                .FirstOrDefault();
         }
 
         public CoreStateContext GetCoreStateContext()
@@ -572,19 +600,21 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public List<Tenant> GetTenants(bool withInActive = true)
         {
+            using var coreStateContext = new CoreStateContext();
             if (withInActive == true)
-                return _coreStateContext
+                return coreStateContext
                     .Tenants
                     .ToList();
             else
-                return _coreStateContext
+                return coreStateContext
                     .Tenants.Where(t => t.IsActive == true)
                     .ToList();
         }
 
         public List<Product> GetProducts(long tenantId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .Products
                 .Where(p => p.TenantId == tenantId)
                 .ToList();
@@ -592,7 +622,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public List<Component> GetComponents(long productId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .Components
                 .Where(c => c.ProductId == productId)
                 .ToList();
@@ -600,7 +631,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public List<Topic> GetTopics(long componentId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .Topics
                 .Where(t => t.ComponentId == componentId)
                 .ToList();
@@ -608,7 +640,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public List<Subscription> GetSubscriptions(long topicId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .Subscriptions
                 .Where(s => s.TopicId == topicId)
                 .ToList();
@@ -616,7 +649,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public List<TenantToken> GetTenantToken(long tenantId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .TenantTokens
                 .Where(t => t.TenantId == tenantId)
                 .ToList();
@@ -624,7 +658,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public List<ProductToken> GetProductToken(long productId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
              .ProductTokens
              .Where(t => t.ProductId == productId)
              .ToList();
@@ -632,7 +667,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public List<ComponentToken> GetComponentToken(long componentId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .ComponentTokens
                 .Where(t => t.ComponentId == componentId)
                 .ToList();
@@ -647,11 +683,9 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public void EditTopicSettings(TopicSettings topicSettings)
         {
-
             _coreStateContext
                 .TopicSettings
                 .Update(topicSettings);
-
         }
 
         public void DeleteTopicSettings(long topicId)
@@ -665,7 +699,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public TopicSettings GetTopicSettings(long topicId)
         {
-            return _coreStateContext
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
                 .TopicSettings
                 .Where(t => t.TopicId == topicId)
                 .FirstOrDefault();
