@@ -104,6 +104,13 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 {
                     subscriptionTopicData.TopicState = topicStateContext.TopicStates.Find(nodeSubscriptionId);
                     subscriptionTopicData.LastUnackedMessageEntryPositionSent = subscriptionTopicData.TopicState.MarkDeleteEntryPosition;
+
+                    // RetentionBackgrounService, check if any HARD_TTL has remove messages before consuming, if yes skip deleted messages
+                    if (subscriptionTopicData.TopicState.MarkDeleteEntryPosition > subscriptionTopicData.CurrentPosition.ReadEntryPosition)
+                    {
+                        subscriptionTopicData.CurrentPosition.ReadEntryPosition = subscriptionTopicData.TopicState.MarkDeleteEntryPosition;
+                        subscriptionTopicData.LastMessageEntryPositionSent = subscriptionTopicData.CurrentPosition.ReadEntryPosition;
+                    }
                 }
 
                 _subscriptionTopicData.TryAdd(subscriptionId, subscriptionTopicData);

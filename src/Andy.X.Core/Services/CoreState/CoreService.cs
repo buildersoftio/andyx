@@ -8,7 +8,9 @@ using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using Buildersoft.Andy.X.Model.Entities.Core.Subscriptions;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
 using Buildersoft.Andy.X.Model.Entities.Core.Topics;
+using Buildersoft.Andy.X.Utility.Extensions;
 using Buildersoft.Andy.X.Utility.Extensions.Json;
+using Buildersoft.Andy.X.Utility.Generators;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
@@ -53,7 +55,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                         }
                     }
                 }
-                _logger.LogInformation("Initial configuration are done");
+                _logger.LogInformation("Initial configuration is done");
             }
         }
 
@@ -249,8 +251,8 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             if (currentTenant is null)
                 return false;  // tenant doesnot exists
 
-            secret = "GENERATED_SECRET";
-            string encryptedSecret = "ENCRYPTED_SECRET";
+            secret = KeyGenerators.GenerateApiSecret();
+            string encryptedSecret = secret.ToHashString();
 
             var tenantTokenToRegister = new TenantToken()
             {
@@ -426,8 +428,8 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             if (currentProduct is null)
                 return false; // product doesnot exists
 
-            secret = "GENERATE_SECRET";
-            string encryptedSecret = "GENERATE_SECRET";
+            secret = KeyGenerators.GenerateApiSecret();
+            string encryptedSecret = secret.ToHashString();
 
             var tokenToRegister = new ProductToken()
             {
@@ -729,8 +731,8 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             if (currentComponent is null)
                 return false; // component doesnot exists
 
-            secret = "GENERATE_SECRET";
-            var encryptedSecret = "ENCRYPTED_SECRET";
+            secret = KeyGenerators.GenerateApiSecret();
+            var encryptedSecret = secret.ToHashString();
 
             var newToken = new ComponentToken()
             {
