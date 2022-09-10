@@ -3,6 +3,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
 using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
+using Buildersoft.Andy.X.Utility.Extensions;
 using System;
 using System.Linq;
 using System.Text;
@@ -25,7 +26,7 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
             if (isParsed == false)
                 return false;
 
-            var encryptedSecret = credentials.LastOrDefault();
+            var encryptedSecret = credentials.LastOrDefault().ToHashString();
 
             var tenantToken = coreRepository.GetTenantToken(key);
             if (tenantToken == null)
@@ -73,7 +74,7 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
             if (isParsed == false)
                 return false;
 
-            var encryptedSecret = credentials.LastOrDefault();
+            var encryptedSecret = credentials.LastOrDefault().ToHashString();
 
             var productToken = coreRepository.GetProductToken(key);
             if (productToken == null)
@@ -122,7 +123,7 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
             if (isParsed == false)
                 return false;
 
-            var encryptedSecret = credentials.LastOrDefault();
+            var encryptedSecret = credentials.LastOrDefault().ToHashString();
 
 
             var componentToken = coreRepository.GetComponentToken(key);
