@@ -1,55 +1,44 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
-using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Net.Mime;
-using System.Collections.Generic;
-using System.Linq;
-using Buildersoft.Andy.X.Model.Subscriptions;
-using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Microsoft.AspNetCore.Authorization;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
+using Buildersoft.Andy.X.Model.Entities.Core.Producers;
+using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Extensions;
 
 namespace Buildersoft.Andy.X.Controllers
 {
-    [Route("api/v3/tenants/{tenant}/products/{product}/components/{component}/topics/{topic}/subscriptions")]
+    [Route("api/v3/tenants/{tenant}/products/{product}/components/{component}/topics/{topic}/producers")]
     [Produces(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ApiController]
-    public class SubscriptionsController : ControllerBase
+    public class ProducersController : ControllerBase
     {
-        private readonly ILogger<SubscriptionsController> _logger;
+        private readonly ILogger<ProducersController> _logger;
         private readonly ICoreRepository _coreRepository;
         private readonly ICoreService _coreService;
-        private readonly ITenantStateService _tenantStateService;
-        private readonly ITenantFactory _tenantFactory;
-        private readonly ISubscriptionFactory _subscriptionFactory;
 
-        public SubscriptionsController(ILogger<SubscriptionsController> logger,
+        public ProducersController(ILogger<ProducersController> logger,
             ICoreRepository coreRepository,
-            ICoreService coreService,
-            ITenantStateService tenantStateService,
-            ITenantFactory tenantFactory,
-            ISubscriptionFactory subscriptionFactory)
+            ICoreService coreService)
         {
             _logger = logger;
             _coreRepository = coreRepository;
             _coreService = coreService;
-            _tenantStateService = tenantStateService;
-            _tenantFactory = tenantFactory;
-            _subscriptionFactory = subscriptionFactory;
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("")]
         [Authorize(Roles = "admin,readonly")]
-        public ActionResult<List<string>> GetSubscriptions(string tenant, string product, string component, string topic)
+        public ActionResult<List<string>> GetProducers(string tenant, string product, string component, string topic)
         {
             _logger.LogApiCallFrom(HttpContext);
 
@@ -69,18 +58,18 @@ namespace Buildersoft.Andy.X.Controllers
             if (topicDetails is null)
                 return NotFound($"Topic {topic} does not exists in {tenant}/{product}/{component}");
 
-            var subscriptions = _coreRepository
-                .GetSubscriptions(topicDetails.Id)
-                .Select(x => new { Name = x.Name, Type = x.SubscriptionType });
+            var producers = _coreRepository
+                .GetProducers(topicDetails.Id)
+                .Select(x => new { Name = x.Name });
 
-            return Ok(subscriptions);
+            return Ok(producers);
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpGet("{subscription}")]
+        [HttpGet("{producer}")]
         [Authorize(Roles = "admin,readonly")]
-        public ActionResult<Subscription> GetSubscription(string tenant, string product, string component, string topic, string subscription)
+        public ActionResult<Producer> GetProducer(string tenant, string product, string component, string topic, string producer)
         {
             _logger.LogApiCallFrom(HttpContext);
 
@@ -100,25 +89,19 @@ namespace Buildersoft.Andy.X.Controllers
             if (topicDetails is null)
                 return NotFound($"Topic {topic} does not exists in {tenant}/{product}/{component}");
 
-            var subscriptionDetails = _coreRepository.GetSubscription(topicDetails.Id, subscription);
-            if (subscriptionDetails is null)
-                return NotFound($"Subscription {subscription} does not exists in {tenant}/{product}/{component}/{topic}");
+            var producerDetails = _coreRepository.GetProducer(topicDetails.Id, producer);
+            if (producerDetails is null)
+                return NotFound($"Producer {producer} does not exists in {tenant}/{product}/{component}/{topic}");
 
-            return Ok(subscriptionDetails);
+            return Ok(producerDetails);
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpPost("{subscription}")]
+        [HttpPost("{producer}")]
         [Authorize(Roles = "admin")]
-        public ActionResult<Subscription> CreateSubscription(string tenant,
-            string product,
-            string component,
-            string topic,
-            string subscription,
-            [FromQuery] SubscriptionType subscriptionType,
-            [FromQuery] SubscriptionMode subscriptionMode,
-            [FromQuery] InitialPosition initialPosition)
+        public ActionResult<Subscription> CreateProducer(string tenant, string product, string component,
+            string topic, string producer, [FromQuery] string description, [FromQuery] ProducerInstanceType instanceType)
         {
             _logger.LogApiCallFrom(HttpContext);
 
@@ -138,27 +121,24 @@ namespace Buildersoft.Andy.X.Controllers
             if (topicDetails is null)
                 return NotFound($"Topic {topic} does not exists in {tenant}/{product}/{component}");
 
-            var subscriptionDetails = _coreRepository.GetSubscription(topicDetails.Id, subscription);
-            if (subscriptionDetails is not null)
-                return NotFound($"Subscription {subscription} already exists in {tenant}/{product}/{component}/{topic}");
+            var producerDetails = _coreRepository.GetProducer(topicDetails.Id, producer);
+            if (producerDetails is not null)
+                return NotFound($"Producer {producer} already exists in {tenant}/{product}/{component}/{topic}");
 
-            var isCreated = _coreService.CreateSubscription(tenant, product, component, topic, subscription, subscriptionType, subscriptionMode, initialPosition);
+            var isCreated = _coreService.CreateProducer(tenant, product, component, topic, producer, description, instanceType);
             if (isCreated == true)
             {
-                _tenantStateService.AddSubscriptionConfiguration(tenant, product, component, topic, subscription,
-                    _subscriptionFactory.CreateSubscription(tenant, product, component, topic, subscription, subscriptionType, subscriptionMode, initialPosition));
-
-                return Ok($"Subscription {subscription} has been created");
+                return Ok($"Producer {producer} has been created");
             }
 
-            return BadRequest("Something went wrong, subscription couldnot be created");
+            return BadRequest("Something went wrong, producer couldnot be created");
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpDelete("{subscription}")]
+        [HttpDelete("{producer}")]
         [Authorize(Roles = "admin")]
-        public ActionResult<Subscription> DeleteSubscription(string tenant, string product, string component, string topic, string subscription)
+        public ActionResult<Subscription> DeleteSubscription(string tenant, string product, string component, string topic, string producer)
         {
             _logger.LogApiCallFrom(HttpContext);
 
@@ -178,17 +158,18 @@ namespace Buildersoft.Andy.X.Controllers
             if (topicDetails is null)
                 return NotFound($"Topic {topic} does not exists in {tenant}/{product}/{component}");
 
-            var subscriptionDetails = _coreRepository.GetSubscription(topicDetails.Id, subscription);
-            if (subscriptionDetails is null)
-                return NotFound($"Subscription {subscription} does not exists in {tenant}/{product}/{component}/{topic}");
+            var producerDetails = _coreRepository.GetProducer(topicDetails.Id, producer);
+            if (producerDetails is null)
+                return NotFound($"Producer {producer} does not exists in {tenant}/{product}/{component}/{topic}");
 
-            var isDeleted = _coreService.DeleteSubscription(tenant, product, component, topic, subscription);
+            var isDeleted = _coreService.DeleteProducer(tenant, product, component, topic, producer);
             if (isDeleted == true)
             {
-                return Ok($"Subscription is marked for deletion, this is async process, it will take some time to start reflecting");
+                return Ok($"Producer is marked for deletion, this is async process, it will take some time to start reflecting");
             }
 
-            return BadRequest("Something went wrong, subscription couldnot be deleted");
+            return BadRequest("Something went wrong, producer couldnot be deleted");
         }
+
     }
 }

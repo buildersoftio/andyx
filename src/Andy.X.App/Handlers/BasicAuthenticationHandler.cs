@@ -1,6 +1,5 @@
 ﻿using Buildersoft.Andy.X.Model.Configurations;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
@@ -17,7 +16,6 @@ namespace Buildersoft.Andy.X.Handlers
     public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         private readonly List<CredentialsConfiguration> _credentialsConfigurations;
-        private object __credentialsConfigurations;
 
         public BasicAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,

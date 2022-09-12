@@ -265,7 +265,10 @@ namespace Buildersoft.Andy.X.Core.Services.App
                     return true;
 
 
-                return _coreService.CreateComponent(tenant, product, componentName, component.Description, component.Settings.IsTopicAutomaticCreationAllowed, component.Settings.IsSchemaValidationEnabled, component.Settings.IsAuthorizationEnabled, component.Settings.IsSubscriptionAutomaticCreationAllowed);
+                return _coreService.CreateComponent(tenant, product, componentName, component.Description,
+                    component.Settings.IsTopicAutomaticCreationAllowed, component.Settings.IsSchemaValidationEnabled,
+                    component.Settings.IsAuthorizationEnabled, component.Settings.IsSubscriptionAutomaticCreationAllowed,
+                    component.Settings.IsProducerAutomaticCreationAllowed);
             }
 
             return false;

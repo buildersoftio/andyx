@@ -20,6 +20,7 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Components
         public bool IsAuthorizationEnabled { get; set; }
 
         public bool IsSubscriptionAutomaticCreationAllowed { get; set; }
+        public bool IsProducerAutomaticCreationAllowed { get; set; }
 
         // internal settings
         [JsonIgnore]

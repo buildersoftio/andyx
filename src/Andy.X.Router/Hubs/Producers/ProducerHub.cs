@@ -5,6 +5,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
+using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
 using Buildersoft.Andy.X.Model.App.Messages;
@@ -29,6 +30,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         private readonly IInboundMessageService _inboundMessageService;
 
         private readonly IClusterHubService _clusterHubService;
+        private readonly ICoreService _coreService;
 
         public ProducerHub(ILogger<ProducerHub> logger,
             IProducerHubRepository producerHubRepository,
@@ -37,7 +39,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             ITenantFactory tenantFactory,
             IProducerFactory producerFactory,
             IInboundMessageService inboundMessageService,
-            IClusterHubService clusterHubService)
+            IClusterHubService clusterHubService,
+            ICoreService coreService)
         {
             _logger = logger;
             _producerHubRepository = producerHubRepository;
@@ -49,6 +52,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             _inboundMessageService = inboundMessageService;
 
             _clusterHubService = clusterHubService;
+            _coreService = coreService;
         }
 
         public override Task OnConnectedAsync()
@@ -122,6 +126,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             }
 
             var connectedComponent = _tenantStateService.GetComponent(tenant, product, component);
+            var productFromState = _coreRepository.GetProduct(tenantFromState.Id, product);
             if (connectedComponent == null)
             {
                 var componentDetails = _tenantFactory.CreateComponent(component);
@@ -130,7 +135,6 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             else
             {
                 // check component token validation
-                var productFromState = _coreRepository.GetProduct(tenantFromState.Id, product);
                 bool isComponentTokenValidated = _tenantStateService.ValidateComponentToken(_coreRepository, productFromState.Id, component, componentToken, producerName, false);
                 if (isComponentTokenValidated != true)
                 {
@@ -158,12 +162,35 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
                 _tenantStateService.AddTopic(tenant, product, component, topic, topicDetails);
             }
 
-            if (_producerHubRepository.GetProducerByProducerName(tenant, product, component, topic, producerName).Equals(default(KeyValuePair<string, Producer>)) != true)
+            // check if this is a new producer.
+            var componentFromState = _coreRepository.GetComponent(tenantFromState.Id, productFromState.Id, component);
+            var topicFromState = _coreRepository.GetTopic(componentFromState.Id, topic);
+            var producerFromState = _coreRepository.GetProducer(topicFromState.Id, producerName);
+            if (producerFromState == null)
             {
-                string message = $"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} is already connected";
-                _logger.LogWarning(message);
-                Clients.Caller.AndyOrderedDisconnect(message);
-                return OnDisconnectedAsync(new Exception($"There is a producer with name '{producerName}' at {tenant}/{product}/{component}/{topic} connected to this node"));
+                var componentSettings = _coreRepository.GetComponentSettings(componentFromState.Id);
+                if (componentSettings.IsProducerAutomaticCreationAllowed != true)
+                {
+                    var message = $"Component '{component}' does not allow to create a new producer {producerName} at '{tenant}/{product}/{component}'. To allow creating update property IsProducerAutomaticCreationAllowed at component settings.";
+                    _logger.LogInformation(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
+                    return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new producer {producerName} at '{tenant}/{product}/{component}'. To allow creating update property IsProducerAutomaticCreationAllowed at component settings."));
+
+                }
+
+                _coreService.CreateProducer(tenant, product, component, topic, producerName, "Created automatically with the client request", Model.Entities.Core.Producers.ProducerInstanceType.Multiple);
+                producerFromState = _coreRepository.GetProducer(topicFromState.Id, producerName);
+            }
+
+            if (producerFromState.InstanceType == Model.Entities.Core.Producers.ProducerInstanceType.Single)
+            {
+                if (_producerHubRepository.GetProducerByProducerName(tenant, product, component, topic, producerName).Equals(default(KeyValuePair<string, Producer>)) != true)
+                {
+                    string message = $"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} is already connected";
+                    _logger.LogWarning(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
+                    return OnDisconnectedAsync(new Exception($"There is a producer with name '{producerName}' at {tenant}/{product}/{component}/{topic} connected to this node"));
+                }
             }
 
             producerToRegister = _producerFactory.CreateProducer(tenant, product, component, topic, producerName);

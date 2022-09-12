@@ -12,6 +12,7 @@ using Buildersoft.Andy.X.Model.Entities.Core.Components;
 using System;
 using Microsoft.AspNetCore.Authorization;
 using System.Data;
+using Buildersoft.Andy.X.Extensions;
 
 namespace Buildersoft.Andy.X.Controllers
 {
@@ -47,6 +48,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<string>> GetComponents(string tenant, string product)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -68,6 +71,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<Component> GetComponent(string tenant, string product, string component)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -89,6 +94,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> CreateComponent(string tenant, string product, string component, [FromQuery] string description, [FromBody] ComponentSettings componentSettings)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -101,7 +108,11 @@ namespace Buildersoft.Andy.X.Controllers
             if (componentDetails is not null)
                 return BadRequest($"Component already exists");
 
-            var isCreated = _coreService.CreateComponent(tenant, product, component, description, componentSettings.IsTopicAutomaticCreationAllowed, componentSettings.IsSchemaValidationEnabled, componentSettings.IsAuthorizationEnabled, componentSettings.IsSubscriptionAutomaticCreationAllowed);
+            var isCreated = _coreService.CreateComponent(tenant, product, component, description, 
+                componentSettings.IsTopicAutomaticCreationAllowed, componentSettings.IsSchemaValidationEnabled,
+                componentSettings.IsAuthorizationEnabled, componentSettings.IsSubscriptionAutomaticCreationAllowed,
+                componentSettings.IsProducerAutomaticCreationAllowed);
+
             if (isCreated == true)
             {
                 _tenantStateService.AddComponent(tenant, product, component, _tenantFactory.CreateComponent(component, description, componentSettings));
@@ -117,6 +128,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> UpdateComponent(string tenant, string product, string component, [FromQuery] string description)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -144,6 +157,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> DeleteComponent(string tenant, string product, string component)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -169,6 +184,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<ComponentSettings> GetComponentSettings(string tenant, string product, string component)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -193,6 +210,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> UpdateComponentSettings(string tenant, string product, string component, [FromBody] ComponentSettings componentSettings)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -219,6 +238,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> CreateComponentToken(string tenant, string product, string component, [FromBody] ComponentToken componentToken)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -244,6 +265,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> CreateComponentToken(string tenant, string product, string component, Guid key)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -269,6 +292,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<ComponentToken>> GetComponentTokens(string tenant, string product, string component)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -298,6 +323,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<ComponentToken> GetComponentToken(string tenant, string product, string component, Guid key)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -323,6 +350,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<ComponentRetention>> GetComponentRetentions(string tenant, string product, string component)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -346,6 +375,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> AddComponentRetention(string tenant, string product, string component, [FromBody] ComponentRetention componentRetention)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -358,7 +389,7 @@ namespace Buildersoft.Andy.X.Controllers
             if (componentDetails is null)
                 return NotFound($"Component {component} does not exists in {tenant}/{product}");
 
-            var isCreated = _coreService.CreateComponentRetention(tenant, product, component,componentRetention.Name, componentRetention.Type, componentRetention.TimeToLiveInMinutes);
+            var isCreated = _coreService.CreateComponentRetention(tenant, product, component, componentRetention.Name, componentRetention.Type, componentRetention.TimeToLiveInMinutes);
             if (isCreated)
                 return Ok("Component retention has been created, this is async process, it will take some time to start reflecting");
 
@@ -370,8 +401,10 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{component}/retentions/{id}")]
         [Authorize(Roles = "admin")]
-        public ActionResult<string> UpdateComponentRetention(string tenant, string product, string component, long id,[FromBody] ComponentRetention componentRetention)
+        public ActionResult<string> UpdateComponentRetention(string tenant, string product, string component, long id, [FromBody] ComponentRetention componentRetention)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -397,6 +430,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> DeleteComponentRetention(string tenant, string product, string component, long id)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
