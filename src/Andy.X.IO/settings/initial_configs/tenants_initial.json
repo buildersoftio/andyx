@@ -32,7 +32,8 @@
               "IsTopicAutomaticCreation": false,
               "IsSchemaValidationEnabled": false,
               "IsAuthorizationEnabled": false,
-              "IsSubscriptionAutomaticCreationAllowed": true
+              "IsSubscriptionAutomaticCreationAllowed": true,
+              "IsProducerAutomaticCreationAllowed": true
             }
           },
           {
@@ -41,7 +42,8 @@
               "IsTopicAutomaticCreation": false,
               "IsSchemaValidationEnabled": false,
               "IsAuthorizationEnabled": false,
-              "IsSubscriptionAutomaticCreationAllowed": true
+              "IsSubscriptionAutomaticCreationAllowed": true,
+              "IsProducerAutomaticCreationAllowed": true
             }
           },
           {
@@ -50,7 +52,8 @@
               "IsTopicAutomaticCreation": false,
               "IsSchemaValidationEnabled": false,
               "IsAuthorizationEnabled": false,
-              "IsSubscriptionAutomaticCreationAllowed": true
+              "IsSubscriptionAutomaticCreationAllowed": true,
+              "IsProducerAutomaticCreationAllowed": true
             }
           }
         ]
@@ -64,7 +67,8 @@
               "IsTopicAutomaticCreation": false,
               "IsSchemaValidationEnabled": false,
               "IsAuthorizationEnabled": false,
-              "IsSubscriptionAutomaticCreationAllowed": true
+              "IsSubscriptionAutomaticCreationAllowed": true,
+              "IsProducerAutomaticCreationAllowed": true
             },
             "Topics": [
               {
@@ -78,7 +82,8 @@
               "IsTopicAutomaticCreation": false,
               "IsSchemaValidationEnabled": false,
               "IsAuthorizationEnabled": false,
-              "IsSubscriptionAutomaticCreationAllowed": true
+              "IsSubscriptionAutomaticCreationAllowed": true,
+              "IsProducerAutomaticCreationAllowed": true
             },
             "Topics": [
               {
@@ -92,7 +97,8 @@
               "IsTopicAutomaticCreation": false,
               "IsSchemaValidationEnabled": false,
               "IsAuthorizationEnabled": false,
-              "IsSubscriptionAutomaticCreationAllowed": true
+              "IsSubscriptionAutomaticCreationAllowed": true,
+              "IsProducerAutomaticCreationAllowed": true
             },
             "Topics": [
               {

@@ -4,9 +4,9 @@ using Buildersoft.Andy.X.Model.Entities.Core.Subscriptions;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
 using Buildersoft.Andy.X.Model.Entities.Core.Topics;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System;
 using Buildersoft.Andy.X.Core.Contexts.CoreState;
+using Buildersoft.Andy.X.Model.Entities.Core.Producers;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState
 {
@@ -102,7 +102,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState
         TopicSettings GetTopicSettings(long topicId);
         TopicSettings GetTopicSettings(string tenant, string product, string component, string topic);
 
-        List<Subscription> GetSubscriptions(long topicId);  
+        List<Subscription> GetSubscriptions(long topicId);
         void AddSubscription(Subscription subscription);
         void EditSubscription(Subscription subscription);
         void DeleteSubscription(long subscriptionId);
@@ -110,10 +110,15 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState
         Subscription GetSubscription(long subscriptionId);
         Subscription GetSubscription(long topicId, string subscriptionName);
 
+        List<Producer> GetProducers(long topicId);
+        void AddProducer(Producer producer);
+        void EditProducer(Producer producer);
+        void DeleteProducer(long producerId);
+        void SoftDeleteProducer(long producerId);
+        Producer GetProducer(long producerId);
+        Producer GetProducer(long topicId, string producerName);
 
         int SaveChanges();
-        Task<int> SaveChangesAsync();
-
         CoreStateContext GetCoreStateContext();
     }
 }

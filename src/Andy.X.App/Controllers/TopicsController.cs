@@ -11,6 +11,7 @@ using System.Linq;
 using Buildersoft.Andy.X.Model.Entities.Core.Topics;
 using Microsoft.AspNetCore.Authorization;
 using System.Data;
+using Buildersoft.Andy.X.Extensions;
 
 namespace Buildersoft.Andy.X.Controllers
 {
@@ -46,6 +47,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<string>> GetTopics(string tenant, string product, string component)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -71,6 +74,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<Topic> GetTopic(string tenant, string product, string component, string topic)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -97,6 +102,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> CreateTopic(string tenant, string product, string component, string topic, [FromQuery] string description, [FromBody] TopicSettings topicSettings)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -129,6 +136,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> UpdateTopic(string tenant, string product, string component, string topic, [FromQuery] string description)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -161,6 +170,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> DeleteTopic(string tenant, string product, string component, string topic)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -193,6 +204,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<TopicSettings> GetTopicSettings(string tenant, string product, string component, string topic)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -220,6 +233,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> UpdateTopicSettings(string tenant, string product, string component, string topic, [FromBody] TopicSettings topicSettings)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");

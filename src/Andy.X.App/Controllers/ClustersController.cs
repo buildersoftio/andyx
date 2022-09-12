@@ -1,4 +1,5 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
+using Buildersoft.Andy.X.Extensions;
 using Buildersoft.Andy.X.Model.Clusters;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -32,6 +33,9 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<Cluster> GetClusters()
         {
+            _logger.LogApiCallFrom(HttpContext);
+
+
             var isFromCli = HttpContext.Request.Headers["x-called-by"].ToString();
             if (isFromCli != "")
                 _logger.LogInformation($"{isFromCli} GET '{HttpContext.Request.Path}' is called");

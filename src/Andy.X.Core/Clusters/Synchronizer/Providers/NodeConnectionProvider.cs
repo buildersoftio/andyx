@@ -16,7 +16,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Providers
         private readonly Replica _replica;
         private readonly ClusterConfiguration _clusterConfiguration;
         private readonly NodeConfiguration _nodeConfiguration;
-        private HubConnection? _connection;
+        private HubConnection _connection;
 
         public NodeConnectionProvider(Replica replica,
             ClusterConfiguration clusterConfiguration,

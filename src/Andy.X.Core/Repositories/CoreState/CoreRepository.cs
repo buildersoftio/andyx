@@ -1,10 +1,12 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
 using Buildersoft.Andy.X.Core.Contexts.CoreState;
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
+using Buildersoft.Andy.X.Model.Entities.Core.Producers;
 using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using Buildersoft.Andy.X.Model.Entities.Core.Subscriptions;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
 using Buildersoft.Andy.X.Model.Entities.Core.Topics;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,8 +16,13 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 {
     public class CoreRepository : ICoreRepository
     {
-        private readonly CoreStateContext _coreStateContext;
+        private CoreStateContext _coreStateContext;
         public CoreRepository()
+        {
+            InitializeCoreContext();
+        }
+
+        private void InitializeCoreContext()
         {
             _coreStateContext = new CoreStateContext();
         }
@@ -545,18 +552,6 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
                 .FirstOrDefault();
         }
 
-        public int SaveChanges()
-        {
-            return _coreStateContext
-                .SaveChanges();
-        }
-
-        public Task<int> SaveChangesAsync()
-        {
-            return _coreStateContext
-                .SaveChangesAsync();
-        }
-
         public Product GetProduct(long tenantId, string productName)
         {
             using var coreStateContext = new CoreStateContext();
@@ -694,7 +689,7 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
             if (topicSettings is null)
                 return;
 
-            _coreStateContext.TopicSettings.Remove(null);
+            _coreStateContext.TopicSettings.Remove(topicSettings);
         }
 
         public TopicSettings GetTopicSettings(long topicId)
@@ -715,6 +710,76 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
 
             return GetTopicSettings(topicDetails.Id);
+        }
+
+        public List<Producer> GetProducers(long topicId)
+        {
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
+                .Producers.Where(p => p.TopicId == topicId)
+                .ToList();
+        }
+
+        public void AddProducer(Producer producer)
+        {
+            _coreStateContext
+                .Producers
+                .Add(producer);
+        }
+
+        public void EditProducer(Producer producer)
+        {
+            _coreStateContext
+                .Producers
+                .Update(producer);
+        }
+
+        public void DeleteProducer(long producerId)
+        {
+            var producer = GetProducer(producerId);
+            if (producer is null)
+                return;
+
+            _coreStateContext.Producers.Remove(producer);
+        }
+
+        public void SoftDeleteProducer(long producerId)
+        {
+            var producer = GetProducer(producerId);
+
+            if (producer is not null)
+            {
+                producer.IsMarkedForDeletion = true;
+                EditProducer(producer);
+            }
+        }
+
+        public Producer GetProducer(long producerId)
+        {
+            using var coreStateContext = new CoreStateContext();
+
+            return coreStateContext
+                .Producers
+                .Find(producerId);
+        }
+
+        public Producer GetProducer(long topicId, string producerName)
+        {
+            using var coreStateContext = new CoreStateContext();
+            return coreStateContext
+                .Producers
+                .Where(c => c.TopicId == topicId && c.Name == producerName)
+                .FirstOrDefault();
+        }
+
+        public int SaveChanges()
+        {
+            var result = _coreStateContext
+                .SaveChanges();
+
+            InitializeCoreContext();
+
+            return result;
         }
     }
 }

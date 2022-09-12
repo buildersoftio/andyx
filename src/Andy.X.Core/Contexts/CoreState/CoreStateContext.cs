@@ -1,5 +1,6 @@
 ﻿using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
+using Buildersoft.Andy.X.Model.Entities.Core.Producers;
 using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using Buildersoft.Andy.X.Model.Entities.Core.Subscriptions;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
@@ -29,6 +30,12 @@ namespace Buildersoft.Andy.X.Core.Contexts.CoreState
             modelBuilder.Entity<TenantToken>().Ignore(t => t.Roles);
             modelBuilder.Entity<ProductToken>().Ignore(t => t.Roles);
             modelBuilder.Entity<ComponentToken>().Ignore(t => t.Roles);
+
+            modelBuilder.Entity<Producer>().Ignore(t => t.PublicIpRange);
+            modelBuilder.Entity<Producer>().Ignore(t => t.PrivateIpRange);
+
+            modelBuilder.Entity<Subscription>().Ignore(t => t.PublicIpRange);
+            modelBuilder.Entity<Subscription>().Ignore(t => t.PrivateIpRange);
         }
 
         // Tenant Related Tables
@@ -59,6 +66,9 @@ namespace Buildersoft.Andy.X.Core.Contexts.CoreState
 
         // Subscription Related Tables
         public DbSet<Subscription> Subscriptions { get; set; }
+
+        // Producer Related Tables
+        public DbSet<Producer> Producers { get; set; }
 
     }
 }

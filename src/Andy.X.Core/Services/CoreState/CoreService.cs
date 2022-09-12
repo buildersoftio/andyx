@@ -4,6 +4,7 @@ using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Entities.Core;
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
+using Buildersoft.Andy.X.Model.Entities.Core.Producers;
 using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using Buildersoft.Andy.X.Model.Entities.Core.Subscriptions;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
@@ -17,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using static RocksDbSharp.ColumnFamilies;
 
 namespace Buildersoft.Andy.X.Core.Services.CoreState
 {
@@ -41,13 +41,18 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                 var tenantsFromSettings = JsonConvert.DeserializeObject<List<TenantConfiguration>>(File.ReadAllText(ConfigurationLocations.GetTenantsInitialConfigurationFile()));
                 foreach (var tenant in tenantsFromSettings)
                 {
-                    CreateTenant(tenant.Name, tenant.Settings.IsProductAutomaticCreationAllowed, tenant.Settings.IsEncryptionEnabled, tenant.Settings.IsAuthorizationEnabled);
+                    CreateTenant(tenant.Name, tenant.Settings.IsProductAutomaticCreationAllowed, tenant.Settings.IsEncryptionEnabled, 
+                        tenant.Settings.IsAuthorizationEnabled);
                     foreach (var product in tenant.Products)
                     {
                         CreateProduct(tenant.Name, product.Name, "initial");
                         foreach (var component in product.Components)
                         {
-                            CreateComponent(tenant.Name, product.Name, component.Name, "initial", component.Settings.IsTopicAutomaticCreationAllowed, component.Settings.IsSchemaValidationEnabled, component.Settings.IsAuthorizationEnabled, component.Settings.IsSubscriptionAutomaticCreationAllowed);
+                            CreateComponent(tenant.Name, product.Name, component.Name, "initial", 
+                                component.Settings.IsTopicAutomaticCreationAllowed, component.Settings.IsSchemaValidationEnabled, 
+                                component.Settings.IsAuthorizationEnabled, component.Settings.IsSubscriptionAutomaticCreationAllowed, 
+                                component.Settings.IsProducerAutomaticCreationAllowed);
+
                             foreach (var topic in component.Topics)
                             {
                                 CreateTopic(tenant.Name, product.Name, component.Name, topic.Name, "initial");
@@ -586,9 +591,9 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
         public bool CreateComponent(string tenant, string product, string componentName, string description)
         {
-            return CreateComponent(tenant, product, componentName, description, true, false, false, true);
+            return CreateComponent(tenant, product, componentName, description, true, false, false, true, true);
         }
-        public bool CreateComponent(string tenant, string product, string componentName, string description, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled, bool isSubscriptionAllowToCreate)
+        public bool CreateComponent(string tenant, string product, string componentName, string description, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled, bool isSubscriptionAllowToCreate, bool isProducerAllowToCreate)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -624,6 +629,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                 IsSchemaValidationEnabled = isSchemaValidationEnabled,
                 IsAuthorizationEnabled = isAuthorizationEnabled,
                 IsSubscriptionAutomaticCreationAllowed = isSubscriptionAllowToCreate,
+                IsProducerAutomaticCreationAllowed = isProducerAllowToCreate,
 
                 CreatedBy = "system",
                 CreatedDate = DateTimeOffset.Now
@@ -1018,6 +1024,8 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                 InitialPosition = initialPosition,
                 SubscriptionMode = mode,
                 SubscriptionType = type,
+                _PrivateIpRange = new List<string>() { "0.0.0.0" }.ToJson(),
+                _PublicIpRange = new List<string>() { "0.0.0.0" }.ToJson(),
 
                 CreatedDate = DateTimeOffset.UtcNow,
                 CreatedBy = "SYSTEM"
@@ -1133,6 +1141,81 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             currentTopicSettings.UpdatedBy = "SYSTEM";
 
             _coreRepository.EditTopic(currentTopic);
+            _coreRepository.SaveChanges();
+
+            return true;
+        }
+
+        public bool CreateProducer(string tenant, string product, string component, string topic, string producer, string description, ProducerInstanceType producerInstanceType)
+        {
+            var currentTenant = _coreRepository.GetTenant(tenant);
+            if (currentTenant is null)
+                return false;  // tenant doesnot exists
+
+            var currentProduct = _coreRepository.GetProduct(currentTenant.Id, product);
+            if (currentProduct is null)
+                return false; // product doesnot exists
+
+            var currentComponent = _coreRepository.GetComponent(currentTenant.Id, currentProduct.Id, component);
+            if (currentComponent is null)
+                return false; // component doesnot exists
+
+            var currentTopic = _coreRepository.GetTopic(currentComponent.Id, topic);
+            if (currentTopic is null)
+                return false; // topic doesnot exists
+
+            var currentProducer = _coreRepository.GetProducer(currentTopic.Id, producer);
+            if (currentProducer is not null)
+                return false; // this producer already exists in this topic
+
+            var newProducer = new Producer()
+            {
+                TopicId = currentTopic.Id,
+                Name = producer,
+                Description = description,
+
+                InstanceType = producerInstanceType,
+
+                _PrivateIpRange = new List<string>() { "0.0.0.0" }.ToJson(),
+                _PublicIpRange = new List<string>() { "0.0.0.0" }.ToJson(),
+
+                CreatedDate = DateTimeOffset.UtcNow,
+                CreatedBy = "SYSTEM"
+            };
+
+            _coreRepository.AddProducer(newProducer);
+            _coreRepository.SaveChanges();
+
+            return true;
+        }
+
+        public bool DeleteProducer(string tenant, string product, string component, string topic, string producer)
+        {
+            var currentTenant = _coreRepository.GetTenant(tenant);
+            if (currentTenant is null)
+                return false;  // tenant doesnot exists
+
+            var currentProduct = _coreRepository.GetProduct(currentTenant.Id, product);
+            if (currentProduct is null)
+                return false; // product doesnot exists
+
+            var currentComponent = _coreRepository.GetComponent(currentTenant.Id, currentProduct.Id, component);
+            if (currentComponent is null)
+                return false; // component doesnot exists
+
+            var currentTopic = _coreRepository.GetTopic(currentComponent.Id, topic);
+            if (currentTopic is null)
+                return false; // topic doesnot exists
+
+            var currentProducer = _coreRepository.GetProducer(currentTopic.Id, producer);
+            if (currentProducer is null)
+                return false; // this producer doesnot exists
+
+            currentProducer.IsMarkedForDeletion = true;
+            currentProducer.UpdatedDate = DateTimeOffset.UtcNow;
+            currentProducer.UpdatedBy = "SYSTEM";
+
+            _coreRepository.EditProducer(currentProducer);
             _coreRepository.SaveChanges();
 
             return true;

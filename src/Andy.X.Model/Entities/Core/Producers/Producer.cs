@@ -1,14 +1,13 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-using Buildersoft.Andy.X.Model.Subscriptions;
-using System.Text.Json.Serialization;
-using Buildersoft.Andy.X.Utility.Extensions.Json;
+﻿using Buildersoft.Andy.X.Utility.Extensions.Json;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
-namespace Buildersoft.Andy.X.Model.Entities.Core.Subscriptions
+namespace Buildersoft.Andy.X.Model.Entities.Core.Producers
 {
-    public class Subscription
+    public class Producer
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
@@ -18,11 +17,10 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Subscriptions
         public long TopicId { get; set; }
 
         public string Name { get; set; }
+        public string Description { get; set; }
 
-        public SubscriptionType SubscriptionType { get; set; }
-        public SubscriptionMode SubscriptionMode { get; set; }
-        public InitialPosition InitialPosition { get; set; }
-
+        public ProducerInstanceType InstanceType { get; set; }
+        
         public List<string> PublicIpRange { get; set; }
         public List<string> PrivateIpRange { get; set; }
 
@@ -54,16 +52,19 @@ namespace Buildersoft.Andy.X.Model.Entities.Core.Subscriptions
             }
         }
 
-
-        // internal settings
         [JsonIgnore]
         public bool IsMarkedForDeletion { get; set; }
-
 
         public DateTimeOffset? UpdatedDate { get; set; }
         public DateTimeOffset CreatedDate { get; set; }
 
         public string UpdatedBy { get; set; }
         public string CreatedBy { get; set; }
+    }
+
+    public enum ProducerInstanceType
+    {
+        Single,
+        Multiple
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Buildersoft.Andy.X.Model.Entities.Core;
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
+using Buildersoft.Andy.X.Model.Entities.Core.Producers;
 using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
 using Buildersoft.Andy.X.Model.Entities.Core.Topics;
@@ -18,7 +19,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.CoreState
         bool CreateTenant(string tenantName, bool isProductCreation, bool isEncryptionEnabled, bool isAuthorizationEnabled);
         bool UpdateTenantSettings(string tenantName, bool isProductCreation, bool isEncryptionEnabled, bool isAuthorizationEnabled);
 
-        bool CreateTenantToken(string tenant, string description, DateTimeOffset expireDate, List<TenantTokenRole> tenantTokenRoles,out Guid id, out string secret);
+        bool CreateTenantToken(string tenant, string description, DateTimeOffset expireDate, List<TenantTokenRole> tenantTokenRoles, out Guid id, out string secret);
         bool RevokeTenantToken(string tenant, Guid id);
         bool DeleteTenantToken(string tenant, Guid id);
 
@@ -41,12 +42,12 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.CoreState
         bool DeleteProductRetention(string tenant, string product, long retentionId);
 
         bool CreateComponent(string tenant, string product, string componentName, string description);
-        bool CreateComponent(string tenant, string product, string componentName, string description, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled, bool isSubscriptionAllowToCreate);
+        bool CreateComponent(string tenant, string product, string componentName, string description, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled, bool isSubscriptionAllowToCreate, bool isProducerAllowToCreate);
         bool DeleteComponent(string tenant, string product, string component);
         bool UpdateComponent(string tenant, string product, string component, string description);
         bool UpdateComponentSettings(string tenant, string product, string componentName, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled, bool isSubscriptionAllowToCreate);
 
-        bool CreateComponentToken(string tenant, string product, string component, string description, string issuedFor,DateTimeOffset expireDate, List<ComponentTokenRole> componentTokenRoles, out Guid id, out string secret);
+        bool CreateComponentToken(string tenant, string product, string component, string description, string issuedFor, DateTimeOffset expireDate, List<ComponentTokenRole> componentTokenRoles, out Guid id, out string secret);
         bool RevokeComponentToken(string tenant, string product, string component, Guid id);
         bool DeleteComponentToken(string tenant, string product, string component, Guid id);
 
@@ -60,7 +61,10 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.CoreState
         bool UpdateTopic(string tenant, string product, string component, string topic, string description);
         bool DeleteTopic(string tenant, string product, string component, string topic);
 
-        bool CreateSubscription(string tenant, string product, string component, string topic, string subscription, SubscriptionType type, SubscriptionMode mode, InitialPosition initialPosition );
+        bool CreateSubscription(string tenant, string product, string component, string topic, string subscription, SubscriptionType type, SubscriptionMode mode, InitialPosition initialPosition);
         bool DeleteSubscription(string tenant, string product, string component, string topic, string subscription);
+
+        bool CreateProducer(string tenant, string product, string component, string topic, string producer, string description, ProducerInstanceType producerInstanceType);
+        bool DeleteProducer(string tenant, string product, string component, string topic, string producer);
     }
 }

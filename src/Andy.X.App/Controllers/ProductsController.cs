@@ -12,6 +12,7 @@ using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using System;
 using Microsoft.AspNetCore.Authorization;
 using System.Data;
+using Buildersoft.Andy.X.Extensions;
 
 namespace Buildersoft.Andy.X.Controllers
 {
@@ -28,7 +29,8 @@ namespace Buildersoft.Andy.X.Controllers
         private readonly ITenantStateService _tenantStateService;
         private readonly ITenantFactory _tenantFactory;
 
-        public ProductsController(ILogger<ProductsController> logger,
+        public ProductsController(
+            ILogger<ProductsController> logger,
             ICoreRepository coreRepository,
             ICoreService coreService,
             ITenantStateService tenantStateService,
@@ -47,6 +49,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<string>> GetProducts(string tenant)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -65,6 +69,9 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<Product> GetProduct(string tenant, string product)
         {
+
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -82,6 +89,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> CreateProduct(string tenant, string product, [FromQuery] string description, [FromBody] ProductSettings productSettings)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -106,6 +115,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<Product> UpdateProduct(string tenant, string product, [FromQuery] string description)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -129,6 +140,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> DeleteProduct(string tenant, string product)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -151,6 +164,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<ProductSettings> GetProductSettings(string tenant, string product)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -170,6 +185,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> UpdateProductSettings(string tenant, string product, [FromBody] ProductSettings productSettings)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -191,6 +208,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> CreateProductToken(string tenant, string product, [FromBody] ProductToken productToken)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -212,6 +231,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> RevokeProductToken(string tenant, string product, Guid key)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -234,6 +255,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<ProductToken>> GetProductTokens(string tenant, string product)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -259,6 +282,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<ProductToken> GetProductToken(string tenant, Guid key, string product)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -279,6 +304,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin,readonly")]
         public ActionResult<List<ProductRetention>> GetProductRetentions(string tenant, string product)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -298,6 +325,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> AddProductRetention(string tenant, string product, [FromBody] ProductRetention productRetention)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -319,6 +348,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> UpdateProductRetention(string tenant, string product, long id, [FromBody] ProductRetention productRetention)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
@@ -340,6 +371,8 @@ namespace Buildersoft.Andy.X.Controllers
         [Authorize(Roles = "admin")]
         public ActionResult<string> DeleteProductRetention(string tenant, string product, long id)
         {
+            _logger.LogApiCallFrom(HttpContext);
+
             var tenantDetails = _coreRepository.GetTenant(tenant);
             if (tenantDetails is null)
                 return NotFound($"Tenant {tenant} does not exists in this cluster");
