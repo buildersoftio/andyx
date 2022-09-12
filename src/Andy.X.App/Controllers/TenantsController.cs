@@ -316,7 +316,7 @@ namespace Buildersoft.Andy.X.Controllers
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpPut("{tenant}/retentions/id")]
+        [HttpPut("{tenant}/retentions/{id}")]
         [Authorize(Roles = "admin")]
         public ActionResult<string> PutTenantRetentions(string tenant, long id, [FromBody] TenantRetention tenantRetention)
         {
@@ -337,7 +337,7 @@ namespace Buildersoft.Andy.X.Controllers
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpDelete("{tenant}/retentions/id")]
+        [HttpDelete("{tenant}/retentions/{id}")]
         [Authorize(Roles = "admin")]
         public ActionResult<string> DeleteTenantRetentions(string tenant, long id)
         {

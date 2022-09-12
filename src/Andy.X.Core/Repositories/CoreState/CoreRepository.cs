@@ -342,16 +342,14 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
         public void AddProductToken(ProductToken productToken)
         {
-            using var coreStateContext = new CoreStateContext();
-            coreStateContext
+            _coreStateContext
                 .ProductTokens
                 .Add(productToken);
         }
 
         public void EditProductToken(ProductToken productToken)
         {
-            using var coreStateContext = new CoreStateContext();
-            coreStateContext
+            _coreStateContext
                 .ProductTokens
                 .Update(productToken);
         }
@@ -360,9 +358,8 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
         {
             var productToken = GetProductToken(id);
 
-            using var coreStateContext = new CoreStateContext();
             if (productToken is not null)
-                coreStateContext.ProductTokens.Remove(productToken);
+                _coreStateContext.ProductTokens.Remove(productToken);
         }
 
         public ProductToken GetProductToken(Guid id)
