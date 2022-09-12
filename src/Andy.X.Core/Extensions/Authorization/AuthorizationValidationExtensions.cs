@@ -156,8 +156,12 @@ namespace Buildersoft.Andy.X.Core.Extensions.Authorization
                 if (roles.Contains(ComponentTokenRole.Produce) != true)
                     return false;
 
-            if (componentToken.IssuedFor != subscriptionProducerName)
-                return false;
+            // if is not set, it means any producer or consumer can have access, this is not recommended for production use-cases
+            if (componentToken.IssuedFor != "")
+            {
+                if (componentToken.IssuedFor != subscriptionProducerName)
+                    return false;
+            }
 
             return true;
         }

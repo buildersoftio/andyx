@@ -9,9 +9,9 @@ namespace Buildersoft.Andy.X.Extensions
         {
             var isFromCli = httpContext.Request.Headers["x-called-by"].ToString();
             if (isFromCli != "")
-                logger.LogInformation($"{isFromCli} GET '{httpContext.Request.Path}' is called");
+                logger.LogInformation($"{isFromCli} {httpContext.Request.Method} '{httpContext.Request.Path}' is called");
             else
-                logger.LogInformation($"GET '{httpContext.Request.Path}' is called");
+                logger.LogInformation($"{httpContext.Request.Method} '{httpContext.Request.Path}' is called");
         }
     }
 }

@@ -261,7 +261,7 @@ namespace Buildersoft.Andy.X.Controllers
 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpPost("{component}/tokens/{key}/revoke")]
+        [HttpPut("{component}/tokens/{key}/revoke")]
         [Authorize(Roles = "admin")]
         public ActionResult<string> CreateComponentToken(string tenant, string product, string component, Guid key)
         {
