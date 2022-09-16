@@ -25,5 +25,6 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions
         Dictionary<string, Subscription> GetSubscriptionsByTopic(string tenant, string product, string component, string topic);
 
         List<string> GetAllSubscriptionNames();
+        List<SubscriptionActivity> GetAllSubscriptionActivities();
     }
 }

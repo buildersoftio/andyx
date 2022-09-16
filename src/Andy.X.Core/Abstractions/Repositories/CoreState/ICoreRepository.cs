@@ -120,5 +120,12 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState
 
         int SaveChanges();
         CoreStateContext GetCoreStateContext();
+
+        long GetTenantsCount();
+        long GetProductsCount();
+        long GetComponentsCount();
+        long GetTopicsCount();
+        long GetProducersCount();
+        long GetSubscriptionsCount();
     }
 }

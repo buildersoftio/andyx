@@ -60,7 +60,7 @@ namespace Buildersoft.Andy.X.Controllers
 
             var producers = _coreRepository
                 .GetProducers(topicDetails.Id)
-                .Select(x => new { Name = x.Name });
+                .Select(x => x.Name);
 
             return Ok(producers);
         }

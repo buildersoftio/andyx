@@ -25,7 +25,6 @@ namespace Buildersoft.Andy.X.Router.Repositories.Producers
             TenantIOService.TryCreateProducerDirectory(producer.Tenant, producer.Product, producer.Component, producer.Topic, producer.ProducerName);
             return _producers.TryAdd(connectionId, producer);
         }
-
         public List<string> GetAllProducers()
         {
             return _producers.Keys.ToList();
@@ -75,6 +74,23 @@ namespace Buildersoft.Andy.X.Router.Repositories.Producers
         public bool RemoveProducer(string connectionId)
         {
             return _producers.TryRemove(connectionId, out _);
+        }
+
+        public List<ProducerActivity> GetAllProducerActivities()
+        {
+            var results = new List<ProducerActivity>();
+
+            foreach (var sub in _producers)
+            {
+                results.Add(new ProducerActivity()
+                {
+                    Name = sub.Value.ProducerName,
+                    Location = $"{sub.Value.Tenant}/{sub.Value.Product}/{sub.Value.Component}/{sub.Value.Topic}",
+                    IsActive = true
+                });
+            }
+
+            return results;
         }
     }
 }
