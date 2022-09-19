@@ -15,7 +15,6 @@ namespace Buildersoft.Andy.X.Controllers
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ApiController]
-    //[Authorize]
     public class ClustersController : ControllerBase
     {
         private readonly ILogger<ClustersController> _logger;

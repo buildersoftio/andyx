@@ -1,4 +1,5 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
+using Buildersoft.Andy.X.Core.Extensions;
 using Buildersoft.Andy.X.Model.Configurations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,7 +15,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
         {
             var generalColor = Console.ForegroundColor;
 
-            Console.WriteLine("                   Starting Buildersoft Andy X");
+            Console.WriteLine($"                   Starting {ApplicationProperties.Name}");
             //Console.WriteLine("                   Copyright (C) 2022 Buildersoft LLC");
             Console.WriteLine("                   Set your information in motion.");
             Console.WriteLine("");
@@ -23,7 +24,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.Write("    ###"); Console.ForegroundColor = generalColor; Console.Write("  ###");
             //Console.WriteLine("       Andy X 3.0.0-alpha. Copyright (C) 2022 Buildersoft Inc.");
-            Console.WriteLine("       Andy X 3.0.0-beta269. Developed with (love) by Buildersoft Inc.");
+            Console.WriteLine($"       {ApplicationProperties.ShortName} {ApplicationProperties.Version}. Developed with (love) by Buildersoft Inc.");
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.Write("      ####         "); Console.ForegroundColor = generalColor; Console.WriteLine("Licensed under the Apache License 2.0. See https://bit.ly/3DqVQbx");
             Console.ForegroundColor = ConsoleColor.Blue;
@@ -34,9 +35,9 @@ namespace Buildersoft.Andy.X.Core.Services.App
             ExposePorts();
 
             Console.WriteLine("");
-            Console.WriteLine("                   Starting Buildersoft Andy X...");
+            Console.WriteLine($"                   Starting {ApplicationProperties.Name}...");
             Console.WriteLine("\n");
-            logger.LogInformation("Starting Buildersoft Andy X...");
+            logger.LogInformation($"Starting {ApplicationProperties.Name}...");
             logger.LogInformation("Update settings");
             logger.LogInformation($"Node identifier is '{nodeConfiguration.NodeId}'");
 
@@ -45,7 +46,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
 
             var clusterService = serviceProvider.GetService<IClusterService>();
 
-            logger.LogInformation("Andy X is ready");
+            logger.LogInformation($"{ApplicationProperties.ShortName} is ready");
 
 
         }

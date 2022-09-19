@@ -778,5 +778,53 @@ namespace Buildersoft.Andy.X.Core.Repositories.CoreState
 
             return result;
         }
+
+        public long GetTenantsCount()
+        {
+            using var coreStateContext = new CoreStateContext();
+            return _coreStateContext
+                .Tenants
+                .Count();
+        }
+
+        public long GetProductsCount()
+        {
+            using var coreStateContext = new CoreStateContext();
+            return _coreStateContext
+                .Products
+                .Count();
+        }
+
+        public long GetComponentsCount()
+        {
+            using var coreStateContext = new CoreStateContext();
+            return _coreStateContext
+                .Components
+                .Count();
+        }
+
+        public long GetTopicsCount()
+        {
+            using var coreStateContext = new CoreStateContext();
+            return _coreStateContext
+                .Topics
+                .Count();
+        }
+
+        public long GetProducersCount()
+        {
+            using var coreStateContext = new CoreStateContext();
+            return _coreStateContext
+                .Producers
+                .Count();
+        }
+
+        public long GetSubscriptionsCount()
+        {
+            using var coreStateContext = new CoreStateContext();
+            return _coreStateContext
+                .Subscriptions
+                .Count();
+        }
     }
 }

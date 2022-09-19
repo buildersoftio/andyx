@@ -42,8 +42,6 @@ namespace Buildersoft.Andy.X.Controllers
             _tenantFactory = tenantFactory;
         }
 
-
-
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("")]

@@ -4,6 +4,7 @@ using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Consumers;
 using Buildersoft.Andy.X.Model.Entities.Subscriptions;
 using Buildersoft.Andy.X.Model.Subscriptions;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
@@ -164,6 +165,26 @@ namespace Buildersoft.Andy.X.Router.Repositories.Subscriptions
                 return null;
 
             return _subscriptions[subscriptionId];
+        }
+
+        public List<SubscriptionActivity> GetAllSubscriptionActivities()
+        {
+            var results = new List<SubscriptionActivity>();
+
+            foreach (var sub in _subscriptions)
+            {
+                var isActive = false;
+                if (sub.Value.ConsumersConnected.Count != 0 || sub.Value.ConsumerExternalConnected.Count != 0)
+                    isActive = true;
+                results.Add(new SubscriptionActivity()
+                {
+                    Name = sub.Value.SubscriptionName,
+                    Location = $"{sub.Value.Tenant}/{sub.Value.Product}/{sub.Value.Component}/{sub.Value.Topic}",
+                    IsActive = isActive
+                });
+            }
+
+            return results;
         }
     }
 }
