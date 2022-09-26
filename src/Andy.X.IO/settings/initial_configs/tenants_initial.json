@@ -30,7 +30,7 @@
             "Name": "storage",
             "Settings": {
               "IsTopicAutomaticCreation": false,
-              "IsSchemaValidationEnabled": false,
+              "EnforceSchemaValidation": false,
               "IsAuthorizationEnabled": false,
               "IsSubscriptionAutomaticCreationAllowed": true,
               "IsProducerAutomaticCreationAllowed": true
@@ -40,7 +40,7 @@
             "Name": "producer",
             "Settings": {
               "IsTopicAutomaticCreation": false,
-              "IsSchemaValidationEnabled": false,
+              "EnforceSchemaValidation": false,
               "IsAuthorizationEnabled": false,
               "IsSubscriptionAutomaticCreationAllowed": true,
               "IsProducerAutomaticCreationAllowed": true
@@ -50,7 +50,7 @@
             "Name": "consumer",
             "Settings": {
               "IsTopicAutomaticCreation": false,
-              "IsSchemaValidationEnabled": false,
+              "EnforceSchemaValidation": false,
               "IsAuthorizationEnabled": false,
               "IsSubscriptionAutomaticCreationAllowed": true,
               "IsProducerAutomaticCreationAllowed": true
@@ -65,7 +65,7 @@
             "Name": "storage",
             "Settings": {
               "IsTopicAutomaticCreation": false,
-              "IsSchemaValidationEnabled": false,
+              "EnforceSchemaValidation": false,
               "IsAuthorizationEnabled": false,
               "IsSubscriptionAutomaticCreationAllowed": true,
               "IsProducerAutomaticCreationAllowed": true
@@ -80,7 +80,7 @@
             "Name": "producer",
             "Settings": {
               "IsTopicAutomaticCreation": false,
-              "IsSchemaValidationEnabled": false,
+              "EnforceSchemaValidation": false,
               "IsAuthorizationEnabled": false,
               "IsSubscriptionAutomaticCreationAllowed": true,
               "IsProducerAutomaticCreationAllowed": true
@@ -95,7 +95,7 @@
             "Name": "consumer",
             "Settings": {
               "IsTopicAutomaticCreation": false,
-              "IsSchemaValidationEnabled": false,
+              "EnforceSchemaValidation": false,
               "IsAuthorizationEnabled": false,
               "IsSubscriptionAutomaticCreationAllowed": true,
               "IsProducerAutomaticCreationAllowed": true

@@ -49,7 +49,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                         foreach (var component in product.Components)
                         {
                             CreateComponent(tenant.Name, product.Name, component.Name, "initial", 
-                                component.Settings.IsTopicAutomaticCreationAllowed, component.Settings.IsSchemaValidationEnabled, 
+                                component.Settings.IsTopicAutomaticCreationAllowed, component.Settings.EnforceSchemaValidation, 
                                 component.Settings.IsAuthorizationEnabled, component.Settings.IsSubscriptionAutomaticCreationAllowed, 
                                 component.Settings.IsProducerAutomaticCreationAllowed);
 
@@ -626,7 +626,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             {
                 ComponentId = componentToRegister.Id,
                 IsTopicAutomaticCreationAllowed = isTopicAutomaticCreation,
-                IsSchemaValidationEnabled = isSchemaValidationEnabled,
+                EnforceSchemaValidation = isSchemaValidationEnabled,
                 IsAuthorizationEnabled = isAuthorizationEnabled,
                 IsSubscriptionAutomaticCreationAllowed = isSubscriptionAllowToCreate,
                 IsProducerAutomaticCreationAllowed = isProducerAllowToCreate,
@@ -706,7 +706,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             if (currentSettings is null)
                 return false; // settings doesnot exists, something is really wrong.!
 
-            currentSettings.IsSchemaValidationEnabled = isSchemaValidationEnabled;
+            currentSettings.EnforceSchemaValidation = isSchemaValidationEnabled;
             currentSettings.IsTopicAutomaticCreationAllowed = isTopicAutomaticCreation;
             currentSettings.IsAuthorizationEnabled = isAuthorizationEnabled;
             currentSettings.IsSubscriptionAutomaticCreationAllowed = isSubscriptionAllowToCreate;
