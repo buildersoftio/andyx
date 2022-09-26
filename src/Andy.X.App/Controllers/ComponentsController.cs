@@ -109,7 +109,7 @@ namespace Buildersoft.Andy.X.Controllers
                 return BadRequest($"Component already exists");
 
             var isCreated = _coreService.CreateComponent(tenant, product, component, description, 
-                componentSettings.IsTopicAutomaticCreationAllowed, componentSettings.IsSchemaValidationEnabled,
+                componentSettings.IsTopicAutomaticCreationAllowed, componentSettings.EnforceSchemaValidation,
                 componentSettings.IsAuthorizationEnabled, componentSettings.IsSubscriptionAutomaticCreationAllowed,
                 componentSettings.IsProducerAutomaticCreationAllowed);
 
@@ -224,7 +224,7 @@ namespace Buildersoft.Andy.X.Controllers
             if (componentDetails is null)
                 return NotFound($"Component {component} does not exists in {tenant}/{product}");
 
-            var isUpdated = _coreService.UpdateComponentSettings(tenant, product, component, componentSettings.IsTopicAutomaticCreationAllowed, componentSettings.IsSchemaValidationEnabled, componentSettings.IsAuthorizationEnabled, componentSettings.IsSubscriptionAutomaticCreationAllowed);
+            var isUpdated = _coreService.UpdateComponentSettings(tenant, product, component, componentSettings.IsTopicAutomaticCreationAllowed, componentSettings.EnforceSchemaValidation, componentSettings.IsAuthorizationEnabled, componentSettings.IsSubscriptionAutomaticCreationAllowed);
             if (isUpdated == true)
                 return Ok("Component settings have been updated, product in the tenant is marked to refresh settings, this may take a while");
 

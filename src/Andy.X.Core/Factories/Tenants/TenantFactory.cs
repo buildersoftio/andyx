@@ -61,7 +61,7 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
                 Settings = new Model.Entities.Core.Components.ComponentSettings
                 {
                     IsAuthorizationEnabled = false,
-                    IsSchemaValidationEnabled = false,
+                    EnforceSchemaValidation = false,
                     IsTopicAutomaticCreationAllowed = true,
                     IsSubscriptionAutomaticCreationAllowed = true,
                     IsProducerAutomaticCreationAllowed = true
