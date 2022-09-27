@@ -24,7 +24,7 @@ namespace Buildersoft.Andy.X.Model.Clusters
 
         public Cluster()
         {
-            ShardDistributionType = DistributionTypes.Sync;
+            ShardDistributionType = DistributionTypes.Async;
             Shards = new List<Shard>();
             Status = ClusterStatus.Starting;
 

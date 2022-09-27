@@ -10,7 +10,6 @@ using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Outbound;
 using Buildersoft.Andy.X.Core.Contexts.Storages;
-using Buildersoft.Andy.X.Core.Services.Inbound;
 using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.App.Components;
 using Buildersoft.Andy.X.Model.App.Products;
@@ -66,7 +65,8 @@ namespace Buildersoft.Andy.X.Core.Services.App
             _subscriptionFactory = subscriptionFactory;
             _nodeConfiguration = nodeConfiguration;
             _clusterHubService = clusterHubService;
-            this._inboundMessageService = inboundMessageService;
+            _inboundMessageService = inboundMessageService;
+
             AddTenantsFromPersistentLog();
         }
 
@@ -160,7 +160,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 }
 
                 string topicKey = ConnectorHelper.GetTopicConnectorKey(tenant, product, component, topicName);
-                _inboundMessageService.TryCreateTopicConnector(topicKey);
+                _inboundMessageService.TryCreateTopicConnector(topicKey, 1);
 
                 var isCreated = _coreService.CreateTopic(tenant, product, component, topicName, topic.Description);
 

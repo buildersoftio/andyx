@@ -2,7 +2,8 @@
 {
     public enum DistributionTypes
     {
-        Sync,
+        // Sync distribution will not be supported for andyx v3.0.0
+        //Sync,
         Async,
     }
 }

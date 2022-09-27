@@ -1,6 +1,6 @@
 ﻿{
   "Name": "standalone_cluster",
-  "ShardDistributionType": "Sync",
+  "ShardDistributionType": "Async",
   "Shards": [
     {
 

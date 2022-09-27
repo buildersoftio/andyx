@@ -55,8 +55,7 @@ namespace Buildersoft.Andy.X.Core.Repositories
                     _logger.LogError("Andy X is shutting down unexpectedly");
                     throw new System.Exception($"There is already a node connected in this shard that is working as main, node_id {mainReplica.NodeId}, host_name {mainReplica.Host}");
                 }
-
-                _mainReplicasAsShards[_mainReplicasAsShards.Count - 1].NodeId = replica.NodeId;
+                _mainReplicasAsShards.Add(new ReplicaShardConnection() { NodeConnectionId = "", NodeId = replica.NodeId, NodeEntryState = null });
             }
 
             lastShard.Replicas.Add(replica);
@@ -88,7 +87,6 @@ namespace Buildersoft.Andy.X.Core.Repositories
                 }
             }
             _cluster.Shards.Add(shard);
-            _mainReplicasAsShards.Add(new ReplicaShardConnection());
             return shard;
         }
 
@@ -139,28 +137,50 @@ namespace Buildersoft.Andy.X.Core.Repositories
 
         public bool AddReplicaConnectionToShard(string nodeId, string nodeConnectionId)
         {
-            var replicaShardConnection = _mainReplicasAsShards.Where(n => n.NodeId == nodeId).FirstOrDefault();
-            if (replicaShardConnection == null)
+            var mainReplica = _mainReplicasAsShards.Where(x => x.NodeId == nodeId).FirstOrDefault();
+            if (mainReplica == null)
                 return false;
 
             var replica = GetReplica(nodeId);
             replica.IsConnected = true;
 
-            replicaShardConnection.NodeConnectionId = nodeConnectionId;
+            mainReplica.NodeConnectionId = nodeConnectionId;
             return true;
         }
 
-        public bool RemoveReplicaConnectionToShard(string nodeId)
+        public bool RemoveReplicaConnectionFromShard(string nodeId)
         {
-            var replicaShardConnection = _mainReplicasAsShards.Where(n => n.NodeId == nodeId).FirstOrDefault();
-            if (replicaShardConnection == null)
+            var mainReplica = _mainReplicasAsShards.Where(x => x.NodeId == nodeId).FirstOrDefault();
+            if (mainReplica == null)
                 return false;
 
             var replica = GetReplica(nodeId);
             replica.IsConnected = false;
 
-            replicaShardConnection.NodeConnectionId = "";
+            mainReplica.NodeConnectionId = "";
             return true;
+        }
+
+        public List<ReplicaShardConnection> GetReplicaShardConnections()
+        {
+            return _mainReplicasAsShards;
+        }
+
+        public ReplicaShardConnection GetMainReplicaConnection(string nodeId)
+        {
+            var mainReplica = _mainReplicasAsShards
+                .Where(x => x.NodeId == nodeId)
+                .FirstOrDefault();
+
+            if (mainReplica == null)
+                return null;
+
+            return mainReplica;
+        }
+
+        public ReplicaShardConnection GetMainReplicaConnectionByIndex(int index)
+        {
+            return _mainReplicasAsShards[index];
         }
     }
 }

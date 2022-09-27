@@ -1,5 +1,8 @@
-﻿using Buildersoft.Andy.X.Model.App.Products;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
+using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Topics;
+using Buildersoft.Andy.X.Model.Clusters;
+using Buildersoft.Andy.X.Model.Entities.Clusters;
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
 using Buildersoft.Andy.X.Model.Entities.Subscriptions;
@@ -55,5 +58,9 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Clusters
         // only between replicas
         Task UpdateSubscriptionPosition_ToReplica(string tenant, string product, string component, string topic,string subscriptionName, SubscriptionPosition subscription);
         Task UpdateEntryPosition_ToReplica(string tenant, string product, string component, string topic, TopicStates topicStates);
+
+
+        ITopicDataService<ClusterChangeLog> GetClusterDataService(string nodeId);
+        void InitializeClusterDataService(Replica replica);
     }
 }

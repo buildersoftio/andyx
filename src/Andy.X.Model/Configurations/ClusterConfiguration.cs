@@ -16,7 +16,7 @@ namespace Buildersoft.Andy.X.Model.Configurations
         public List<Shard> Shards { get; set; }
         public ClusterConfiguration()
         {
-            ShardDistributionType = DistributionTypes.Sync;
+            ShardDistributionType = DistributionTypes.Async;
             Shards = new List<Shard>();
         }
     }

@@ -1,10 +1,13 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Hubs.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
-using Buildersoft.Andy.X.Model.App.Components;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
+using Buildersoft.Andy.X.Core.Services.Data;
 using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Topics;
+using Buildersoft.Andy.X.Model.Clusters;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Model.Entities.Clusters;
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
 using Buildersoft.Andy.X.Model.Entities.Subscriptions;
@@ -13,6 +16,7 @@ using Buildersoft.Andy.X.Router.Hubs.Clusters;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Component = Buildersoft.Andy.X.Model.App.Components.Component;
 
@@ -20,24 +24,33 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
 {
     public class ClusterHubService : IClusterHubService
     {
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger<ClusterHubService> _logger;
         private readonly IClusterHubRepository _clusterHubRepository;
         private readonly IHubContext<ClusterHub, IClusterHub> _hub;
         private readonly IClusterRepository _clusterRepository;
         private readonly NodeConfiguration _nodeConfiguration;
+        private readonly StorageConfiguration _storageConfiguration;
 
-        public ClusterHubService(ILogger<ClusterHubService> logger,
+        private readonly ConcurrentDictionary<string, ITopicDataService<ClusterChangeLog>> _nodesDataServices;
+
+        public ClusterHubService(ILoggerFactory logger,
             IClusterHubRepository clusterHubRepository,
             IHubContext<ClusterHub, IClusterHub> hub,
             IClusterRepository clusterRepository,
-            NodeConfiguration nodeConfiguration)
+            NodeConfiguration nodeConfiguration,
+            StorageConfiguration storageConfiguration)
         {
-            _logger = logger;
+            _loggerFactory = logger;
+            _logger = logger.CreateLogger<ClusterHubService>();
 
             _clusterHubRepository = clusterHubRepository;
             _hub = hub;
             _clusterRepository = clusterRepository;
             _nodeConfiguration = nodeConfiguration;
+            _storageConfiguration = storageConfiguration;
+
+            _nodesDataServices = new ConcurrentDictionary<string, ITopicDataService<ClusterChangeLog>>();
         }
 
         public Task ClusterMetadataSynchronization_AllNodes()
@@ -258,7 +271,7 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             });
         }
 
-        public Task UpdateTenant_AllNodes(string name, Model.Entities.Core.Tenants.TenantSettings tenantSettings)
+        public Task UpdateTenant_AllNodes(string name, TenantSettings tenantSettings)
         {
             return _hub.Clients.All.TenantUpdatedAsync(new Model.Clusters.Events.TenantUpdatedArgs()
             {
@@ -331,6 +344,24 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
 
                     SubscriptionPosition = subscription
                 });
+            }
+        }
+
+        public ITopicDataService<ClusterChangeLog> GetClusterDataService(string nodeId)
+        {
+            if (_nodesDataServices.ContainsKey(nodeId) != true)
+                return null;
+
+            return _nodesDataServices[nodeId];
+        }
+
+        public void InitializeClusterDataService(Replica replica)
+        {
+            // Initialize NodeRocksDbService
+            if (_nodesDataServices.ContainsKey(replica.NodeId) != true)
+            {
+                var clusterDataService = new ClusterRocksDbDataService(_loggerFactory, replica, _storageConfiguration);
+                _nodesDataServices.TryAdd(replica.NodeId, clusterDataService);
             }
         }
     }

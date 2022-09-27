@@ -51,9 +51,9 @@ namespace Buildersoft.Andy.X.IO.Locations
             return Path.Combine(GetDataDirectory(), "temp");
         }
 
-        public static string GetTempClusterRootDirectory()
+        public static string GetTempDistributedClusterRootDirectory()
         {
-            return Path.Combine(TempDirectory(), "clusters");
+            return Path.Combine(TempDirectory(), "distribution");
         }
 
 

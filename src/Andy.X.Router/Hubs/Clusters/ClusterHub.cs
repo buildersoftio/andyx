@@ -18,12 +18,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
         private readonly IClusterHubRepository _clusterHubRepository;
         private readonly IClusterFactory _clusterFactory;
         private readonly IClusterRepository _clusterRepository;
+        private readonly IClusterHubService _clusterHubService;
 
         public ClusterHub(ILogger<ClusterHub> logger,
             IClusterService clusterService,
             IClusterHubRepository clusterHubRepository,
             IClusterFactory clusterFactory,
-            IClusterRepository clusterRepository)
+            IClusterRepository clusterRepository,
+            IClusterHubService clusterHubService)
         {
             _logger = logger;
 
@@ -31,6 +33,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
             _clusterHubRepository = clusterHubRepository;
             _clusterFactory = clusterFactory;
             _clusterRepository = clusterRepository;
+            _clusterHubService = clusterHubService;
         }
 
         public override Task OnConnectedAsync()
@@ -53,14 +56,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
             int shardId = Convert.ToInt32(headers["x-andyx-shard-id"].ToString());
 
             ReplicaTypes replicaType = replicaClient.Type;
-            _logger.LogInformation($"Node '{nodeId}' as {replicaType.ToString()} with hostname '{hostName}' requested connection");
+            _logger.LogInformation($"Node '{nodeId}' as {replicaType} with hostname '{hostName}' requested connection");
 
 
             // check if this node is already connected here
             if (_clusterHubRepository.GetNodeClientByNodeId(nodeId) != null)
             {
                 // node exists
-                _logger.LogWarning($"Node '{nodeId}' as {replicaType.ToString()} with hostname '{hostName}' is already connected  ");
+                _logger.LogWarning($"Node '{nodeId}' as {replicaType} with hostname '{hostName}' is already connected  ");
                 return OnDisconnectedAsync(new Exception($"There is a node with id '{nodeId}' part of cluster '{clusterId}' connected to this node"));
             }
 
@@ -75,7 +78,15 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
                 ShardId = shardId
             });
 
-            _logger.LogInformation($"Node '{nodeId}' as {replicaType.ToString()} with hostname '{hostName}' is connected");
+            _logger.LogInformation($"Node '{nodeId}' as {replicaType} with hostname '{hostName}' is connected");
+
+            // start the service to read from cluster rocksdb and send to the client.
+            if(replicaType == ReplicaTypes.Main)
+            {
+                _clusterHubService.InitializeClusterDataService(replicaClient);
+            }
+
+            _clusterRepository.AddReplicaConnectionToShard(nodeId, clientConnectionId);
 
             return base.OnConnectedAsync();
         }
@@ -88,6 +99,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
             {
                 _clusterHubRepository.RemoveNodeClient(clientConnectionId);
 
+                _clusterRepository.RemoveReplicaConnectionFromShard(nodeClientToRemove.NodeId);
+                
                 _logger.LogInformation($"Node '{nodeClientToRemove.NodeId}' with hostname '{nodeClientToRemove.HostName}' is disconnected");
 
                 Clients.Caller.NodeDisconnectedAsync(new Model.Clusters.Events.NodeDisconnectedArgs()
