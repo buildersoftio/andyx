@@ -182,5 +182,32 @@ namespace Buildersoft.Andy.X.Core.Repositories
         {
             return _mainReplicasAsShards[index];
         }
+
+        public void ConnectNode(string nodeId)
+        {
+            var node = GetReplica(nodeId);
+            if (node != null)
+                node.IsConnected = true;
+
+            var areReplicasConnected = _cluster
+                .Shards
+                .Any(x => x.Replicas
+                .Any(r => r.IsConnected != true) == true);
+
+            if (areReplicasConnected != true)
+            {
+                _cluster.Status = ClusterStatus.Online;
+            }
+        }
+
+        public void DisconnectNode(string nodeId)
+        {
+            var node = GetReplica(nodeId);
+            if (node != null)
+            {
+                node.IsConnected = false;
+                _cluster.Status = ClusterStatus.PartiallyOnline;
+            }
+        }
     }
 }

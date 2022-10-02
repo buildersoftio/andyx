@@ -1,22 +1,20 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Hubs.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
-using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
-using Buildersoft.Andy.X.Core.Services.Data;
-using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Clusters;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Entities.Clusters;
 using Buildersoft.Andy.X.Model.Entities.Core.Components;
+using Buildersoft.Andy.X.Model.Entities.Core.Products;
 using Buildersoft.Andy.X.Model.Entities.Core.Tenants;
+using Buildersoft.Andy.X.Model.Entities.Core.Topics;
 using Buildersoft.Andy.X.Model.Entities.Subscriptions;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Router.Hubs.Clusters;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Component = Buildersoft.Andy.X.Model.App.Components.Component;
 
@@ -31,8 +29,6 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
         private readonly IClusterRepository _clusterRepository;
         private readonly NodeConfiguration _nodeConfiguration;
         private readonly StorageConfiguration _storageConfiguration;
-
-        private readonly ConcurrentDictionary<string, ITopicDataService<ClusterChangeLog>> _nodesDataServices;
 
         public ClusterHubService(ILoggerFactory logger,
             IClusterHubRepository clusterHubRepository,
@@ -49,8 +45,6 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             _clusterRepository = clusterRepository;
             _nodeConfiguration = nodeConfiguration;
             _storageConfiguration = storageConfiguration;
-
-            _nodesDataServices = new ConcurrentDictionary<string, ITopicDataService<ClusterChangeLog>>();
         }
 
         public Task ClusterMetadataSynchronization_AllNodes()
@@ -87,9 +81,15 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             });
         }
 
-        public Task CreateComponentToken_AllNodes(ComponentToken tenantToken)
+        public Task CreateComponentToken_AllNodes(string tenant, string product, string component, ComponentToken componentToken)
         {
-            throw new NotImplementedException();
+            return _hub.Clients.All.ComponentTokenCreatedAsync(new Model.Clusters.Events.ComponentTokenCreatedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                Component = component,
+                ComponentToken = componentToken
+            });
         }
 
         public Task CreateComponent_AllNodes(string tenant, string product, Component component)
@@ -103,7 +103,7 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             });
         }
 
-        public Task CreateProduct_AllNodes(string tenant, Product product)
+        public Task CreateProduct_AllNodes(string tenant, Model.App.Products.Product product)
         {
             return _hub.Clients.All.ProductCreatedAsync(new Model.Clusters.Events.ProductCreatedArgs()
             {
@@ -129,12 +129,16 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             });
         }
 
-        public Task CreateTenantToken_AllNodes(TenantToken tenantToken)
+        public Task CreateTenantToken_AllNodes(string tenant, TenantToken tenantToken)
         {
-            throw new NotImplementedException();
+            return _hub.Clients.All.TenantTokenCreatedAsync(new Model.Clusters.Events.TenantTokenCreatedArgs()
+            {
+                Tenant = tenant,
+                TenantToken = tenantToken
+            });
         }
 
-        public Task CreateTenant_AllNodes(string name, Model.Entities.Core.Tenants.TenantSettings tenantSettings)
+        public Task CreateTenant_AllNodes(string name, TenantSettings tenantSettings)
         {
             return _hub.Clients.All.TenantCreatedAsync(new Model.Clusters.Events.TenantCreatedArgs()
             {
@@ -143,7 +147,7 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             });
         }
 
-        public Task CreateTopic_AllNodes(string tenant, string product, string component, Topic topic)
+        public Task CreateTopic_AllNodes(string tenant, string product, string component, Model.App.Topics.Topic topic)
         {
             return _hub.Clients.All.TopicCreatedAsync(new Model.Clusters.Events.TopicCreatedArgs()
             {
@@ -235,24 +239,34 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             });
         }
 
-        public Task RevokeComponentToken_AllNodes(string tenant, string product, string component, string key)
+        public Task RevokeComponentToken_AllNodes(string tenant, string product, string component, Guid key)
         {
-            throw new NotImplementedException();
+            return _hub.Clients.All.ComponentTokenRevokedAsync(new Model.Clusters.Events.ComponentTokenRevokedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                Component = component,
+                Key = key
+            });
         }
 
-        public Task RevokeTenantToken_AllNodes(string tenant, string key)
+        public Task RevokeTenantToken_AllNodes(string tenant, Guid key)
         {
-            throw new NotImplementedException();
+            return _hub.Clients.All.TenantTokenRevokedAsync(new Model.Clusters.Events.TenantTokenRevokedArgs()
+            {
+                Tenant = tenant,
+                Key = key
+            });
         }
 
-        public Task UpdateComponent_AllNodes(string tenant, string product, Component component)
+        public Task UpdateComponent_AllNodes(string tenant, string product, string component, ComponentSettings componentSettings)
         {
             return _hub.Clients.All.ComponentUpdatedAsync(new Model.Clusters.Events.ComponentUpdatedArgs()
             {
                 Tenant = tenant,
                 Product = product,
-                Settings = component.Settings,
-                Name = component.Name
+                Component = component,
+                Settings = componentSettings
             });
         }
 
@@ -280,25 +294,25 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             });
         }
 
-        public Task UpdateTopic_AllNodes(string tenant, string product, string component, Topic topic)
+        public Task UpdateTopic_AllNodes(string tenant, string product, string component, string topic, TopicSettings topicSettings)
         {
             return _hub.Clients.All.TopicUpdatedAsync(new Model.Clusters.Events.TopicUpdatedArgs()
             {
                 Tenant = tenant,
                 Product = product,
                 Component = component,
-                Name = topic.Name
+                Name = topic,
+                TopicSettings = topicSettings
             });
         }
 
-        public Task UpdateProduct_AllNodes(string tenant, Product product)
+        public Task UpdateProduct_AllNodes(string tenant, string product, ProductSettings productSettings)
         {
             return _hub.Clients.All.ProductUpdatedAsync(new Model.Clusters.Events.ProductUpdatedArgs()
             {
                 Tenant = tenant,
-                Name = product.Name,
-
-                Description = product.Description,
+                Name = product,
+                ProductSettings = productSettings
             });
         }
 
@@ -330,7 +344,7 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             var currentShard = _clusterRepository.GetCurrentShard();
             foreach (var replica in currentShard.Replicas)
             {
-                if (replica.IsLocal == true && replica.Type == Model.Clusters.ReplicaTypes.Main)
+                if (replica.IsLocal == true && replica.Type == ReplicaTypes.Main)
                     continue;
 
                 var replicaConnectionId = _clusterHubRepository.GetNodeConnectionIdByNodeId(replica.NodeId);
@@ -347,22 +361,177 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             }
         }
 
-        public ITopicDataService<ClusterChangeLog> GetClusterDataService(string nodeId)
+        public async Task DistributeMessage_ToNode(string nodeId, string connectionId, ClusterChangeLog clusterChangeLog)
         {
-            if (_nodesDataServices.ContainsKey(nodeId) != true)
-                return null;
-
-            return _nodesDataServices[nodeId];
+            //var connectionId = _clusterHubRepository.GetNodeConnectionIdByNodeId(nodeId);
+            await _hub
+                .Clients
+                .Client(connectionId)
+                .SendMessageToMainShardAsync(clusterChangeLog);
         }
 
-        public void InitializeClusterDataService(Replica replica)
+        public Task CreateProductToken_AllNodes(string tenant, string product, Model.Entities.Core.Products.ProductToken productToken)
         {
-            // Initialize NodeRocksDbService
-            if (_nodesDataServices.ContainsKey(replica.NodeId) != true)
+            return _hub.Clients.All.ProductTokenCreatedAsync(new Model.Clusters.Events.ProductTokenCreatedArgs()
             {
-                var clusterDataService = new ClusterRocksDbDataService(_loggerFactory, replica, _storageConfiguration);
-                _nodesDataServices.TryAdd(replica.NodeId, clusterDataService);
-            }
+                Tenant = tenant,
+                Product = product,
+                ProductToken = productToken
+            });
+        }
+
+        public Task RevokeProductToken_AllNodes(string tenant, string product, Guid key)
+        {
+            return _hub.Clients.All.ProductTokenRevokedAsync(new Model.Clusters.Events.ProductTokenRevokedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                Key = key
+            });
+        }
+
+        public Task CreateTenantRetention_AllNodes(string tenant, TenantRetention tenantRetention)
+        {
+            return _hub.Clients.All.TenantRetentionCreatedAsync(new Model.Clusters.Events.TenantRetentionCreatedArgs()
+            {
+                Tenant = tenant,
+                TenantRetention = tenantRetention
+            });
+        }
+
+        public Task UpdateTenantRetention_AllNodes(string tenant, TenantRetention tenantRetention)
+        {
+            return _hub.Clients.All.TenantRetentionUpdatedAsync(new Model.Clusters.Events.TenantRetentionUpdatedArgs()
+            {
+                Tenant = tenant,
+                TenantRetention = tenantRetention
+            });
+        }
+
+        public Task DeleteTenantRetention_AllNodes(string tenant, TenantRetention tenantRetention)
+        {
+            return _hub.Clients.All.TenantRetentionDeletedAsync(new Model.Clusters.Events.TenantRetentionDeletedArgs()
+            {
+                Tenant = tenant,
+                TenantRetention = tenantRetention
+            });
+        }
+
+        public Task CreateProductRetention_AllNodes(string tenant, string product, Model.Entities.Core.Products.ProductRetention productRetention)
+        {
+            return _hub.Clients.All.ProductRetentionCreatedAsync(new Model.Clusters.Events.ProductRetentionCreatedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                ProductRetention = productRetention
+            });
+        }
+
+        public Task UpdateProductRetention_AllNodes(string tenant, string product, Model.Entities.Core.Products.ProductRetention productRetention)
+        {
+            return _hub.Clients.All.ProductRetentionUpdatedAsync(new Model.Clusters.Events.ProductRetentionUpdatedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                ProductRetention = productRetention
+            });
+        }
+
+        public Task DeleteProductRetention_AllNodes(string tenant, string product, Model.Entities.Core.Products.ProductRetention productRetention)
+        {
+            return _hub.Clients.All.ProductRetentionDeletedAsync(new Model.Clusters.Events.ProductRetentionDeletedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                ProductRetention = productRetention
+            });
+        }
+
+        public Task CreateComponentRetention_AllNodes(string tenant, string product, string component, ComponentRetention componentRetention)
+        {
+            return _hub.Clients.All.ComponentRetentionCreatedAsync(new Model.Clusters.Events.ComponentRetentionCreatedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                Component = component,
+                ComponentRetention = componentRetention
+            });
+        }
+
+        public Task UpdateComponentRetention_AllNodes(string tenant, string product, string component, ComponentRetention componentRetention)
+        {
+            return _hub.Clients.All.ComponentRetentionUpdatedAsync(new Model.Clusters.Events.ComponentRetentionUpdatedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                Component = component,
+                ComponentRetention = componentRetention
+            });
+        }
+
+        public Task DeleteComponentRetention_AllNodes(string tenant, string product, string component, ComponentRetention componentRetention)
+        {
+            return _hub.Clients.All.ComponentRetentionDeletedAsync(new Model.Clusters.Events.ComponentRetentionDeletedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                Component = component,
+                ComponentRetention = componentRetention
+            });
+        }
+
+        public Task CreateProducer_AllNodes(string tenant, string product, string component, string topic, Model.Entities.Core.Producers.Producer producer)
+        {
+            return _hub.Clients.All.ProducerCreatedAsync(new Model.Clusters.Events.ProducerCreatedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                Component = component,
+                Topic = topic,
+                Producer = producer
+            });
+        }
+
+        public Task DeleteProducer_AllNodes(string tenant, string product, string component, string topic, string producerName)
+        {
+            return _hub.Clients.All.ProducerDeletedAsync(new Model.Clusters.Events.ProducerDeletedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                Component = component,
+                Topic = topic,
+                Producer = producerName
+            });
+        }
+
+        public Task DeleteTenantToken_AllNodes(string tenant, Guid key)
+        {
+            return _hub.Clients.All.TenantTokenDeletedAsync(new Model.Clusters.Events.TenantTokenDeletedArgs()
+            {
+                Tenant = tenant,
+                Key = key
+            });
+        }
+
+        public Task DeleteProductToken_AllNodes(string tenant, string product, Guid key)
+        {
+            return _hub.Clients.All.ProductTokenDeletedAsync(new Model.Clusters.Events.ProductTokenDeletedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                Key = key
+            });
+        }
+
+        public Task DeleteComponentToken_AllNodes(string tenant, string product, string component, Guid key)
+        {
+            return _hub.Clients.All.ComponentTokenDeletedAsync(new Model.Clusters.Events.ComponentTokenDeletedArgs()
+            {
+                Tenant = tenant,
+                Product = product,
+                Component = component,
+                Key = key
+            });
         }
     }
 }

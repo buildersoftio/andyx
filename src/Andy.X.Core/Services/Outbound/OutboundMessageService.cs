@@ -5,7 +5,6 @@ using Buildersoft.Andy.X.Core.Abstractions.Services.Subscriptions;
 using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.Core.Contexts.Subscriptions;
 using Buildersoft.Andy.X.Core.Services.Outbound.Connectors;
-using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Entities.Storages;
 using Buildersoft.Andy.X.Model.Subscriptions;
@@ -242,6 +241,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 }
             }
 
+            // Unacknoledged Position for subscription.
             using (var topicStateContext = new TopicEntryPositionContext(subscriptionTopicData.Subscription.Tenant, subscriptionTopicData.Subscription.Product, subscriptionTopicData.Subscription.Component, subscriptionTopicData.Subscription.Topic))
             {
                 var state = topicStateContext.TopicStates.Find(nodeSubscriptionId);

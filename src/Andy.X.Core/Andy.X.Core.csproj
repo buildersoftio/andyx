@@ -22,8 +22,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Cortex.Collections" Version="1.0.0-preview11" />
-		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.8" />
-		<PackageReference Include="RocksDB" Version="7.5.3.32213" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.9" />
+		<PackageReference Include="RocksDB" Version="7.5.3.32564" />
 
 	</ItemGroup>
 

@@ -195,7 +195,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             {
                 try
                 {
-                    _clusterHubService.GetClusterDataService(nodeId).Put(message.Entry.ToString(), message);
+                    _orchestratorService.GetClusterDataService(nodeId).Put(message.Entry.ToString(), message);
                 }
                 catch (Exception ex)
                 {

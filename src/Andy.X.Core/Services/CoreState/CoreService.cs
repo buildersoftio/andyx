@@ -1,4 +1,5 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
 using Buildersoft.Andy.X.IO.Locations;
 using Buildersoft.Andy.X.Model.Configurations;
@@ -25,12 +26,17 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
     {
         private readonly ILogger<CoreService> _logger;
         private readonly ICoreRepository _coreRepository;
+        private readonly IClusterHubService _clusterHubService;
         private readonly StorageConfiguration _storageConfiguration;
 
-        public CoreService(ILogger<CoreService> logger, ICoreRepository coreRepository, StorageConfiguration storageConfiguration)
+        public CoreService(ILogger<CoreService> logger,
+            ICoreRepository coreRepository,
+            IClusterHubService clusterHubService,
+            StorageConfiguration storageConfiguration)
         {
             _logger = logger;
             _coreRepository = coreRepository;
+            _clusterHubService = clusterHubService;
             _storageConfiguration = storageConfiguration;
 
             if (_coreRepository.GetCoreStateContext().Database.EnsureCreated())
@@ -41,16 +47,16 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
                 var tenantsFromSettings = JsonConvert.DeserializeObject<List<TenantConfiguration>>(File.ReadAllText(ConfigurationLocations.GetTenantsInitialConfigurationFile()));
                 foreach (var tenant in tenantsFromSettings)
                 {
-                    CreateTenant(tenant.Name, tenant.Settings.IsProductAutomaticCreationAllowed, tenant.Settings.IsEncryptionEnabled, 
+                    CreateTenant(tenant.Name, tenant.Settings.IsProductAutomaticCreationAllowed, tenant.Settings.IsEncryptionEnabled,
                         tenant.Settings.IsAuthorizationEnabled);
                     foreach (var product in tenant.Products)
                     {
                         CreateProduct(tenant.Name, product.Name, "initial");
                         foreach (var component in product.Components)
                         {
-                            CreateComponent(tenant.Name, product.Name, component.Name, "initial", 
-                                component.Settings.IsTopicAutomaticCreationAllowed, component.Settings.EnforceSchemaValidation, 
-                                component.Settings.IsAuthorizationEnabled, component.Settings.IsSubscriptionAutomaticCreationAllowed, 
+                            CreateComponent(tenant.Name, product.Name, component.Name, "initial",
+                                component.Settings.IsTopicAutomaticCreationAllowed, component.Settings.EnforceSchemaValidation,
+                                component.Settings.IsAuthorizationEnabled, component.Settings.IsSubscriptionAutomaticCreationAllowed,
                                 component.Settings.IsProducerAutomaticCreationAllowed);
 
                             foreach (var topic in component.Topics)
@@ -101,7 +107,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             return true;
         }
-        public bool DeleteTenant(string tenantName)
+        public bool DeleteTenant(string tenantName, bool notifyCluster = true)
         {
             var tenant = _coreRepository.GetTenant(tenantName);
             if (tenant is null)
@@ -109,6 +115,9 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             _coreRepository.SoftDeleteTenant(tenant.Id);
             _coreRepository.SaveChanges();
+
+            if (notifyCluster)
+                _clusterHubService.DeleteTenant_AllNodes(tenantName);
 
             return true;
         }
@@ -150,7 +159,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             return true;
         }
-        public bool UpdateTenantSettings(string tenantName, bool isProductCreation, bool isEncryptionEnabled, bool isAuthorizationEnabled)
+        public bool UpdateTenantSettings(string tenantName, bool isProductCreation, bool isEncryptionEnabled, bool isAuthorizationEnabled, bool notifyCluster = true)
         {
             var tenant = _coreRepository.GetTenant(tenantName);
             if (tenant is null)
@@ -169,11 +178,15 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.EditTenantSettings(currentTenantSettings);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.UpdateTenant_AllNodes(tenantName, currentTenantSettings);
+
             return true;
         }
 
 
-        public bool CreateTenantRetention(string tenant, string name, RetentionType retentionType, long timeToLive)
+        public bool CreateTenantRetention(string tenant, string name, RetentionType retentionType, long timeToLive, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -202,9 +215,13 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.AddTenantRetention(tenantRetentionToRegister);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.CreateTenantRetention_AllNodes(tenant, retention);
+
             return true;
         }
-        public bool UpdateTenantRetention(string tenant, long retentionId, string name, long timeToLive)
+        public bool UpdateTenantRetention(string tenant, long retentionId, string name, long timeToLive, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -225,9 +242,13 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.EditTenantRetention(currentTenantRetention);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.UpdateTenantRetention_AllNodes(tenant, currentTenantRetention);
+
             return true;
         }
-        public bool DeleteTenantRetention(string tenant, long retentionId)
+        public bool DeleteTenantRetention(string tenant, long retentionId, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -243,11 +264,14 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.DeleteTenantRetention(currentTenantRetention.Id);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.DeleteTenantRetention_AllNodes(tenant, currentTenantRetention);
+
             return true;
         }
 
-
-        public bool CreateTenantToken(string tenant, string description, DateTimeOffset expireDate, List<TenantTokenRole> tenantTokenRoles, out Guid id, out string secret)
+        public bool CreateTenantToken(string tenant, string description, DateTimeOffset expireDate, List<TenantTokenRole> tenantTokenRoles, out Guid id, out string secret, bool notifyCluster = true)
         {
             id = Guid.Empty;
             secret = "";
@@ -278,9 +302,13 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             id = tenantTokenToRegister.Id;
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.CreateTenantToken_AllNodes(tenant, tenantTokenToRegister);
+
             return true;
         }
-        public bool RevokeTenantToken(string tenant, Guid id)
+        public bool RevokeTenantToken(string tenant, Guid id, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -300,9 +328,13 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.EditTenantToken(currentTenantTenant);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.RevokeTenantToken_AllNodes(tenant, id);
+
             return true;
         }
-        public bool DeleteTenantToken(string tenant, Guid id)
+        public bool DeleteTenantToken(string tenant, Guid id, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -317,6 +349,10 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             _coreRepository.DeleteTenantToken(id);
             _coreRepository.SaveChanges();
+
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.DeleteTenantToken_AllNodes(tenant, id);
 
             return true;
         }
@@ -364,7 +400,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             return true;
         }
-        public bool DeleteProduct(string tenant, string product)
+        public bool DeleteProduct(string tenant, string product, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -377,9 +413,12 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.SoftDeleteProduct(currentProduct.Id);
             _coreRepository.SaveChanges();
 
+            if (notifyCluster)
+                _clusterHubService.DeleteProduct_AllNodes(tenant, product);
+
             return true;
         }
-        public bool UpdateProductSettings(string tenant, string product, bool isAuthorizationEnabled)
+        public bool UpdateProductSettings(string tenant, string product, bool isAuthorizationEnabled, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -397,6 +436,11 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             _coreRepository.EditProductSettings(currentSettings);
             _coreRepository.SaveChanges();
+
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.UpdateProduct_AllNodes(tenant, product, currentSettings);
+
 
             return true;
         }
@@ -420,7 +464,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             return true;
         }
 
-        public bool CreateProductToken(string tenant, string product, string description, DateTimeOffset expireDate, List<ProductTokenRole> productTokenRoles, out Guid id, out string secret)
+        public bool CreateProductToken(string tenant, string product, string description, DateTimeOffset expireDate, List<ProductTokenRole> productTokenRoles, out Guid id, out string secret, bool notifyCluster = true)
         {
             id = Guid.Empty;
             secret = "";
@@ -457,9 +501,13 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             id = tokenToRegister.Id;
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.CreateProductToken_AllNodes(tenant, product, tokenToRegister);
+
             return true;
         }
-        public bool RevokeProductToken(string tenant, string product, Guid id)
+        public bool RevokeProductToken(string tenant, string product, Guid id, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -481,9 +529,14 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.EditProductToken(currentProductToken);
             _coreRepository.SaveChanges();
 
+
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.RevokeProductToken_AllNodes(tenant, product, id);
+
             return true;
         }
-        public bool DeleteProductToken(string tenant, string product, Guid id)
+        public bool DeleteProductToken(string tenant, string product, Guid id, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -501,10 +554,14 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.DeleteProductToken(id);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.DeleteProductToken_AllNodes(tenant, product, id);
+
             return true;
         }
 
-        public bool CreateProductRetention(string tenant, string product, string name, RetentionType retentionType, long timeToLive)
+        public bool CreateProductRetention(string tenant, string product, string name, RetentionType retentionType, long timeToLive, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -537,9 +594,14 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.AddProductRetention(productRetentionToRegister);
             _coreRepository.SaveChanges();
 
+
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.CreateProductRetention_AllNodes(tenant, product, productRetentionToRegister);
+
             return true;
         }
-        public bool UpdateProductRetention(string tenant, string product, long retentionId, string name, long timeToLive)
+        public bool UpdateProductRetention(string tenant, string product, long retentionId, string name, long timeToLive, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -564,9 +626,13 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.EditProductRetention(currentProductRetention);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.UpdateProductRetention_AllNodes(tenant, product, currentProductRetention);
+
             return true;
         }
-        public bool DeleteProductRetention(string tenant, string product, long retentionId)
+        public bool DeleteProductRetention(string tenant, string product, long retentionId, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -585,6 +651,10 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             _coreRepository.DeleteProductRetention(retentionId);
             _coreRepository.SaveChanges();
+
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.DeleteProductRetention_AllNodes(tenant, product, currentProductRetention);
 
             return true;
         }
@@ -661,7 +731,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             return true;
         }
-        public bool DeleteComponent(string tenant, string product, string component)
+        public bool DeleteComponent(string tenant, string product, string component, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -686,9 +756,12 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.EditComponentSettings(currentSettings);
             _coreRepository.SaveChanges();
 
+            if (notifyCluster)
+                _clusterHubService.DeleteComponent_AllNodes(tenant, product, component);
+
             return true;
         }
-        public bool UpdateComponentSettings(string tenant, string product, string componentName, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled, bool isSubscriptionAllowToCreate)
+        public bool UpdateComponentSettings(string tenant, string product, string componentName, bool isTopicAutomaticCreation, bool isSchemaValidationEnabled, bool isAuthorizationEnabled, bool isSubscriptionAllowToCreate, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -717,10 +790,14 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.EditComponentSettings(currentSettings);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.UpdateComponent_AllNodes(tenant, product, componentName, currentSettings);
+
             return true;
         }
 
-        public bool CreateComponentToken(string tenant, string product, string component, string description, string issuedFor, DateTimeOffset expireDate, List<ComponentTokenRole> componentTokenRoles, out Guid id, out string secret)
+        public bool CreateComponentToken(string tenant, string product, string component, string description, string issuedFor, DateTimeOffset expireDate, List<ComponentTokenRole> componentTokenRoles, out Guid id, out string secret, bool notifyCluster = true)
         {
             id = Guid.Empty;
             secret = "";
@@ -761,9 +838,13 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             id = newToken.Id;
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.CreateComponentToken_AllNodes(tenant, product, component, newToken);
+
             return true;
         }
-        public bool RevokeComponentToken(string tenant, string product, string component, Guid id)
+        public bool RevokeComponentToken(string tenant, string product, string component, Guid id, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -791,9 +872,13 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.EditComponentToken(currentToken);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.RevokeComponentToken_AllNodes(tenant, product, component, id);
+
             return true;
         }
-        public bool DeleteComponentToken(string tenant, string product, string component, Guid id)
+        public bool DeleteComponentToken(string tenant, string product, string component, Guid id, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -817,10 +902,14 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.DeleteComponentToken(id);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.DeleteComponentToken_AllNodes(tenant, product, component, id);
+
             return true;
         }
 
-        public bool CreateComponentRetention(string tenant, string product, string component, string name, RetentionType retentionType, long timeToLive)
+        public bool CreateComponentRetention(string tenant, string product, string component, string name, RetentionType retentionType, long timeToLive, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -857,9 +946,13 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.AddComponentRetention(newRetention);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.CreateComponentRetention_AllNodes(tenant, product, component, newRetention);
+
             return true;
         }
-        public bool UpdateComponentRetention(string tenant, string product, string component, long retentionId, string name, long timeToLive)
+        public bool UpdateComponentRetention(string tenant, string product, string component, long retentionId, string name, long timeToLive, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -888,9 +981,13 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.EditComponentRetention(currentComponentRetention);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.UpdateComponentRetention_AllNodes(tenant, product, component, currentComponentRetention);
+
             return true;
         }
-        public bool DeleteComponentRetention(string tenant, string product, string component, long retentionId)
+        public bool DeleteComponentRetention(string tenant, string product, string component, long retentionId, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -913,6 +1010,10 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             _coreRepository.DeleteComponentRetention(retentionId);
             _coreRepository.SaveChanges();
+
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.DeleteComponentRetention_AllNodes(tenant, product, component, currentComponentRetention);
 
             return true;
         }
@@ -964,7 +1065,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             return true;
         }
-        public bool DeleteTopic(string tenant, string product, string component, string topic)
+        public bool DeleteTopic(string tenant, string product, string component, string topic, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -991,6 +1092,9 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             _coreRepository.EditTopic(currentTopic);
             _coreRepository.SaveChanges();
+
+            if (notifyCluster)
+                _clusterHubService.DeleteTopic_AllNodes(tenant, product, component, topic);
 
             return true;
         }
@@ -1107,7 +1211,7 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             return true;
         }
 
-        public bool UpdateTopicSettings(string tenant, string product, string component, string topic, TopicSettings topicSettings)
+        public bool UpdateTopicSettings(string tenant, string product, string component, string topic, TopicSettings topicSettings, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -1143,10 +1247,14 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.EditTopic(currentTopic);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.UpdateTopic_AllNodes(tenant, product, component, topic, currentTopicSettings);
+
             return true;
         }
 
-        public bool CreateProducer(string tenant, string product, string component, string topic, string producer, string description, ProducerInstanceType producerInstanceType)
+        public bool CreateProducer(string tenant, string product, string component, string topic, string producer, string description, ProducerInstanceType producerInstanceType, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -1186,10 +1294,14 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
             _coreRepository.AddProducer(newProducer);
             _coreRepository.SaveChanges();
 
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.CreateProducer_AllNodes(tenant, product, component, topic, newProducer);
+
             return true;
         }
 
-        public bool DeleteProducer(string tenant, string product, string component, string topic, string producer)
+        public bool DeleteProducer(string tenant, string product, string component, string topic, string producer, bool notifyCluster = true)
         {
             var currentTenant = _coreRepository.GetTenant(tenant);
             if (currentTenant is null)
@@ -1217,6 +1329,10 @@ namespace Buildersoft.Andy.X.Core.Services.CoreState
 
             _coreRepository.EditProducer(currentProducer);
             _coreRepository.SaveChanges();
+
+            // inform other nodes
+            if (notifyCluster)
+                _clusterHubService.DeleteProducer_AllNodes(tenant, product, component, topic, producer);
 
             return true;
         }

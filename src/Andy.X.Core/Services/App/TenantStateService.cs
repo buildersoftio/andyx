@@ -20,7 +20,6 @@ using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
-using System.Threading;
 
 namespace Buildersoft.Andy.X.Core.Services.App
 {

@@ -1,7 +1,6 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
 using System;
-using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 {
@@ -30,17 +29,17 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
             _nodeClusterEventService.CurrentEntryPositionUpdated += NodeClusterEventService_CurrentEntryPositionUpdated;
         }
 
-        private void NodeClusterEventService_CurrentEntryPositionUpdated(Buildersoft.Andy.X.Model.Clusters.Events.CurrentEntryPositionUpdatedArgs obj)
+        private void NodeClusterEventService_CurrentEntryPositionUpdated(Model.Clusters.Events.CurrentEntryPositionUpdatedArgs obj)
         {
             // TODO: Not implemented.
         }
 
-        private void NodeClusterEventService_SubscriptionPositionUpdated(Buildersoft.Andy.X.Model.Clusters.Events.SubscriptionPositionUpdatedArgs obj)
+        private void NodeClusterEventService_SubscriptionPositionUpdated(Model.Clusters.Events.SubscriptionPositionUpdatedArgs obj)
         {
             // TODO: Not implemented.
         }
 
-        private void NodeClusterEventService_SubscriptionUpdated(Buildersoft.Andy.X.Model.Clusters.Events.SubscriptionUpdatedArgs obj)
+        private void NodeClusterEventService_SubscriptionUpdated(Model.Clusters.Events.SubscriptionUpdatedArgs obj)
         {
             // TODO: Not implemented.
         }
@@ -61,7 +60,6 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
             }
             catch (Exception)
             {
-
             }
         }
     }

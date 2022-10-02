@@ -7,6 +7,7 @@ using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Service.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
+using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services;
 using Buildersoft.Andy.X.Core.Contexts.Clusters;
@@ -38,7 +39,7 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
         private readonly ITenantFactory _tenantFactory;
         private readonly StorageConfiguration _storageConfiguration;
         private readonly IInboundMessageService _inboundMessageService;
-
+        private readonly ICoreService _coreService;
 
         private readonly ConcurrentDictionary<string, Task<NodeClusterEventService>> _nodesClientServices;
 
@@ -54,7 +55,8 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
             ITenantStateService tenantService,
             ITenantFactory tenantFactory,
             StorageConfiguration storageConfiguration,
-            IInboundMessageService inboundMessageService)
+            IInboundMessageService inboundMessageService,
+            ICoreService coreService)
         {
             _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<ClusterService>();
@@ -72,6 +74,8 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
             _tenantFactory = tenantFactory;
             _storageConfiguration = storageConfiguration;
             _inboundMessageService = inboundMessageService;
+            _coreService = coreService;
+
 
             _nodesClientServices = new ConcurrentDictionary<string, Task<NodeClusterEventService>>();
 
@@ -125,7 +129,9 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
                                   _tenantFactory,
                                   _nodeConfiguration,
                                   _consumerFactory,
-                                  _subscriptionFactory);
+                                  _subscriptionFactory,
+                                  _inboundMessageService,
+                                  _coreService);
                         });
 
                         _nodesClientServices.TryAdd(key, nodeClusterEventServiceTask);
@@ -172,7 +178,7 @@ namespace Buildersoft.Andy.X.Core.Services.Clusters
                     {
                         Id = key,
                         CurrentEntry = 1,
-                        MarkDeleteEntryPosition = 0,
+                        MarkDeleteEntryPosition = 1,
 
                         CreateDate = DateTimeOffset.Now
                     };

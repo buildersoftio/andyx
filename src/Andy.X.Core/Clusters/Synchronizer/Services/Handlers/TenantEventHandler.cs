@@ -24,6 +24,44 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
             _nodeClusterEventService.TenantCreated += NodeClusterEventService_TenantCreated;
             _nodeClusterEventService.TenantUpdated += NodeClusterEventService_TenantUpdated;
             _nodeClusterEventService.TenantDeleted += NodeClusterEventService_TenantDeleted;
+
+            _nodeClusterEventService.TenantRetentionCreated += NodeClusterEventService_TenantRetentionCreated;
+            _nodeClusterEventService.TenantRetentionUpdated += NodeClusterEventService_TenantRetentionUpdated;
+            _nodeClusterEventService.TenantRetentionDeleted += NodeClusterEventService_TenantRetentionDeleted;
+
+            _nodeClusterEventService.TenantTokenCreated += NodeClusterEventService_TenantTokenCreated;
+            _nodeClusterEventService.TenantTokenDeleted += NodeClusterEventService_TenantTokenDeleted;
+            _nodeClusterEventService.TenantTokenRevoked += NodeClusterEventService_TenantTokenRevoked;
+        }
+
+        private void NodeClusterEventService_TenantTokenRevoked(Model.Clusters.Events.TenantTokenRevokedArgs obj)
+        {
+
+        }
+
+        private void NodeClusterEventService_TenantTokenDeleted(Model.Clusters.Events.TenantTokenDeletedArgs obj)
+        {
+
+        }
+
+        private void NodeClusterEventService_TenantTokenCreated(Model.Clusters.Events.TenantTokenCreatedArgs obj)
+        {
+
+        }
+
+        private void NodeClusterEventService_TenantRetentionUpdated(Model.Clusters.Events.TenantRetentionUpdatedArgs obj)
+        {
+
+        }
+
+        private void NodeClusterEventService_TenantRetentionCreated(Model.Clusters.Events.TenantRetentionCreatedArgs obj)
+        {
+
+        }
+
+        private void NodeClusterEventService_TenantRetentionDeleted(Model.Clusters.Events.TenantRetentionDeletedArgs obj)
+        {
+
         }
 
         private void NodeClusterEventService_TenantUpdated(Model.Clusters.Events.TenantUpdatedArgs obj)

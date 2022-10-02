@@ -5,6 +5,8 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Clusters
 {
     public interface IClusterRepository
     {
+        void ConnectNode(string nodeId);
+        void DisconnectNode(string nodeId);
         List<ReplicaShardConnection> GetReplicaShardConnections();
         ReplicaShardConnection GetMainReplicaConnection(string nodeId);
         ReplicaShardConnection GetMainReplicaConnectionByIndex(int index);

@@ -1,7 +1,9 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Clusters;
+using Buildersoft.Andy.X.Core.Abstractions.Orchestrators;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.Clusters;
 using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
+using Buildersoft.Andy.X.Core.Services.Outbound;
 using Buildersoft.Andy.X.Model.Clusters;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -19,13 +21,17 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
         private readonly IClusterFactory _clusterFactory;
         private readonly IClusterRepository _clusterRepository;
         private readonly IClusterHubService _clusterHubService;
+        private readonly IOrchestratorService _orchestratorService;
+        private readonly OutboundClusterMessageService _outboundClusterMessageService;
 
         public ClusterHub(ILogger<ClusterHub> logger,
             IClusterService clusterService,
             IClusterHubRepository clusterHubRepository,
             IClusterFactory clusterFactory,
             IClusterRepository clusterRepository,
-            IClusterHubService clusterHubService)
+            IClusterHubService clusterHubService,
+            IOrchestratorService orchestratorService,
+            OutboundClusterMessageService outboundClusterMessageService)
         {
             _logger = logger;
 
@@ -34,6 +40,8 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
             _clusterFactory = clusterFactory;
             _clusterRepository = clusterRepository;
             _clusterHubService = clusterHubService;
+            _orchestratorService = orchestratorService;
+            this._outboundClusterMessageService = outboundClusterMessageService;
         }
 
         public override Task OnConnectedAsync()
@@ -81,12 +89,15 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
             _logger.LogInformation($"Node '{nodeId}' as {replicaType} with hostname '{hostName}' is connected");
 
             // start the service to read from cluster rocksdb and send to the client.
-            if(replicaType == ReplicaTypes.Main)
+            if (replicaType == ReplicaTypes.Main)
             {
-                _clusterHubService.InitializeClusterDataService(replicaClient);
+                _orchestratorService.InitializeClusterDataService(replicaClient);
+                _outboundClusterMessageService.StartService(nodeId);
             }
 
             _clusterRepository.AddReplicaConnectionToShard(nodeId, clientConnectionId);
+
+            _clusterRepository.ConnectNode(nodeId);
 
             return base.OnConnectedAsync();
         }
@@ -94,13 +105,14 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
         public override Task OnDisconnectedAsync(Exception exception)
         {
             string clientConnectionId = Context.ConnectionId;
-            var nodeClientToRemove = _clusterHubRepository.GetNodeClientByNodeId(clientConnectionId);
+
+            var nodeClientToRemove = _clusterHubRepository.GetNodeClientById(clientConnectionId);
             if (nodeClientToRemove != null)
             {
                 _clusterHubRepository.RemoveNodeClient(clientConnectionId);
-
+                _clusterRepository.DisconnectNode(nodeClientToRemove.NodeId);
                 _clusterRepository.RemoveReplicaConnectionFromShard(nodeClientToRemove.NodeId);
-                
+                _outboundClusterMessageService.StopService(nodeClientToRemove.NodeId);
                 _logger.LogInformation($"Node '{nodeClientToRemove.NodeId}' with hostname '{nodeClientToRemove.HostName}' is disconnected");
 
                 Clients.Caller.NodeDisconnectedAsync(new Model.Clusters.Events.NodeDisconnectedArgs()

@@ -27,16 +27,54 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
             _nodeClusterEventService.ProductCreated += NodeClusterEventService_ProductCreated;
             _nodeClusterEventService.ProductUpdated += NodeClusterEventService_ProductUpdated;
             _nodeClusterEventService.ProductDeleted += NodeClusterEventService_ProductDeleted;
+
+            _nodeClusterEventService.ProductRetentionCreated += NodeClusterEventService_ProductRetentionCreated;
+            _nodeClusterEventService.ProductRetentionDeleted += NodeClusterEventService_ProductRetentionDeleted;
+            _nodeClusterEventService.ProductRetentionUpdated += NodeClusterEventService_ProductRetentionUpdated;
+
+            _nodeClusterEventService.ProductTokenCreated += NodeClusterEventService_ProductTokenCreated;
+            _nodeClusterEventService.ProductTokenRevoked += NodeClusterEventService_ProductTokenRevoked;
+            _nodeClusterEventService.ProductTokenDeleted += NodeClusterEventService_ProductTokenDeleted;
+        }
+
+        private void NodeClusterEventService_ProductTokenDeleted(Model.Clusters.Events.ProductTokenDeletedArgs obj)
+        {
+            
+        }
+
+        private void NodeClusterEventService_ProductTokenRevoked(Model.Clusters.Events.ProductTokenRevokedArgs obj)
+        {
+            
+        }
+
+        private void NodeClusterEventService_ProductTokenCreated(Model.Clusters.Events.ProductTokenCreatedArgs obj)
+        {
+            
+        }
+
+        private void NodeClusterEventService_ProductRetentionUpdated(Model.Clusters.Events.ProductRetentionUpdatedArgs obj)
+        {
+            
+        }
+
+        private void NodeClusterEventService_ProductRetentionDeleted(Model.Clusters.Events.ProductRetentionDeletedArgs obj)
+        {
+            
+        }
+
+        private void NodeClusterEventService_ProductRetentionCreated(Model.Clusters.Events.ProductRetentionCreatedArgs obj)
+        {
+            
         }
 
         private void NodeClusterEventService_ProductUpdated(Model.Clusters.Events.ProductUpdatedArgs obj)
         {
-            throw new NotImplementedException();
+            
         }
 
         private void NodeClusterEventService_ProductDeleted(Model.Clusters.Events.ProductDeletedArgs obj)
         {
-            throw new NotImplementedException();
+            
         }
 
         private void NodeClusterEventService_ProductCreated(Model.Clusters.Events.ProductCreatedArgs obj)
