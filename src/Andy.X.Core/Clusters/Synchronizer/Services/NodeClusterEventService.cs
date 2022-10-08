@@ -226,12 +226,12 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services
         private void InitializeEventHandlers()
         {
             nodeEventHandler = new NodeEventHandler(this);
-            tenantEventHandler = new TenantEventHandler(this, _tenantService, _tenantFactory);
-            productEventHandler = new ProductEventHandler(this, _tenantService, _tenantFactory);
-            componentEventHandler = new ComponentEventHandler(this, _tenantService, _tenantFactory);
-            topicEventHandler = new TopicEventHandler(this, _tenantService, _tenantFactory);
-            subscriptionEventHandler = new SubscriptionEventHandler(this, _tenantService, _subscriptionFactory);
-            producerEventHandler = new ProducerEventHandler(this, _producerHubRepository, _producerFactory);
+            tenantEventHandler = new TenantEventHandler(this, _tenantService, _tenantFactory, _coreService);
+            productEventHandler = new ProductEventHandler(this, _tenantService, _tenantFactory, _coreService);
+            componentEventHandler = new ComponentEventHandler(this, _tenantService, _tenantFactory, _coreService);
+            topicEventHandler = new TopicEventHandler(this, _tenantService, _tenantFactory, _coreService);
+            subscriptionEventHandler = new SubscriptionEventHandler(this, _tenantService, _subscriptionFactory, _coreService);
+            producerEventHandler = new ProducerEventHandler(this, _producerHubRepository, _producerFactory, _coreService);
             consumerEventHandler = new ConsumerEventHandler(this, _subscriptionHubRepository, _subscriptionFactory, _consumerFactory);
             messageEventHandler = new MessageEventHandler(this, _inboundMessageService, _nodeConfiguration);
         }

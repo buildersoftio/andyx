@@ -14,10 +14,12 @@ using Buildersoft.Andy.X.Model.Configurations;
 using Buildersoft.Andy.X.Model.Consumers.Events;
 using Buildersoft.Andy.X.Model.Entities.Clusters;
 using Buildersoft.Andy.X.Utility.Extensions.Helpers;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using EntityMessage = Buildersoft.Andy.X.Model.Entities.Storages.Message;
 
 namespace Buildersoft.Andy.X.Core.Services.Inbound
@@ -191,15 +193,39 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
 
         private void InboundClusterMessagingProcessor(string nodeId, Guid threadId)
         {
+            var nodeReplica = _clusterRepository.GetMainReplicaConnection(nodeId);
+            var sharedDistributionType = _clusterRepository.GetCluster().ShardDistributionType;
+            var clusterService = _orchestratorService.GetClusterDataService(nodeId);
+
             while (_clusterAsyncConnectors[nodeId].MessagesBuffer.TryDequeue(out var message))
             {
                 try
                 {
-                    _orchestratorService.GetClusterDataService(nodeId).Put(message.Entry.ToString(), message);
+                    // Here if the cluster distributed type is ASYNC, store into async
+                    if (sharedDistributionType == DistributionTypes.Async)
+                    {
+                        clusterService.Put(message.Entry.ToString(), message);
+                        continue;
+                    }
+
+                    // Send directly to the node, if the node is connected.
+                    if (nodeReplica.NodeConnectionId != "")
+                    {
+                        _clusterHubService
+                            .DistributeMessage_ToNode(nodeReplica.NodeId, nodeReplica.NodeConnectionId, message);
+
+                        // simulate deletion for the cluster state
+                        nodeReplica.NodeEntryState.MarkDeleteEntryPosition = nodeReplica.NodeEntryState.MarkDeleteEntryPosition + 1;
+
+                        continue;
+                    }
+
+                    // store for async communication, because the node was not working at that time.
+                    clusterService.Put(message.Entry.ToString(), message);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"An error accured while storing in {nodeId} cluster temp storage, read details {ex.Message}");
+                    _logger.LogError($"An error accured while storing in {nodeId} cluster temp storage or in-memory, read details {ex.Message}");
                 }
             }
 

@@ -102,7 +102,7 @@ namespace Buildersoft.Andy.X.Controllers
             var isCreated = _coreService.CreateProduct(tenant, product, description, productSettings.IsAuthorizationEnabled);
             if (isCreated == true)
             {
-                _tenantStateService.AddProduct(tenant, product, _tenantFactory.CreateProduct(product, description));
+                _tenantStateService.AddProduct(tenant, product, _tenantFactory.CreateProduct(product, description), false);
                 return Ok("Product has been created");
             }
 

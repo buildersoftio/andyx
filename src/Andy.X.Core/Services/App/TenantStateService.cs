@@ -109,7 +109,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
             }
         }
 
-        public bool AddTopic(string tenant, string product, string component, string topicName, Topic topic, bool notifyOtherNodes = true)
+        public bool AddTopic(string tenant, string product, string component, string topicName, Topic topic, bool storeProductIntoCore = true)
         {
             if (_tenantStateRepository.GetTenants().ContainsKey(tenant))
                 if (_tenantStateRepository.GetTenants()[tenant].Products.ContainsKey(product))
@@ -129,11 +129,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 if (componentDetails == null)
                     return false;
 
-                if (TenantIOService.TryCreateTopicDirectory(tenant, product, component, topicName) == true)
-                {
-                    if (notifyOtherNodes == true)
-                        _clusterHubService.CreateTopic_AllNodes(tenant, product, component, topic);
-                }
+                TenantIOService.TryCreateTopicDirectory(tenant, product, component, topicName);
 
                 // Open connection with topic log data.
                 using (var topicStateContext = new TopicEntryPositionContext(tenant, product, component, topicName))
@@ -161,16 +157,17 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 string topicKey = ConnectorHelper.GetTopicConnectorKey(tenant, product, component, topicName);
                 _inboundMessageService.TryCreateTopicConnector(topicKey, 1);
 
-                var isCreated = _coreService.CreateTopic(tenant, product, component, topicName, topic.Description);
+                bool isCreated = true;
+                if (storeProductIntoCore)
+                    isCreated = _coreService.CreateTopic(tenant, product, component, topicName, topic.Description);
 
                 _orchestratorService.InitializeTopicDataService(tenant, product, component, topic);
 
-                // We are not initializing the readonly when the topic is created, beacuse of memory leak.
-                //_orchestratorService.InitializeTopicReadonlyDataService(tenant, product, component, topic);
-
-                var topicDetails = _coreRepository.GetTopic(componentDetails.Id, topicName);
-                if (topicDetails != null)
-                    return false;
+                // TODO: I think this block here is useless
+                // UPDATE: this block of code is commented
+                //var topicDetails = _coreRepository.GetTopic(componentDetails.Id, topicName);
+                //if (topicDetails != null)
+                //    return false;
 
                 return isCreated;
             }
@@ -238,7 +235,7 @@ namespace Buildersoft.Andy.X.Core.Services.App
         }
 
 
-        public bool AddComponent(string tenant, string product, string componentName, Component component, bool notifyOtherNodes = true)
+        public bool AddComponent(string tenant, string product, string componentName, Component component, bool storeProductIntoCore = true)
         {
             if (_tenantStateRepository.GetTenants().ContainsKey(tenant))
                 if (_tenantStateRepository.GetTenants()[tenant].Products.ContainsKey(product))
@@ -253,27 +250,26 @@ namespace Buildersoft.Andy.X.Core.Services.App
                 if (productDetails == null)
                     return false;
 
-                if (TenantIOService.TryCreateComponentDirectory(tenant, product, componentName) == true)
-                {
-                    if (notifyOtherNodes == true)
-                        _clusterHubService.CreateComponent_AllNodes(tenant, product, component);
-                }
+                TenantIOService.TryCreateComponentDirectory(tenant, product, componentName);
 
                 var componentDetails = _coreRepository.GetComponent(tenantDetails.Id, productDetails.Id, componentName);
                 if (componentDetails != null)
                     return true;
 
 
-                return _coreService.CreateComponent(tenant, product, componentName, component.Description,
-                    component.Settings.IsTopicAutomaticCreationAllowed, component.Settings.EnforceSchemaValidation,
-                    component.Settings.IsAuthorizationEnabled, component.Settings.IsSubscriptionAutomaticCreationAllowed,
-                    component.Settings.IsProducerAutomaticCreationAllowed);
+                if (storeProductIntoCore)
+                    return _coreService.CreateComponent(tenant, product, componentName, component.Description,
+                        component.Settings.IsTopicAutomaticCreationAllowed, component.Settings.EnforceSchemaValidation,
+                        component.Settings.IsAuthorizationEnabled, component.Settings.IsSubscriptionAutomaticCreationAllowed,
+                        component.Settings.IsProducerAutomaticCreationAllowed);
+
+                return true;
             }
 
             return false;
         }
 
-        public bool AddProduct(string tenant, string productName, Product product, bool notifyOtherNodes = true)
+        public bool AddProduct(string tenant, string productName, Product product, bool storeProductIntoCore = true)
         {
             if (_tenantStateRepository.GetTenants().ContainsKey(tenant))
                 _tenantStateRepository.GetTenants()[tenant].Products.TryAdd(productName, product);
@@ -282,17 +278,16 @@ namespace Buildersoft.Andy.X.Core.Services.App
             var tenantDetail = _coreRepository.GetTenant(tenant);
             if (tenantDetail != null)
             {
-                if (TenantIOService.TryCreateProductDirectory(tenant, productName) == true)
-                {
-                    if (notifyOtherNodes == true)
-                        _clusterHubService.CreateProduct_AllNodes(tenant, product);
-                }
+                TenantIOService.TryCreateProductDirectory(tenant, productName);
 
                 var productDetails = _coreRepository.GetProduct(tenantDetail.Id, productName);
                 if (productDetails != null)
                     return true;
 
-                return _coreService.CreateProduct(tenant, productName, product.Description);
+                if (storeProductIntoCore)
+                    return _coreService.CreateProduct(tenant, productName, product.Description);
+
+                return true;
             }
 
             return false;

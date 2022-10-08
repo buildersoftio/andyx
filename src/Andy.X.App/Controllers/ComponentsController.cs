@@ -108,14 +108,14 @@ namespace Buildersoft.Andy.X.Controllers
             if (componentDetails is not null)
                 return BadRequest($"Component already exists");
 
-            var isCreated = _coreService.CreateComponent(tenant, product, component, description, 
+            var isCreated = _coreService.CreateComponent(tenant, product, component, description,
                 componentSettings.IsTopicAutomaticCreationAllowed, componentSettings.EnforceSchemaValidation,
                 componentSettings.IsAuthorizationEnabled, componentSettings.IsSubscriptionAutomaticCreationAllowed,
                 componentSettings.IsProducerAutomaticCreationAllowed);
 
             if (isCreated == true)
             {
-                _tenantStateService.AddComponent(tenant, product, component, _tenantFactory.CreateComponent(component, description, componentSettings));
+                _tenantStateService.AddComponent(tenant, product, component, _tenantFactory.CreateComponent(component, description, componentSettings), false);
                 return Ok("Component has been created");
             }
 
@@ -224,10 +224,9 @@ namespace Buildersoft.Andy.X.Controllers
             if (componentDetails is null)
                 return NotFound($"Component {component} does not exists in {tenant}/{product}");
 
-            var isUpdated = _coreService.UpdateComponentSettings(tenant, product, component, componentSettings.IsTopicAutomaticCreationAllowed, componentSettings.EnforceSchemaValidation, componentSettings.IsAuthorizationEnabled, componentSettings.IsSubscriptionAutomaticCreationAllowed);
+            var isUpdated = _coreService.UpdateComponentSettings(tenant, product, component, componentSettings.IsTopicAutomaticCreationAllowed, componentSettings.EnforceSchemaValidation, componentSettings.IsAuthorizationEnabled, componentSettings.IsSubscriptionAutomaticCreationAllowed, componentSettings.IsProducerAutomaticCreationAllowed);
             if (isUpdated == true)
                 return Ok("Component settings have been updated, product in the tenant is marked to refresh settings, this may take a while");
-
 
             return BadRequest("Something went wrong, component settings couldnot be updated");
         }

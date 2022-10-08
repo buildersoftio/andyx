@@ -1,6 +1,5 @@
 ﻿using Buildersoft.Andy.X.Model.App.Topics;
 using Buildersoft.Andy.X.Model.Entities.Core.Topics;
-using System;
 
 namespace Buildersoft.Andy.X.Model.Clusters.Events
 {
@@ -10,11 +9,8 @@ namespace Buildersoft.Andy.X.Model.Clusters.Events
         public string Product { get; set; }
         public string Component { get; set; }
 
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public TopicStates TopicStates { get; set; }
-
+        public Entities.Core.Topics.Topic Topic { get; set; }
+        public TopicSettings TopicSettings { get; set; }
     }
 
     public class TopicUpdatedArgs

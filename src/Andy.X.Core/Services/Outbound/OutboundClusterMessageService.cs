@@ -62,14 +62,12 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
             var nodeReplica = _clusterRepository.GetMainReplicaConnection(nodeId);
             if (nodeReplica.NodeEntryState.CurrentEntry != nodeReplica.NodeEntryState.MarkDeleteEntryPosition)
                 SendAllMessages(nodeReplica);
-
         }
 
         private void SendAllMessages(ReplicaShardConnection nodeReplica)
         {
             while (nodeReplica.NodeEntryState.CurrentEntry != nodeReplica.NodeEntryState.MarkDeleteEntryPosition)
             {
-
                 if (nodeReplica.NodeConnectionId == "")
                     break;
 
@@ -86,7 +84,6 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                 nodeReplica.NodeEntryState.MarkDeleteEntryPosition = nodeReplica.NodeEntryState.MarkDeleteEntryPosition + 1;
             }
         }
-
 
         public void StopService(string nodeId)
         {

@@ -10,6 +10,8 @@ namespace Buildersoft.Andy.X.Model.Clusters.Events
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+
+        public ProductSettings ProductSettings { get; set; }
     }
     public class ProductUpdatedArgs
     {
@@ -28,7 +30,7 @@ namespace Buildersoft.Andy.X.Model.Clusters.Events
     {
         public string Tenant { get; set; }
         public string Product { get; set; }
-        public Entities.Core.Products.ProductToken ProductToken { get; set; }
+        public ProductToken ProductToken { get; set; }
     }
     public class ProductTokenRevokedArgs
     {

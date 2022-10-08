@@ -30,7 +30,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Clusters
         Task DeleteTenantRetention_AllNodes(string tenant, TenantRetention tenantRetention);
 
 
-        Task CreateProduct_AllNodes(string tenant, Model.App.Products.Product product);
+        Task CreateProduct_AllNodes(string tenant, Product product, ProductSettings productSettings);
         Task UpdateProduct_AllNodes(string tenant, string product, ProductSettings productSettings);
         Task DeleteProduct_AllNodes(string tenant, string product);
 
@@ -39,7 +39,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Clusters
         Task DeleteProductRetention_AllNodes(string tenant, string product, ProductRetention productRetention);
 
 
-        Task CreateComponent_AllNodes(string tenant, string product, Component component);
+        Task CreateComponent_AllNodes(string tenant, string product, Model.Entities.Core.Components.Component component, ComponentSettings componentSettings);
         Task UpdateComponent_AllNodes(string tenant, string product, string component, ComponentSettings componentSettings);
         Task DeleteComponent_AllNodes(string tenant, string product, string component);
 
@@ -47,7 +47,7 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services.Clusters
         Task UpdateComponentRetention_AllNodes(string tenant, string product, string component, ComponentRetention componentRetention);
         Task DeleteComponentRetention_AllNodes(string tenant, string product, string component, ComponentRetention componentRetention);
 
-        Task CreateTopic_AllNodes(string tenant, string product, string component, Model.App.Topics.Topic topic);
+        Task CreateTopic_AllNodes(string tenant, string product, string component, Model.Entities.Core.Topics.Topic topic, TopicSettings topicSettings);
         Task UpdateTopic_AllNodes(string tenant, string product, string component, string topic, TopicSettings topicSettings);
         Task DeleteTopic_AllNodes(string tenant, string product, string component, string topic);
 

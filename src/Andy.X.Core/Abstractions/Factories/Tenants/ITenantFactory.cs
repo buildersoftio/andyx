@@ -2,8 +2,6 @@
 using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
-using System;
-using System.Collections.Generic;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants
 {

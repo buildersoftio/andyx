@@ -13,6 +13,7 @@ using Buildersoft.Andy.X.Model.Entities.Subscriptions;
 using Buildersoft.Andy.X.Model.Subscriptions;
 using Buildersoft.Andy.X.Router.Hubs.Clusters;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -92,25 +93,27 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             });
         }
 
-        public Task CreateComponent_AllNodes(string tenant, string product, Component component)
+        public Task CreateComponent_AllNodes(string tenant, string product, Model.Entities.Core.Components.Component component, ComponentSettings componentSettings)
         {
             return _hub.Clients.All.ComponentCreatedAsync(new Model.Clusters.Events.ComponentCreatedArgs()
             {
                 Name = component.Name,
                 Tenant = tenant,
                 Product = product,
-                Settings = component.Settings,
+                Component = component,
+                Settings = componentSettings,
             });
         }
 
-        public Task CreateProduct_AllNodes(string tenant, Model.App.Products.Product product)
+        public Task CreateProduct_AllNodes(string tenant, Product product, ProductSettings productSettings)
         {
             return _hub.Clients.All.ProductCreatedAsync(new Model.Clusters.Events.ProductCreatedArgs()
             {
                 Tenant = tenant,
 
                 Description = product.Description,
-                Name = product.Name
+                Name = product.Name,
+                ProductSettings = productSettings
             });
         }
 
@@ -147,7 +150,7 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
             });
         }
 
-        public Task CreateTopic_AllNodes(string tenant, string product, string component, Model.App.Topics.Topic topic)
+        public Task CreateTopic_AllNodes(string tenant, string product, string component, Model.Entities.Core.Topics.Topic topic, TopicSettings topicSettings)
         {
             return _hub.Clients.All.TopicCreatedAsync(new Model.Clusters.Events.TopicCreatedArgs()
             {
@@ -155,8 +158,8 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
                 Product = product,
                 Component = component,
 
-                Name = topic.Name,
-                TopicStates = topic.TopicStates
+                Topic = topic,
+                TopicSettings = topicSettings
             });
         }
 
@@ -370,7 +373,7 @@ namespace Buildersoft.Andy.X.Router.Services.Clusters
                 .SendMessageToMainShardAsync(clusterChangeLog);
         }
 
-        public Task CreateProductToken_AllNodes(string tenant, string product, Model.Entities.Core.Products.ProductToken productToken)
+        public Task CreateProductToken_AllNodes(string tenant, string product, ProductToken productToken)
         {
             return _hub.Clients.All.ProductTokenCreatedAsync(new Model.Clusters.Events.ProductTokenCreatedArgs()
             {

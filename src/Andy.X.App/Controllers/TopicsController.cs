@@ -123,7 +123,7 @@ namespace Buildersoft.Andy.X.Controllers
             var isCreated = _coreService.CreateTopic(tenant, product, component, topic, description, topicSettings);
             if (isCreated == true)
             {
-                _tenantStateService.AddTopic(tenant, product, component, topic, _tenantFactory.CreateTopic(topic, description));
+                _tenantStateService.AddTopic(tenant, product, component, topic, _tenantFactory.CreateTopic(topic, description), false);
                 return Ok($"Topic {topic} has been created");
             }
 

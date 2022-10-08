@@ -1,5 +1,6 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
+using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
 using System;
 
 namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
@@ -9,12 +10,17 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
         private readonly NodeClusterEventService _nodeClusterEventService;
         private readonly ITenantStateService _tenantService;
         private readonly ISubscriptionFactory _subscriptionFactory;
+        private readonly ICoreService _coreService;
 
-        public SubscriptionEventHandler(NodeClusterEventService nodeClusterEventService, ITenantStateService tenantService, ISubscriptionFactory subscriptionFactory)
+        public SubscriptionEventHandler(NodeClusterEventService nodeClusterEventService,
+            ITenantStateService tenantService,
+            ISubscriptionFactory subscriptionFactory,
+            ICoreService coreService)
         {
             _nodeClusterEventService = nodeClusterEventService;
             _tenantService = tenantService;
             _subscriptionFactory = subscriptionFactory;
+            _coreService = coreService;
 
             InitializeEvents();
         }
@@ -46,7 +52,14 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 
         private void NodeClusterEventService_SubscriptionDeleted(Model.Clusters.Events.SubscriptionDeletedArgs obj)
         {
-            // TODO: Not implemented.
+            try
+            {
+                _coreService.DeleteSubscription(obj.Tenant, obj.Product, obj.Component, obj.Topic, obj.SubscriptionName, notifyCluster: false);
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
         private void NodeClusterEventService_SubscriptionCreated(Model.Clusters.Events.SubscriptionCreatedArgs obj)
@@ -60,6 +73,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
             }
             catch (Exception)
             {
+
             }
         }
     }
