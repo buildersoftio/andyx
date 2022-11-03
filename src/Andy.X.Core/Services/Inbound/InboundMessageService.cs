@@ -70,7 +70,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             _clusterAsyncConnectors = new ConcurrentDictionary<string, DataConnector<ClusterChangeLog>>();
         }
 
-        public void AcceptMessage(Message message, string nodeId = "DYNAMIC")
+        public void AcceptMessage(Message message, string nodeId = "")
         {
             var topic = _tenantStateRepository.GetTopic(message.Tenant, message.Product, message.Component, message.Topic);
             var topicKey = ConnectorHelper.GetTopicConnectorKey(message.Tenant, message.Product, message.Component, message.Topic);
@@ -86,7 +86,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
 
             // dynamic.
             ReplicaShardConnection node = null;
-            if (nodeId == "DYNAMIC")
+            if (nodeId == "")
             {
                 node = _clusterRepository.GetMainReplicaConnectionByIndex(_topicConnectors[topicKey].GetNextCurrentClusterShardId());
                 nodeId = node.NodeId;

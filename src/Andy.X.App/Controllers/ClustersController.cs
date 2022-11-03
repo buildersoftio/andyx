@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Net.Mime;
-using System.Security.Claims;
 
 namespace Buildersoft.Andy.X.Controllers
 {

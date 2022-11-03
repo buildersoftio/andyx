@@ -11,7 +11,7 @@ namespace Buildersoft.Andy.X.Model.Entities.Storages
         public long Entry { get; set; }
 
         [Key(1)]
-        public string MessageId { get; set; }
+        public byte[] MessageId { get; set; }
 
         [Key(2)]
         public Dictionary<string, string> Headers { get; set; }

@@ -9,6 +9,6 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Hubs.Producers
         Task ProducerConnected(ProducerConnectedDetails producerConnectedDetails);
         Task ProducerDisconnected(ProducerDisconnectedDetails producerDisconnectedDetails);
 
-        Task MessageStored(object messageStoredDetails);
+        Task MessageAccepted(MessageAcceptedDetails messageAcceptedDetails);
     }
 }

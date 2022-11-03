@@ -238,6 +238,16 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         public void TransmitMessage(Message message)
         {
             _inboundMessageService.AcceptMessage(message);
+
+            if (message.RequiresCallback == true)
+            {
+                Clients.Caller.MessageAccepted(new Model.Producers.Events.MessageAcceptedDetails()
+                {
+                    IdentityId = message.IdentityId,
+                    MessageCount = 1,
+                    AcceptedDate = DateTimeOffset.UtcNow
+                });
+            }
         }
 
         public void TransmitMessages(List<Message> messages)
@@ -245,6 +255,16 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
             foreach (var message in messages)
             {
                 _inboundMessageService.AcceptMessage(message);
+            }
+
+            if (messages[0].RequiresCallback == true)
+            {
+                Clients.Caller.MessageAccepted(new Model.Producers.Events.MessageAcceptedDetails()
+                {
+                    IdentityId = messages[0].IdentityId,
+                    MessageCount = messages.Count,
+                    AcceptedDate = DateTimeOffset.UtcNow
+                });
             }
         }
     }

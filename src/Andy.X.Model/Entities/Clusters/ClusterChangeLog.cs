@@ -36,7 +36,7 @@ namespace Buildersoft.Andy.X.Model.Entities.Clusters
 
         [ProtoMember(7)]
         [Key(6)]
-        public string Id { get; set; }
+        public byte[] Id { get; set; }
         [ProtoMember(8)]
 
         [Key(7)]

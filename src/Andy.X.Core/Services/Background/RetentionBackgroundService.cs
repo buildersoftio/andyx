@@ -67,7 +67,7 @@ namespace Buildersoft.Andy.X.Core.Services.Background
             _backgroundTimer.Elapsed += BackgroundTimer_Elapsed;
             StartService();
 
-            logger.LogInformation($"Background service for retention at {tenant}/{product}/{component}/{topic} has been initiaized");
+            logger.LogInformation($"Retention service for {tenant}/{product}/{component}/{topic} is initiaized");
         }
 
         private void BackgroundTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -254,7 +254,7 @@ namespace Buildersoft.Andy.X.Core.Services.Background
         {
             tenantRetentions = tenantRetentions.OrderBy(a => a.Type).ToList();
             var topic = _tenantStateRepository.GetTopic(_tenant, _product, _component, _topic);
-            
+
             var subscriptions = _coreRepository.GetSubscriptions(topicFromConfig.Id).Select(x => x.Name);
 
             foreach (var retention in tenantRetentions)
