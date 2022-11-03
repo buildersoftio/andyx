@@ -37,7 +37,7 @@ namespace Buildersoft.Andy.X.Router.Services.Subscriptions
             if (subscription.SubscriptionType == SubscriptionType.Unique
                 || subscription.SubscriptionType == SubscriptionType.Failover)
             {
-                await SendMessage(tenant, product, component, topic, message, subscription.ConsumersConnected.First().Key);
+                await SendMessage(message, subscription.ConsumersConnected.First().Key);
             }
             else
             {
@@ -45,21 +45,16 @@ namespace Buildersoft.Andy.X.Router.Services.Subscriptions
                 if (subscription.CurrentConnectionIndex >= subscription.ConsumersConnected.Count)
                     subscription.CurrentConnectionIndex = 0;
 
-                await SendMessage(tenant, product, component, topic, message, subscription.ConsumersConnected.ElementAt(subscription.CurrentConnectionIndex).Key);
+                await SendMessage(message, subscription.ConsumersConnected.ElementAt(subscription.CurrentConnectionIndex).Key);
 
                 subscription.CurrentConnectionIndex++;
             }
         }
 
-        private async Task SendMessage(string tenant, string product, string component, string topic, Message message, string consumerKey)
+        private async Task SendMessage(Message message, string consumerKey)
         {
             await _hub.Clients.Client(consumerKey).MessageSent(new MessageSentDetails()
             {
-                Tenant = tenant,
-                Product = product,
-                Component = component,
-                Topic = topic,
-
                 EntryId = message.Entry,
                 NodeId = message.NodeId,
 

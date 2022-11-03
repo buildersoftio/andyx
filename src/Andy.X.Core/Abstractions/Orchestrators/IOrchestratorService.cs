@@ -1,6 +1,9 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
 using Buildersoft.Andy.X.Model.App.Topics;
+using Buildersoft.Andy.X.Model.Clusters;
+using Buildersoft.Andy.X.Model.Entities.Clusters;
 using Buildersoft.Andy.X.Model.Entities.Storages;
+using System.Collections.Concurrent;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Orchestrators
 {
@@ -22,5 +25,10 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Orchestrators
         // Read Subscription Unacknowledged Message to RocksDb
         ITopicReadonlyDataService<UnacknowledgedMessage> GetSubscriptionUnackedReadonlyDataService(string subscriptionKey);
         bool InitializeSubscriptionUnackedReadonlyDataService(string tenant, string product, string component, string topic, string subscription);
+
+        // Data services for Cluster
+        ITopicDataService<ClusterChangeLog> GetClusterDataService(string nodeId);
+        ConcurrentDictionary<string, ITopicDataService<ClusterChangeLog>> GetClusterDataServices();
+        void InitializeClusterDataService(Replica replica);
     }
 }

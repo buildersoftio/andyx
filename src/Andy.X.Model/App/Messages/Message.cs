@@ -29,7 +29,7 @@ namespace Buildersoft.Andy.X.Model.App.Messages
 
         [ProtoMember(6)]
         [Key(5)]
-        public string Id { get; set; }
+        public byte[] Id { get; set; }
         [ProtoMember(7)]
         [Key(6)]
         public byte[] Payload { get; set; }
@@ -38,11 +38,26 @@ namespace Buildersoft.Andy.X.Model.App.Messages
         [Key(7)]
         public DateTimeOffset SentDate { get; set; }
 
+        [ProtoMember(9)]
+        [Key(8)]
+        public Guid IdentityId { get; set; }
+
+        [ProtoMember(10)]
+        [Key(9)]
+        public string NodeId { get; set; }
+
+        [ProtoMember(11)]
+        [Key(10)]
+        public bool RequiresCallback { get; set; }
+
         public Message()
         {
             // if this property is not coming from Andy X Client
             SentDate = DateTimeOffset.UtcNow;
             Headers = new Dictionary<string, string>();
+            NodeId = "";
+
+            RequiresCallback = false;
         }
     }
 }

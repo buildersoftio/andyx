@@ -9,8 +9,9 @@ using Buildersoft.Andy.X.Core.Abstractions.Services.Data;
 using Buildersoft.Andy.X.Core.Services.Data;
 using Buildersoft.Andy.X.Model.Entities.Storages;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
-using Buildersoft.Andy.X.Core.Abstractions.Services;
 using Buildersoft.Andy.X.Core.Abstractions.Repositories;
+using Buildersoft.Andy.X.Model.Clusters;
+using Buildersoft.Andy.X.Model.Entities.Clusters;
 
 namespace Buildersoft.Andy.X.Router.Services.Orchestrators
 {
@@ -28,6 +29,8 @@ namespace Buildersoft.Andy.X.Router.Services.Orchestrators
 
         private readonly ConcurrentDictionary<string, ITopicDataService<UnacknowledgedMessage>> _subscriptionUnackedDataServices;
         private readonly ConcurrentDictionary<string, ITopicReadonlyDataService<UnacknowledgedMessage>> _subscriptionUnackedReadonlyDataServices;
+
+        private readonly ConcurrentDictionary<string, ITopicDataService<ClusterChangeLog>> _nodesDataServices;
 
         public OrchestratorService(
             ILoggerFactory logger,
@@ -49,6 +52,8 @@ namespace Buildersoft.Andy.X.Router.Services.Orchestrators
 
             _subscriptionUnackedDataServices = new ConcurrentDictionary<string, ITopicDataService<UnacknowledgedMessage>>();
             _subscriptionUnackedReadonlyDataServices = new ConcurrentDictionary<string, ITopicReadonlyDataService<UnacknowledgedMessage>>();
+
+            _nodesDataServices = new ConcurrentDictionary<string, ITopicDataService<ClusterChangeLog>>();
         }
 
         public ITopicDataService<Message> GetTopicDataService(string topicKey)
@@ -129,6 +134,29 @@ namespace Buildersoft.Andy.X.Router.Services.Orchestrators
                 return null;
 
             return _subscriptionUnackedReadonlyDataServices[subscriptionKey];
+        }
+
+        public ITopicDataService<ClusterChangeLog> GetClusterDataService(string nodeId)
+        {
+            if (_nodesDataServices.ContainsKey(nodeId) != true)
+                return null;
+
+            return _nodesDataServices[nodeId];
+        }
+
+        public void InitializeClusterDataService(Replica replica)
+        {
+            // Initialize NodeRocksDbService
+            if (_nodesDataServices.ContainsKey(replica.NodeId) != true)
+            {
+                var clusterDataService = new ClusterRocksDbDataService(_loggerFactory, replica, _storageConfiguration);
+                _nodesDataServices.TryAdd(replica.NodeId, clusterDataService);
+            }
+        }
+
+        public ConcurrentDictionary<string, ITopicDataService<ClusterChangeLog>> GetClusterDataServices()
+        {
+            return _nodesDataServices;
         }
     }
 }

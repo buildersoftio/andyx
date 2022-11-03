@@ -5,23 +5,24 @@ using System.Timers;
 
 namespace Buildersoft.Andy.X.Core.Services.Inbound.Connectors
 {
-    public class TopicDataConnector
+    public class DataConnector<T>
     {
         public delegate void StoringCurrentEntryPositionHandler(object sender, string topicKey);
         public event StoringCurrentEntryPositionHandler StoringCurrentEntryPosition;
 
-
         public ThreadPool MessageStoreThreadingPool { get; set; }
-        public ConcurrentQueue<Model.Entities.Storages.Message> MessagesBuffer { get; set; }
+        public ConcurrentQueue<T> MessagesBuffer { get; set; }
 
         private readonly string _topicKey;
         private readonly int _threadsCount;
 
+        private int currentClusterShardIndex = 0;
+        private int countClusterShards = 1;
 
         private readonly Timer releaseMemoryTimer;
         private readonly Timer currentPositionTimer;
 
-        public TopicDataConnector(string topicKey, int threadsCount, int inboundMemoryReleaseInMillisec, int inboundFlashCurrentEntryPositionInMillisec)
+        public DataConnector(string topicKey, int threadsCount, int inboundMemoryReleaseInMillisec, int inboundFlashCurrentEntryPositionInMillisec)
         {
             releaseMemoryTimer = new Timer() { Interval = inboundMemoryReleaseInMillisec, AutoReset = true };
             releaseMemoryTimer.Elapsed += ReleaseMemoryTimer_Elapsed;
@@ -33,7 +34,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound.Connectors
             _topicKey = topicKey;
             _threadsCount = threadsCount;
 
-            MessagesBuffer = new ConcurrentQueue<Model.Entities.Storages.Message>();
+            MessagesBuffer = new ConcurrentQueue<T>();
             MessageStoreThreadingPool = new ThreadPool(threadsCount);
 
             releaseMemoryTimer.Start();
@@ -63,5 +64,28 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound.Connectors
             }
         }
 
+        public int GetCurrentClusterShardIndex()
+        {
+            return currentClusterShardIndex;
+        }
+
+        public int GetNextCurrentClusterShardId()
+        {
+            currentClusterShardIndex++;
+            if (currentClusterShardIndex == countClusterShards)
+                currentClusterShardIndex = 0;
+
+            return currentClusterShardIndex;
+        }
+
+        public int GetClusterShardCount()
+        {
+            return countClusterShards;
+        }
+
+        public void SetClusterShardCount(int count)
+        {
+            countClusterShards = count;
+        }
     }
 }

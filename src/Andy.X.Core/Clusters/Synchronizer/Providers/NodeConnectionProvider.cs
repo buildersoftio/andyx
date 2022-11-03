@@ -42,7 +42,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Providers
                 .WithUrl(nodeServiceUrl, option =>
                 {
                     // here we gooo...!
-                    if (_replica.ConnectionType == Buildersoft.Andy.X.Model.NodeConnectionType.NON_SSL)
+                    if (_replica.ConnectionType == Model.NodeConnectionType.NON_SSL)
                     {
                         // skip ssl
                         option.HttpMessageHandlerFactory = (message) =>
@@ -88,7 +88,7 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Providers
         private string CreateNodeEndpoint(Replica replica)
         {
             string endpoint = "http://";
-            if (replica.ConnectionType == Buildersoft.Andy.X.Model.NodeConnectionType.SSL)
+            if (replica.ConnectionType == Model.NodeConnectionType.SSL)
                 endpoint = "https://";
 
             endpoint += $"{replica.Host}:{replica.Port}/realtime/v3/cluster";

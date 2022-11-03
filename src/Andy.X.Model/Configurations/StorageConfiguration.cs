@@ -35,6 +35,17 @@
         public int DefaultMaxBackgroundCompactionsThreads { get; set; }
         public int DefaultMaxBackgroundFlushesThreads { get; set; }
 
+
+        // Flushing options for clustering
+        public ulong ClusterWriteBufferSizeInBytes { get; set; }
+        public int ClusterMaxWriteBufferNumber { get; set; }
+        public int ClusterMaxWriteBufferSizeToMaintain { get; set; }
+        public int ClusterMinWriteBufferNumberToMerge { get; set; }
+        public int ClusterMaxBackgroundCompactionsThreads { get; set; }
+        public int ClusterMaxBackgroundFlushesThreads { get; set; }
+
+
+
         public int RetentionBackgroundServiceIntervalInMinutes { get; set; }
         public int RetentionBulkMessagesCountToAnalyze { get; set; }
 
@@ -65,6 +76,15 @@
 
             DefaultMaxBackgroundCompactionsThreads = 1;
             DefaultMaxBackgroundFlushesThreads = 1;
+
+            // Cluster
+            //128MB
+            ClusterWriteBufferSizeInBytes = 128000000;
+            ClusterMaxWriteBufferNumber = 4;
+            ClusterMaxWriteBufferSizeToMaintain = 0;
+            ClusterMinWriteBufferNumberToMerge = 2;
+            ClusterMaxBackgroundCompactionsThreads = 2;
+            ClusterMaxBackgroundFlushesThreads = 1;
 
             //default interval for retention background service
             RetentionBackgroundServiceIntervalInMinutes = 30;

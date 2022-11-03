@@ -82,12 +82,27 @@ namespace Buildersoft.Andy.X.Router.Repositories.Producers
 
             foreach (var sub in _producers)
             {
-                results.Add(new ProducerActivity()
+                var producerInResults = results
+                    .Where(x => x.Name == sub.Value.ProducerName
+                    && x.Location == $"{sub.Value.Tenant}/{sub.Value.Product}/{sub.Value.Component}/{sub.Value.Topic}")
+                    .FirstOrDefault();
+
+                if (producerInResults != null)
                 {
-                    Name = sub.Value.ProducerName,
-                    Location = $"{sub.Value.Tenant}/{sub.Value.Product}/{sub.Value.Component}/{sub.Value.Topic}",
-                    IsActive = true
-                });
+                    producerInResults.InstancesCount++;
+
+                }
+                else
+                {
+                    results.Add(new ProducerActivity()
+                    {
+                        Name = sub.Value.ProducerName,
+                        Tenant = sub.Value.Tenant,
+                        Location = $"{sub.Value.Tenant}/{sub.Value.Product}/{sub.Value.Component}/{sub.Value.Topic}",
+                        IsActive = true,
+                        InstancesCount = 1
+                    });
+                }
             }
 
             return results;

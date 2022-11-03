@@ -10,9 +10,9 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Services
     public interface ITenantStateService
     {
         bool AddTenant(string tenantName, Tenant tenant, bool notifyOtherNodes = true);
-        bool AddProduct(string tenant, string productName, Product product, bool notifyOtherNodes = true);
-        bool AddComponent(string tenant, string product, string componentName, Component component, bool notifyOtherNodes = true);
-        bool AddTopic(string tenant, string product, string component, string topicName, Topic topic, bool notifyOtherNodes = true);
+        bool AddProduct(string tenant, string productName, Product product, bool storeProductIntoCore = true);
+        bool AddComponent(string tenant, string product, string componentName, Component component, bool storeProductIntoCore = true);
+        bool AddTopic(string tenant, string product, string component, string topicName, Topic topic, bool storeProductIntoCore = true);
 
         public bool AddSubscriptionConfiguration(string tenant, string product, string component, string topicName, string subscriptionName, Subscription subscription, bool notifyOtherNodes = true);
 

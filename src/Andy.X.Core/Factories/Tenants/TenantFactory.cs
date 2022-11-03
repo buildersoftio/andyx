@@ -52,7 +52,6 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
             };
         }
 
-
         public Component CreateComponent(string componentName)
         {
             return new Component()
@@ -84,7 +83,8 @@ namespace Buildersoft.Andy.X.Core.Factories.Tenants
             return new Topic()
             {
                 Name = topicName,
-                Description = description
+                Description = description,
+                TopicStates = new TopicStates()
             };
         }
     }

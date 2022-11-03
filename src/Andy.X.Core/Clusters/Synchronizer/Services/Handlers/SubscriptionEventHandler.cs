@@ -1,7 +1,7 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Buildersoft.Andy.X.Core.Abstractions.Services;
+using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
 using System;
-using System.Threading.Tasks;
 
 namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
 {
@@ -10,12 +10,17 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
         private readonly NodeClusterEventService _nodeClusterEventService;
         private readonly ITenantStateService _tenantService;
         private readonly ISubscriptionFactory _subscriptionFactory;
+        private readonly ICoreService _coreService;
 
-        public SubscriptionEventHandler(NodeClusterEventService nodeClusterEventService, ITenantStateService tenantService, ISubscriptionFactory subscriptionFactory)
+        public SubscriptionEventHandler(NodeClusterEventService nodeClusterEventService,
+            ITenantStateService tenantService,
+            ISubscriptionFactory subscriptionFactory,
+            ICoreService coreService)
         {
             _nodeClusterEventService = nodeClusterEventService;
             _tenantService = tenantService;
             _subscriptionFactory = subscriptionFactory;
+            _coreService = coreService;
 
             InitializeEvents();
         }
@@ -30,24 +35,31 @@ namespace Buildersoft.Andy.X.Core.Clusters.Synchronizer.Services.Handlers
             _nodeClusterEventService.CurrentEntryPositionUpdated += NodeClusterEventService_CurrentEntryPositionUpdated;
         }
 
-        private void NodeClusterEventService_CurrentEntryPositionUpdated(Buildersoft.Andy.X.Model.Clusters.Events.CurrentEntryPositionUpdatedArgs obj)
+        private void NodeClusterEventService_CurrentEntryPositionUpdated(Model.Clusters.Events.CurrentEntryPositionUpdatedArgs obj)
         {
             // TODO: Not implemented.
         }
 
-        private void NodeClusterEventService_SubscriptionPositionUpdated(Buildersoft.Andy.X.Model.Clusters.Events.SubscriptionPositionUpdatedArgs obj)
+        private void NodeClusterEventService_SubscriptionPositionUpdated(Model.Clusters.Events.SubscriptionPositionUpdatedArgs obj)
         {
             // TODO: Not implemented.
         }
 
-        private void NodeClusterEventService_SubscriptionUpdated(Buildersoft.Andy.X.Model.Clusters.Events.SubscriptionUpdatedArgs obj)
+        private void NodeClusterEventService_SubscriptionUpdated(Model.Clusters.Events.SubscriptionUpdatedArgs obj)
         {
             // TODO: Not implemented.
         }
 
         private void NodeClusterEventService_SubscriptionDeleted(Model.Clusters.Events.SubscriptionDeletedArgs obj)
         {
-            // TODO: Not implemented.
+            try
+            {
+                _coreService.DeleteSubscription(obj.Tenant, obj.Product, obj.Component, obj.Topic, obj.SubscriptionName, notifyCluster: false);
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
         private void NodeClusterEventService_SubscriptionCreated(Model.Clusters.Events.SubscriptionCreatedArgs obj)

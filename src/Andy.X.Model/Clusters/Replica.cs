@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using Buildersoft.Andy.X.Model.Entities.Storages;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace Buildersoft.Andy.X.Model.Clusters
 {
-
     public class Replica
     {
         public string NodeId { get; set; }
@@ -19,7 +19,9 @@ namespace Buildersoft.Andy.X.Model.Clusters
         [JsonConverter(typeof(StringEnumConverter))]
         public ReplicaTypes Type { get; set; }
 
+        [JsonIgnore]
         public bool IsConnected { get; set; }
+        [JsonIgnore]
         public bool IsLocal { get; set; }
 
 
@@ -30,8 +32,8 @@ namespace Buildersoft.Andy.X.Model.Clusters
 
         public Replica()
         {
-            NodeId = "standalone_01";
-            Type = ReplicaTypes.MainOrWorker;
+            NodeId = "andyx_standalone";
+            Type = ReplicaTypes.Main;
             ConnectionType = NodeConnectionType.NON_SSL;
 
             IsConnected = false;
@@ -43,5 +45,12 @@ namespace Buildersoft.Andy.X.Model.Clusters
     {
         public string NodeId { get; set; }
         public string NodeConnectionId { get; set; }
+
+        public TopicEntryPosition NodeEntryState { get; set; }
+
+        public ReplicaShardConnection()
+        {
+            NodeEntryState = new TopicEntryPosition();
+        }
     }
 }

@@ -8,30 +8,21 @@ namespace Buildersoft.Andy.X.Model.Consumers.Events
     public class MessageSentDetails
     {
         [Key(0)]
-        public string Tenant { get; set; }
-        [Key(1)]
-        public string Product { get; set; }
-        [Key(2)]
-        public string Component { get; set; }
-        [Key(3)]
-        public string Topic { get; set; }
-
-        [Key(4)]
         public long EntryId { get; set; }
 
-        [Key(5)]
+        [Key(1)]
         public string NodeId { get; set; }
 
-        [Key(6)]
+        [Key(2)]
         public Dictionary<string, string> Headers { get; set; }
 
-        [Key(7)]
-        public string MessageId { get; set; }
+        [Key(3)]
+        public byte[] MessageId { get; set; }
 
-        [Key(8)]
+        [Key(4)]
         public byte[] Payload { get; set; }
 
-        [Key(9)]
+        [Key(5)]
         public DateTimeOffset SentDate { get; set; }
     }
 }

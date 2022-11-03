@@ -6,7 +6,6 @@ namespace Buildersoft.Andy.X.Model.Clusters
 {
     public class Cluster
     {
-
         // in-memory properties
         public long InThroughputInMB { get; set; }
         public long OutThroughputInMB { get; set; }
@@ -24,13 +23,11 @@ namespace Buildersoft.Andy.X.Model.Clusters
 
         public Cluster()
         {
-            ShardDistributionType = DistributionTypes.Sync;
+            ShardDistributionType = DistributionTypes.Async;
             Shards = new List<Shard>();
             Status = ClusterStatus.Starting;
 
-
             // in-memory properties
-            // for testing now
             InThroughputInMB = 0;
             OutThroughputInMB = 0;
             ActiveDataIngestions = 0;
