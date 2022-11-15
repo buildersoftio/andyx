@@ -1,10 +1,12 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
 using Buildersoft.Andy.X.Core.Extensions;
 using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Utility.Extensions.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Buildersoft.Andy.X.Core.Services.App
 {
@@ -38,6 +40,17 @@ namespace Buildersoft.Andy.X.Core.Services.App
             Console.WriteLine($"                   Starting {ApplicationProperties.Name}...");
             Console.WriteLine("\n");
             logger.LogInformation($"Starting {ApplicationProperties.Name}...");
+            Console.WriteLine("");
+            logger.LogInformation($"Server environment:os.name: {GetOSName()}");
+            logger.LogInformation($"Server environment:os.platform: {Environment.OSVersion.Platform}");
+            logger.LogInformation($"Server environment:os.version: {Environment.OSVersion}");
+            logger.LogInformation($"Server environment:os.is64bit: {Environment.Is64BitOperatingSystem}");
+            logger.LogInformation($"Server environment:domain.user.name: {Environment.UserDomainName}");
+            logger.LogInformation($"Server environment:user.name: {Environment.UserName}");
+            logger.LogInformation($"Server environment:processor.count: {Environment.ProcessorCount}");
+            logger.LogInformation($"Server environment:dotnet.version: {Environment.Version}");
+            Console.WriteLine("");
+
             logger.LogInformation("Update settings");
             logger.LogInformation($"Node identifier is '{nodeConfiguration.NodeId}'");
 
@@ -71,6 +84,26 @@ namespace Buildersoft.Andy.X.Core.Services.App
                     else
                         Console.WriteLine($"                   Port exposed {url.Split(':').Last()}");
                 }
+            }
+        }
+
+        private static string GetOSName()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return "Windows";
+            }
+            else if (RuntimeInformation.IsOSPlatform(osPlatform: OSPlatform.OSX))
+            {
+                return "MacOS";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return "Linux";
+            }
+            else
+            {
+                return "NOT_SUPPORTED";
             }
         }
     }

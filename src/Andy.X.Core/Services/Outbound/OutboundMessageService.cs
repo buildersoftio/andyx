@@ -238,6 +238,9 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
 
                     subDbContext.CurrentPosition.Update(subPositon);
                     subDbContext.SaveChanges();
+
+                    // storing current position for subscription
+                    _logger.LogInformation($"Subscription subscriptionId={subscriptionTopicData.Subscription.SubscriptionName} at {subscriptionTopicData.Subscription.Tenant}/{subscriptionTopicData.Subscription.Product}/{subscriptionTopicData.Subscription.Component}/{subscriptionTopicData.Subscription.Topic} Seeking to entryPositon {subscriptionTopicData.CurrentPosition.ReadEntryPosition}");
                 }
             }
 

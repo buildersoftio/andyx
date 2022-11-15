@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<Version>3.0.0</Version>
 		<Company>Buildersoft</Company>
 		<Product>Buildersoft Andy</Product>
@@ -23,7 +23,7 @@
 
 	<ItemGroup>
 		<!--<PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />-->
-		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.2" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
 		<PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
 	</ItemGroup>
 

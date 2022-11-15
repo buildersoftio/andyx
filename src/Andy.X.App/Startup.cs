@@ -58,7 +58,10 @@ namespace Andy.X.App
                 {
                     opts.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 })
-                .AddMessagePackProtocol();
+                .AddMessagePackProtocol(opts =>
+                {
+                     
+                });
 
 
             services.AddSwaggerGen(c =>

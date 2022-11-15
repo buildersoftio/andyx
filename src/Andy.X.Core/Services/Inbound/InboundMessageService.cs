@@ -8,6 +8,7 @@ using Buildersoft.Andy.X.Core.Contexts.Clusters;
 using Buildersoft.Andy.X.Core.Contexts.Storages;
 using Buildersoft.Andy.X.Core.Mappers;
 using Buildersoft.Andy.X.Core.Services.Inbound.Connectors;
+using Buildersoft.Andy.X.Core.Services.Outbound.Connectors;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Clusters;
 using Buildersoft.Andy.X.Model.Configurations;
@@ -297,6 +298,9 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
 
                     topicStateContext.TopicStates.Update(currentData);
                     topicStateContext.SaveChanges();
+
+                    _logger.LogInformation($"Topic topicId={tenant}/{product}/{component}/{topic} Registering to writeEntryPositon {currentData.CurrentEntry}");
+
                 }
             }
         }
