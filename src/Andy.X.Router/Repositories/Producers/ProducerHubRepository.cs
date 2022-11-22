@@ -1,4 +1,5 @@
-﻿using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
+﻿using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
+using Buildersoft.Andy.X.IO.Services;
 using Buildersoft.Andy.X.Model.Producers;
 using Microsoft.Extensions.Logging;
 using System;
@@ -21,9 +22,9 @@ namespace Buildersoft.Andy.X.Router.Repositories.Producers
 
         public bool AddProducer(string connectionId, Producer producer)
         {
+            TenantIOService.TryCreateProducerDirectory(producer.Tenant, producer.Product, producer.Component, producer.Topic, producer.ProducerName);
             return _producers.TryAdd(connectionId, producer);
         }
-
         public List<string> GetAllProducers()
         {
             return _producers.Keys.ToList();
@@ -73,6 +74,38 @@ namespace Buildersoft.Andy.X.Router.Repositories.Producers
         public bool RemoveProducer(string connectionId)
         {
             return _producers.TryRemove(connectionId, out _);
+        }
+
+        public List<ProducerActivity> GetAllProducerActivities()
+        {
+            var results = new List<ProducerActivity>();
+
+            foreach (var sub in _producers)
+            {
+                var producerInResults = results
+                    .Where(x => x.Name == sub.Value.ProducerName
+                    && x.Location == $"{sub.Value.Tenant}/{sub.Value.Product}/{sub.Value.Component}/{sub.Value.Topic}")
+                    .FirstOrDefault();
+
+                if (producerInResults != null)
+                {
+                    producerInResults.InstancesCount++;
+
+                }
+                else
+                {
+                    results.Add(new ProducerActivity()
+                    {
+                        Name = sub.Value.ProducerName,
+                        Tenant = sub.Value.Tenant,
+                        Location = $"{sub.Value.Tenant}/{sub.Value.Product}/{sub.Value.Component}/{sub.Value.Topic}",
+                        IsActive = true,
+                        InstancesCount = 1
+                    });
+                }
+            }
+
+            return results;
         }
     }
 }

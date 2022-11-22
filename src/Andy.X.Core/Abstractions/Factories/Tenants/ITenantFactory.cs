@@ -2,28 +2,20 @@
 using Buildersoft.Andy.X.Model.App.Products;
 using Buildersoft.Andy.X.Model.App.Tenants;
 using Buildersoft.Andy.X.Model.App.Topics;
-using System.Collections.Generic;
 
 namespace Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants
 {
     public interface ITenantFactory
     {
-        Tenant CreateTenant();
-        Tenant CreateTenant(string name, string digitalSignature);
-        Tenant CreateTenant(string name,
-            string digitalSignature,
-            bool enableEncryption,
-            bool isProductAutoCreate,
-            bool enableAuthorization, 
-            List<TenantToken> tenantTokens, 
-            TenantLogging tenantLogging, 
-            bool enableGeoReplication,
-            string certificatePath);
+        Tenant CreateTenant(string name, Model.Entities.Core.Tenants.TenantSettings tenantSettings);
+        Tenant CreateTenant(string name, bool enableEncryption, bool isProductAutoCreate, bool enableAuthorization);
 
         Product CreateProduct(string productName);
+        Product CreateProduct(string name, string description);
+
         Component CreateComponent(string componentName);
-        Component CreateComponent(string componentName, bool allowSchemaValidation, bool allowTopicCreation, bool enableAuthorization, List<ComponentToken> tokens);
-        Topic CreateTopic(string topicName);
-        Topic CreateTopic(string topicName, bool isPersistent);
+        Component CreateComponent(string componentName, string description, Model.Entities.Core.Components.ComponentSettings componentSettings);
+
+        Topic CreateTopic(string topicName, string description);
     }
 }

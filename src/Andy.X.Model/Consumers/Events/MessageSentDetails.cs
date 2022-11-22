@@ -1,19 +1,28 @@
-﻿using System;
+﻿using MessagePack;
+using System;
 using System.Collections.Generic;
 
 namespace Buildersoft.Andy.X.Model.Consumers.Events
 {
+    [MessagePackObject]
     public class MessageSentDetails
     {
-        public string Tenant { get; set; }
-        public string Product { get; set; }
-        public string Component { get; set; }
-        public string Topic { get; set; }
+        [Key(0)]
+        public long EntryId { get; set; }
 
-        public Guid Id { get; set; }
-        public object MessageRaw { get; set; }
-        public Dictionary<string, object> Headers { get; set; }
+        [Key(1)]
+        public string NodeId { get; set; }
 
-        public DateTime SentDate { get; set; }
+        [Key(2)]
+        public Dictionary<string, string> Headers { get; set; }
+
+        [Key(3)]
+        public byte[] MessageId { get; set; }
+
+        [Key(4)]
+        public byte[] Payload { get; set; }
+
+        [Key(5)]
+        public DateTimeOffset SentDate { get; set; }
     }
 }

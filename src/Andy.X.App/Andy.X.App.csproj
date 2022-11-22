@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
-		<Version>2.1.0</Version>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net7.0</TargetFramework>
+		<Version>3.0.0</Version>
 		<Company>Buildersoft</Company>
 		<Product>Buildersoft Andy</Product>
 		<Authors>Buildersoft</Authors>
@@ -12,21 +13,26 @@
 		<UserSecretsId>acbefa1b-f798-400c-8352-e0f54e8ee47c</UserSecretsId>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<DockerfileContext>..\..</DockerfileContext>
+		<PackAsTool>False</PackAsTool>
+		<EnforceCodeStyleInBuild>False</EnforceCodeStyleInBuild>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 
-		<PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
+		<PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
-		<PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Andy.X.IO\Andy.X.IO.csproj" />
-		<ProjectReference Include="..\Andy.X.Router\Andy.X.Router.csproj" />
-		<ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj" />
+		<ProjectReference Include="..\Andy.X.Router\Andy.X.Router.csproj">
+		  <Private>True</Private>
+		</ProjectReference>
+		<ProjectReference Include="..\Andy.X.Utility\Andy.X.Utility.csproj">
+		  <Private>True</Private>
+		</ProjectReference>
 	</ItemGroup>
 
 </Project>

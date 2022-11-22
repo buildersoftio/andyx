@@ -32,6 +32,9 @@ namespace Andy.X.App
             if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS") == null)
                 Environment.SetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS", "true");
 
+            if (Environment.GetEnvironmentVariable("ANDYX_NODE_ID") == null)
+                Environment.SetEnvironmentVariable("ANDYX_NODE_ID", "default_01");
+
             try
             {
                 CreateHostBuilder(args).Build().Run();

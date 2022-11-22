@@ -1,0 +1,21 @@
+﻿{
+  "Name": "standalone_cluster",
+  "ShardDistributionType": "Async",
+  "Shards": [
+    {
+
+      "ReplicaDistributionType": "Async",
+      "Replicas": [
+        {
+          "NodeId": "andyx_standalone",
+          "Host": "localhost",
+          "Port": 6540,
+          "ConnectionType": "NON_SSL",
+          "Type": "Main",
+          "Username": "admin",
+          "Password": "admin"
+        }
+      ]
+    }
+  ]
+}

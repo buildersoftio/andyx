@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Configuration;
+﻿using Buildersoft.Andy.X.Model.Configurations;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Security.Claims;
@@ -14,50 +15,62 @@ namespace Buildersoft.Andy.X.Handlers
 {
     public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
-        private readonly IConfiguration configuration;
+        private readonly List<CredentialsConfiguration> _credentialsConfigurations;
+
         public BasicAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
             ISystemClock clock,
-            IConfiguration configuration)
-            : base(options, logger, encoder, clock)
+            List<CredentialsConfiguration> credentialsConfigurations) : base(options, logger, encoder, clock)
         {
-            this.configuration = configuration;
+            _credentialsConfigurations = credentialsConfigurations;
         }
 
-        protected async override Task<AuthenticateResult> HandleAuthenticateAsync()
+        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             string username = null;
+            string role = null;
             try
             {
+                var headers = Request.Headers.Authorization;
                 var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
                 var credentials = Encoding.UTF8.GetString(Convert.FromBase64String(authHeader.Parameter)).Split(':');
                 username = credentials.FirstOrDefault();
                 var password = credentials.LastOrDefault();
 
-                if (!IsAuthorized(username, password))
+                if (!IsAuthorized(username, password, out role))
                     throw new ArgumentException("Invalid credentials");
             }
             catch (Exception ex)
             {
-                return AuthenticateResult.Fail($"Authentication failed: {ex.Message}");
+                return Task.FromResult(AuthenticateResult.Fail($"Authentication failed: {ex.Message}"));
             }
 
             var claims = new[] {
-                new Claim(ClaimTypes.Name, username)
+                new Claim(ClaimTypes.Name, username),
+                new Claim(ClaimTypes.Role, role)
             };
+
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
-            return AuthenticateResult.Success(ticket);
+            return Task.FromResult(AuthenticateResult.Success(ticket));
         }
 
-        public bool IsAuthorized(string username, string password)
+        public bool IsAuthorized(string username, string password, out string role)
         {
-            return username == configuration.GetSection("Credentials:Username").Value
-                && password == configuration.GetSection("Credentials:Password").Value;
+            role = "";
+            var credentials = _credentialsConfigurations
+                .Where(c => c.Username == username && c.Password == password)
+                .FirstOrDefault();
+
+            if (credentials is null)
+                return false;
+
+            role = credentials.Role.ToString();
+            return true;
         }
     }
 }

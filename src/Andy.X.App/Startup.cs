@@ -1,9 +1,11 @@
 using Buildersoft.Andy.X.Core.Services.App;
 using Buildersoft.Andy.X.Extensions.DependencyInjection;
 using Buildersoft.Andy.X.Handlers;
+using Buildersoft.Andy.X.IO.Locations;
+using Buildersoft.Andy.X.Model.Configurations;
+using Buildersoft.Andy.X.Router.Hubs.Clusters;
 using Buildersoft.Andy.X.Router.Hubs.Consumers;
 using Buildersoft.Andy.X.Router.Hubs.Producers;
-using Buildersoft.Andy.X.Router.Hubs.Storages;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -11,7 +13,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
 using System;
+using System.IO;
 using System.Text.Json.Serialization;
 
 namespace Andy.X.App
@@ -28,6 +32,9 @@ namespace Andy.X.App
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddConfigurations(Configuration);
+            var transportConfiguration = JsonConvert.DeserializeObject<TransportConfiguration>(File.ReadAllText(ConfigurationLocations.GetTransportConfigurationFile()));
+
             if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS").ToLower() == "true")
             {
                 services.AddControllers()
@@ -39,19 +46,30 @@ namespace Andy.X.App
 
             services.AddSignalR(opt =>
                 {
-                    opt.MaximumReceiveMessageSize = null;
+                    opt.MaximumReceiveMessageSize = transportConfiguration.MaximumReceiveMessageSizeInBytes;
+                    opt.ClientTimeoutInterval = new TimeSpan(0, 0, transportConfiguration.ClientTimeoutInterval);
+                    opt.HandshakeTimeout = new TimeSpan(0, 0, transportConfiguration.HandshakeTimeout);
+                    opt.KeepAliveInterval = new TimeSpan(0, 0, transportConfiguration.KeepAliveInterval);
+
+                    opt.StreamBufferCapacity = transportConfiguration.StreamBufferCapacity;
+                    opt.MaximumParallelInvocationsPerClient = transportConfiguration.MaximumParallelInvocationsPerClient;
                 })
                 .AddJsonProtocol(opts =>
                 {
                     opts.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                })
+                .AddMessagePackProtocol(opts =>
+                {
+                     
                 });
+
 
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo
+                c.SwaggerDoc("v3", new OpenApiInfo
                 {
-                    Title = "Buildersoft Andy X",
-                    Version = "v2",
+                    Title = "Andy X",
+                    Version = "v3",
                     Description = "Andy X is an open-source distributed streaming platform designed to deliver the best performance possible for high-performance data pipelines, streaming analytics, streaming between microservices and data integration.",
                     License = new OpenApiLicense() { Name = "Licensed under the Apache License 2.0", Url = new Uri("https://bit.ly/3DqVQbx") }
                 });
@@ -66,42 +84,52 @@ namespace Andy.X.App
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
-                          new OpenApiSecurityScheme
-                            {
-                                Reference = new OpenApiReference
-                                {
-                                    Type = ReferenceType.SecurityScheme,
-                                    Id = "basic"
-                                }
-                            },
-                            new string[] {}
+                         new OpenApiSecurityScheme
+                           {
+                               Reference = new OpenApiReference
+                               {
+                                   Type = ReferenceType.SecurityScheme,
+                                   Id = "basic"
+                               }
+                           },
+                           Array.Empty<string>()
                     }
                 });
             });
 
-            services.AddAuthentication("UserAuthentication")
-                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("UserAuthentication", null);
+            services.AddAuthentication("Andy.X_Authorization")
+                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Andy.X_Authorization", null);
+
+            // Persistency Core State
+            services.AddCoreRepository();
+            services.AddCoreService();
 
             services.AddSerilogLoggingConfiguration(Configuration);
             services.AddSingleton<ApplicationService>();
-            services.AddStorageFactoryMethods();
+
+            services.AddClusterRepository();
+            services.AddClusterHubService();
+            services.AddClusterService();
+            services.AddClusterOutboundService();
+
             services.AddAppFactoryMethods();
             services.AddProducerFactoryMethods();
-            services.AddConsumerFactoryMethods();
+            services.AddClusterFactoryMethods();
+            services.AddProducerSubscriptionFactoryMethods();
 
-            services.AddConfigurations(Configuration);
 
+            services.AddOrchestratorService();
+            services.AddInboundMessageServices();
+            services.AddOutboundMessageServices();
+
+            services.AddTenantMemoryService();
             services.AddTenantMemoryRepository();
 
-            services.AddStorageRepository();
             services.AddConsumerRepository();
             services.AddProducerRepository();
 
-            services.AddStorageHubService();
-            services.AddConsumerHubService();
+            services.AddSubscriptionHubService();
             services.AddProducerHubService();
-
-            services.AddRestServices();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -113,7 +141,7 @@ namespace Andy.X.App
                 if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS").ToLower() == "true")
                 {
                     app.UseSwagger();
-                    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Andy X v2"));
+                    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v3/swagger.json", "Andy X v3"));
                 }
             }
 
@@ -124,16 +152,35 @@ namespace Andy.X.App
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
+
+            var transportConfiguration = serviceProvider.GetRequiredService<TransportConfiguration>();
+
             app.UseEndpoints(endpoints =>
             {
                 // Mapping Rest endpoints
                 if (Environment.GetEnvironmentVariable("ANDYX_EXPOSE_CONFIG_ENDPOINTS").ToLower() == "true")
                     endpoints.MapControllers();
 
-                // Mapping SignalR Hubs
-                endpoints.MapHub<StorageHub>("/realtime/v2/storage");
-                endpoints.MapHub<ProducerHub>("/realtime/v2/producer");
-                endpoints.MapHub<ConsumerHub>("/realtime/v2/consumer");
+                // mapping SignaR Cluster Hub
+                endpoints.MapHub<ClusterHub>("/realtime/v3/cluster", opt =>
+                {
+                    opt.ApplicationMaxBufferSize = transportConfiguration.ApplicationMaxBufferSizeInBytes;
+                    opt.TransportMaxBufferSize = transportConfiguration.TransportMaxBufferSizeInBytes;
+                });
+
+                // Mapping SignalR Hub for Producer
+                endpoints.MapHub<ProducerHub>("/realtime/v3/producer", opt =>
+                {
+                    opt.ApplicationMaxBufferSize = transportConfiguration.ApplicationMaxBufferSizeInBytes;
+                    opt.TransportMaxBufferSize = transportConfiguration.TransportMaxBufferSizeInBytes;
+                });
+
+                // Mapping SignalR Hub for Consumer
+                endpoints.MapHub<ConsumerHub>("/realtime/v3/consumer", opt =>
+                {
+                    opt.ApplicationMaxBufferSize = transportConfiguration.ApplicationMaxBufferSizeInBytes;
+                    opt.TransportMaxBufferSize = transportConfiguration.TransportMaxBufferSizeInBytes;
+                });
             });
         }
     }

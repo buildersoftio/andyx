@@ -1,25 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <Version>2.1.0</Version>
-    <Company>Buildersoft</Company>
-    <Product>Buildersoft Andy</Product>
-    <Authors>Buildersoft</Authors>
-    <Description>Buildersoft Andy X is a distributed messaging system. This system will empower developers to move into Event Driven Systems. Andy X is a multi-tenant system.</Description>
-    <Copyright>Copyright © Buildersoft 2022</Copyright>
-    <RootNamespace>Buildersoft.Andy.X.Router</RootNamespace>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<Version>3.0.0</Version>
+		<Company>Buildersoft</Company>
+		<Product>Buildersoft Andy</Product>
+		<Authors>Buildersoft</Authors>
+		<Description>Buildersoft Andy X is a distributed messaging system. This system will empower developers to move into Event Driven Systems. Andy X is a multi-tenant system.</Description>
+		<Copyright>Copyright © Buildersoft 2022</Copyright>
+		<RootNamespace>Buildersoft.Andy.X.Router</RootNamespace>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
-    <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="Services\Consumers\**" />
+		<EmbeddedResource Remove="Services\Consumers\**" />
+		<None Remove="Services\Consumers\**" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Andy.X.Core\Andy.X.Core.csproj" />
-    <ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!--<PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />-->
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
+		<PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Andy.X.Core\Andy.X.Core.csproj" />
+		<ProjectReference Include="..\Andy.X.Model\Andy.X.Model.csproj" />
+	</ItemGroup>
 
 </Project>

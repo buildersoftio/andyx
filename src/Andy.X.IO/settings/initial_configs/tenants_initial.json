@@ -1,0 +1,113 @@
+﻿[
+  {
+    "Name": "default",
+    "Settings": {
+      "IsProductAutomaticCreationAllowed": true,
+      "IsEncryptionEnabled": false,
+      "IsAuthorizationEnabled": false
+    }
+  },
+  {
+    "Name": "public",
+    "Settings": {
+      "IsProductAutomaticCreationAllowed": true,
+      "IsEncryptionEnabled": false,
+      "IsAuthorizationEnabled": false
+    }
+  },
+  {
+    "Name": "system",
+    "Settings": {
+      "IsProductAutomaticCreationAllowed": true,
+      "IsEncryptionEnabled": false,
+      "IsAuthorizationEnabled": false
+    },
+    "Products": [
+      {
+        "Name": "logging",
+        "Components": [
+          {
+            "Name": "storage",
+            "Settings": {
+              "IsTopicAutomaticCreation": false,
+              "EnforceSchemaValidation": false,
+              "IsAuthorizationEnabled": false,
+              "IsSubscriptionAutomaticCreationAllowed": true,
+              "IsProducerAutomaticCreationAllowed": true
+            }
+          },
+          {
+            "Name": "producer",
+            "Settings": {
+              "IsTopicAutomaticCreation": false,
+              "EnforceSchemaValidation": false,
+              "IsAuthorizationEnabled": false,
+              "IsSubscriptionAutomaticCreationAllowed": true,
+              "IsProducerAutomaticCreationAllowed": true
+            }
+          },
+          {
+            "Name": "consumer",
+            "Settings": {
+              "IsTopicAutomaticCreation": false,
+              "EnforceSchemaValidation": false,
+              "IsAuthorizationEnabled": false,
+              "IsSubscriptionAutomaticCreationAllowed": true,
+              "IsProducerAutomaticCreationAllowed": true
+            }
+          }
+        ]
+      },
+      {
+        "Name": "connections",
+        "Components": [
+          {
+            "Name": "storage",
+            "Settings": {
+              "IsTopicAutomaticCreation": false,
+              "EnforceSchemaValidation": false,
+              "IsAuthorizationEnabled": false,
+              "IsSubscriptionAutomaticCreationAllowed": true,
+              "IsProducerAutomaticCreationAllowed": true
+            },
+            "Topics": [
+              {
+                "Name": "events"
+              }
+            ]
+          },
+          {
+            "Name": "producer",
+            "Settings": {
+              "IsTopicAutomaticCreation": false,
+              "EnforceSchemaValidation": false,
+              "IsAuthorizationEnabled": false,
+              "IsSubscriptionAutomaticCreationAllowed": true,
+              "IsProducerAutomaticCreationAllowed": true
+            },
+            "Topics": [
+              {
+                "Name": "events"
+              }
+            ]
+          },
+          {
+            "Name": "consumer",
+            "Settings": {
+              "IsTopicAutomaticCreation": false,
+              "EnforceSchemaValidation": false,
+              "IsAuthorizationEnabled": false,
+              "IsSubscriptionAutomaticCreationAllowed": true,
+              "IsProducerAutomaticCreationAllowed": true
+            },
+            "Topics": [
+              {
+                "Name": "events"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

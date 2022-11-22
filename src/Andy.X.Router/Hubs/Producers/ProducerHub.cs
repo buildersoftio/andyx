@@ -1,10 +1,12 @@
 ﻿using Buildersoft.Andy.X.Core.Abstractions.Factories.Producers;
 using Buildersoft.Andy.X.Core.Abstractions.Factories.Tenants;
 using Buildersoft.Andy.X.Core.Abstractions.Hubs.Producers;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Memory;
-using Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers;
-using Buildersoft.Andy.X.Core.Abstractions.Services.Consumers;
-using Buildersoft.Andy.X.Core.Abstractions.Services.Storages;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories.CoreState;
+using Buildersoft.Andy.X.Core.Abstractions.Service.Producers;
+using Buildersoft.Andy.X.Core.Abstractions.Services;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Clusters;
+using Buildersoft.Andy.X.Core.Abstractions.Services.CoreState;
+using Buildersoft.Andy.X.Core.Abstractions.Services.Inbound;
 using Buildersoft.Andy.X.Core.Extensions.Authorization;
 using Buildersoft.Andy.X.Model.App.Messages;
 using Buildersoft.Andy.X.Model.Producers;
@@ -18,195 +20,252 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 {
     public class ProducerHub : Hub<IProducerHub>
     {
-        private readonly ILogger<ProducerHub> logger;
-        private readonly IProducerHubRepository producerHubRepository;
-        private readonly ITenantRepository tenantRepository;
-        private readonly ITenantFactory tenantFactory;
-        private readonly IProducerFactory producerFactory;
-        private readonly IStorageHubService storageHubService;
-        private readonly IConsumerHubService consumerHubService;
+        private readonly ILogger<ProducerHub> _logger;
+
+        private readonly IProducerHubRepository _producerHubRepository;
+        private readonly ITenantStateService _tenantStateService;
+        private readonly ICoreRepository _coreRepository;
+        private readonly ITenantFactory _tenantFactory;
+        private readonly IProducerFactory _producerFactory;
+        private readonly IInboundMessageService _inboundMessageService;
+
+        private readonly IClusterHubService _clusterHubService;
+        private readonly ICoreService _coreService;
 
         public ProducerHub(ILogger<ProducerHub> logger,
             IProducerHubRepository producerHubRepository,
-            ITenantRepository tenantRepository,
+            ITenantStateService tenantStateService,
+            ICoreRepository coreRepository,
             ITenantFactory tenantFactory,
             IProducerFactory producerFactory,
-            IStorageHubService storageHubService,
-            IConsumerHubService consumerHubService)
+            IInboundMessageService inboundMessageService,
+            IClusterHubService clusterHubService,
+            ICoreService coreService)
         {
-            this.logger = logger;
-            this.producerHubRepository = producerHubRepository;
-            this.tenantRepository = tenantRepository;
-            this.tenantFactory = tenantFactory;
-            this.producerFactory = producerFactory;
-            this.storageHubService = storageHubService;
-            this.consumerHubService = consumerHubService;
+            _logger = logger;
+            _producerHubRepository = producerHubRepository;
+            _tenantStateService = tenantStateService;
+            _coreRepository = coreRepository;
+            _tenantFactory = tenantFactory;
+            _producerFactory = producerFactory;
+
+            _inboundMessageService = inboundMessageService;
+
+            _clusterHubService = clusterHubService;
+            _coreService = coreService;
         }
 
         public override Task OnConnectedAsync()
         {
             Producer producerToRegister;
-            string clientConnectionId = Context.ConnectionId;
+            string producerConnectionId = Context.ConnectionId;
             var headers = Context.GetHttpContext().Request.Headers;
 
             // authorization tokens
-            // TODO: Implement token validation
             string tenantToken = headers["x-andyx-tenant-authoriziation"];
+            tenantToken ??= "";
+            string productToken = headers["x-andyx-product-authoriziation"];
+            productToken ??= "";
             string componentToken = headers["x-andyx-component-authoriziation"];
+            componentToken ??= "";
 
             string tenant = headers["x-andyx-tenant"].ToString();
             string product = headers["x-andyx-product"].ToString();
             string component = headers["x-andyx-component"].ToString();
             string topic = headers["x-andyx-topic"].ToString();
-            bool isPersistent = Boolean.Parse(headers["x-andyx-topic-is-persistent"]);
+            string topicDescription = headers["x-andyx-topic-description"].ToString();
 
+            string producerName = headers["x-andyx-producer-name"].ToString();
 
-            string producerName = headers["x-andyx-producer"].ToString();
-
-            logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} requested connection");
+            _logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} requested connection");
 
             //check if the producer is already connected
-            var connectedTenant = tenantRepository.GetTenant(tenant);
+            var connectedTenant = _tenantStateService.GetTenant(tenant);
             if (connectedTenant == null)
             {
-                logger.LogInformation($"Producer '{producerName}' failed to connect, tenant '{tenant}' does not exists");
+                var message = $"Producer '{producerName}' failed to connect, tenant '{tenant}' does not exists";
+                _logger.LogInformation(message);
+                Clients.Caller.AndyOrderedDisconnect(message);
                 return OnDisconnectedAsync(new Exception($"There is no tenant registered with this name '{tenant}'"));
             }
 
             // check tenant token validation
-            bool isTenantTokenValidated = tenantRepository.ValidateTenantToken(tenant, tenantToken);
+            bool isTenantTokenValidated = _tenantStateService.ValidateTenantToken(_coreRepository, tenant, tenantToken, false);
             if (isTenantTokenValidated != true)
             {
-                logger.LogInformation($"Producer '{producerName}' failed to connect, access is forbidden. Not authorized");
+                var message = $"Producer '{producerName}' failed to connect, access is forbidden. Not authorized";
+                _logger.LogInformation(message);
+                Clients.Caller.AndyOrderedDisconnect(message);
                 return OnDisconnectedAsync(new Exception($"Producer '{producerName}' failed to connect, access is forbidden"));
             }
 
-            var connectedProduct = tenantRepository.GetProduct(tenant, product);
+            var connectedProduct = _tenantStateService.GetProduct(tenant, product);
             if (connectedProduct == null)
             {
-                if (connectedTenant.Settings.AllowProductCreation != true)
+                if (connectedTenant.Settings.IsProductAutomaticCreationAllowed != true)
                 {
-                    logger.LogInformation($"Producer '{producerName}' failed to connect, tenant '{tenant}' does not allow to create new product");
+                    var message = $"Producer '{producerName}' failed to connect, tenant '{tenant}' does not allow to create new product";
+                    _logger.LogInformation(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"There is no product registered with this name '{product}'. Tenant '{tenant}' does not allow to create new product"));
                 }
 
-                var productDetails = tenantFactory.CreateProduct(product);
-                tenantRepository.AddProduct(tenant, product, productDetails);
-                storageHubService.CreateProductAsync(tenant, productDetails);
+                var productDetails = _tenantFactory.CreateProduct(product);
+                _tenantStateService.AddProduct(tenant, product, productDetails);
             }
-            else
+
+            // check product token validation
+            var tenantFromState = _coreRepository.GetTenant(tenant);
+            bool isProductTokenValidated = _tenantStateService.ValidateProductToken(_coreRepository, tenantFromState.Id, product, productToken, false);
+            if (isProductTokenValidated != true)
             {
-                storageHubService.UpdateProductAsync(tenant, connectedProduct);
+                string message = $"Producer '{producerName}' failed to connect, access is forbidden. Not authorized, check product token";
+                _logger.LogInformation(message);
+                Clients.Caller.AndyOrderedDisconnect(message);
+                return OnDisconnectedAsync(new Exception($"Producer '{producerName}' failed to connect, access is forbidden, check product token"));
             }
 
-
-            var connectedComponent = tenantRepository.GetComponent(tenant, product, component);
+            var connectedComponent = _tenantStateService.GetComponent(tenant, product, component);
+            var productFromState = _coreRepository.GetProduct(tenantFromState.Id, product);
             if (connectedComponent == null)
             {
-                var componentDetails = tenantFactory.CreateComponent(component);
-                tenantRepository.AddComponent(tenant, product, component, componentDetails);
-                storageHubService.CreateComponentAsync(tenant, product, componentDetails);
+                var componentDetails = _tenantFactory.CreateComponent(component);
+                _tenantStateService.AddComponent(tenant, product, component, componentDetails);
             }
             else
             {
                 // check component token validation
-                bool isComponentTokenValidated = tenantRepository.ValidateComponentToken(tenant, product, component, componentToken, producerName, false);
+                bool isComponentTokenValidated = _tenantStateService.ValidateComponentToken(_coreRepository, productFromState.Id, component, componentToken, producerName, false);
                 if (isComponentTokenValidated != true)
                 {
-                    logger.LogInformation($"Producer '{producerName}' failed to connect, access is forbidden. Not authorized, check component token");
+                    string message = $"Producer '{producerName}' failed to connect, access is forbidden. Not authorized, check component token";
+                    _logger.LogInformation(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"Producer '{producerName}' failed to connect, access is forbidden, check component token"));
                 }
-
-                storageHubService.UpdateComponentAsync(tenant, product, connectedComponent);
             }
 
-
-            var connectedTopic = tenantRepository.GetTopic(tenant, product, component, topic);
+            var connectedTopic = _tenantStateService.GetTopic(tenant, product, component, topic);
             if (connectedTopic == null)
             {
                 // Check if the component allows to create a new topic.
-                connectedComponent = tenantRepository.GetComponent(tenant, product, component);
-                if (connectedComponent.Settings.AllowTopicCreation != true)
+                connectedComponent = _tenantStateService.GetComponent(tenant, product, component);
+                if (connectedComponent.Settings.IsTopicAutomaticCreationAllowed != true)
                 {
-                    logger.LogInformation($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component.");
+                    string message = $"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component.";
+                    _logger.LogInformation(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
                     return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new topic {topic} at '{tenant}/{product}/{component}'. To allow creating update property AllowTopicCreation at component."));
                 }
 
-                var topicDetails = tenantFactory.CreateTopic(topic, isPersistent);
-                tenantRepository.AddTopic(tenant, product, component, topic, topicDetails);
-                storageHubService.CreateTopicAsync(tenant, product, component, topicDetails);
-            }
-            else
-            {
-                storageHubService.UpdateTopicAsync(tenant, product, component, connectedTopic);
+                var topicDetails = _tenantFactory.CreateTopic(topic, topicDescription);
+                _tenantStateService.AddTopic(tenant, product, component, topic, topicDetails);
             }
 
-            if (producerHubRepository.GetProducerByProducerName(tenant, product, component, topic, producerName).Equals(default(KeyValuePair<string, Producer>)) != true)
+            // check if this is a new producer.
+            var componentFromState = _coreRepository.GetComponent(tenantFromState.Id, productFromState.Id, component);
+            var topicFromState = _coreRepository.GetTopic(componentFromState.Id, topic);
+            var producerFromState = _coreRepository.GetProducer(topicFromState.Id, producerName);
+            if (producerFromState == null)
             {
-                logger.LogWarning($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} is already connected");
-                return OnDisconnectedAsync(new Exception($"There is a producer with name '{producerName}' at {tenant}/{product}/{component}/{topic} connected to this node"));
+                var componentSettings = _coreRepository.GetComponentSettings(componentFromState.Id);
+                if (componentSettings.IsProducerAutomaticCreationAllowed != true)
+                {
+                    var message = $"Component '{component}' does not allow to create a new producer {producerName} at '{tenant}/{product}/{component}'. To allow creating update property IsProducerAutomaticCreationAllowed at component settings.";
+                    _logger.LogInformation(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
+                    return OnDisconnectedAsync(new Exception($"Component '{component}' does not allow to create a new producer {producerName} at '{tenant}/{product}/{component}'. To allow creating update property IsProducerAutomaticCreationAllowed at component settings."));
+
+                }
+
+                _coreService.CreateProducer(tenant, product, component, topic, producerName, "Created automatically with the client request", Model.Entities.Core.Producers.ProducerInstanceType.Multiple);
+                producerFromState = _coreRepository.GetProducer(topicFromState.Id, producerName);
             }
 
-            producerToRegister = producerFactory.CreateProducer(tenant, product, component, topic, producerName);
-            producerHubRepository.AddProducer(clientConnectionId, producerToRegister);
-            storageHubService.ConnectProducerAsync(producerToRegister);
+            if (producerFromState.InstanceType == Model.Entities.Core.Producers.ProducerInstanceType.Single)
+            {
+                if (_producerHubRepository.GetProducerByProducerName(tenant, product, component, topic, producerName).Equals(default(KeyValuePair<string, Producer>)) != true)
+                {
+                    string message = $"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} is already connected";
+                    _logger.LogWarning(message);
+                    Clients.Caller.AndyOrderedDisconnect(message);
+                    return OnDisconnectedAsync(new Exception($"There is a producer with name '{producerName}' at {tenant}/{product}/{component}/{topic} connected to this node"));
+                }
+            }
+
+            producerToRegister = _producerFactory.CreateProducer(tenant, product, component, topic, producerName);
+            _producerHubRepository.AddProducer(producerConnectionId, producerToRegister);
 
             Clients.Caller.ProducerConnected(new Model.Producers.Events.ProducerConnectedDetails()
             {
-                Id = producerToRegister.Id,
                 Tenant = tenant,
                 Product = product,
                 Component = component,
                 Topic = topic,
+                Id = producerToRegister.Id.ToString(),
                 ProducerName = producerName
             });
-            logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} is connected");
+            _logger.LogInformation($"Producer '{producerName}' at {tenant}/{product}/{component}/{topic} is connected");
+
+            // notify other nodes in the cluster
+            _clusterHubService.ConnectProducer_AllNodes(tenant, product, component, topic, producerConnectionId, producerName);
 
             return base.OnConnectedAsync();
         }
 
         public override Task OnDisconnectedAsync(Exception exception)
         {
-            string clientConnectionId = Context.ConnectionId;
-            Producer producerToRemove = producerHubRepository.GetProducerById(clientConnectionId);
+            string producerConnectionId = Context.ConnectionId;
+            Producer producerToRemove = _producerHubRepository.GetProducerById(producerConnectionId);
 
             // When the producer with the same name try to connect more than one.
             if (producerToRemove != null)
             {
-                storageHubService.DisconnectProducerAsync(producerToRemove);
-                producerHubRepository.RemoveProducer(clientConnectionId);
+                _clusterHubService.DisconnectProducer_AllNodes(producerToRemove.Tenant, producerToRemove.Product, producerToRemove.Component, producerToRemove.Topic, producerConnectionId);
 
-                logger.LogInformation($"Producer '{producerToRemove.ProducerName}' at {producerToRemove.Tenant}/{producerToRemove.Product}/{producerToRemove.Component}/{producerToRemove.Topic} is disconnected");
+                _producerHubRepository.RemoveProducer(producerConnectionId);
+                _logger.LogInformation($"Producer '{producerToRemove.ProducerName}' at {producerToRemove.Tenant}/{producerToRemove.Product}/{producerToRemove.Component}/{producerToRemove.Topic} is disconnected");
 
                 Clients.Caller.ProducerDisconnected(new Model.Producers.Events.ProducerDisconnectedDetails()
                 {
                     Id = producerToRemove.Id
                 });
             }
+
             return base.OnDisconnectedAsync(exception);
         }
 
-        public async Task TransmitMessage(Message message)
+        public void TransmitMessage(Message message)
         {
-            await consumerHubService.TransmitMessage(message);
-            IncreaseMessageProducedCount();
+            _inboundMessageService.AcceptMessage(message);
+
+            if (message.RequiresCallback == true)
+            {
+                Clients.Caller.MessageAccepted(new Model.Producers.Events.MessageAcceptedDetails()
+                {
+                    IdentityId = message.IdentityId,
+                    MessageCount = 1,
+                    AcceptedDate = DateTimeOffset.UtcNow
+                });
+            }
         }
 
-        public async Task TransmitMessages(List<Message> messages)
+        public void TransmitMessages(List<Message> messages)
         {
             foreach (var message in messages)
             {
-                await consumerHubService.TransmitMessage(message);
+                _inboundMessageService.AcceptMessage(message);
             }
 
-            IncreaseMessageProducedCount(messages.Count);
-        }
-
-        private void IncreaseMessageProducedCount(int count = 1)
-        {
-            string clientConnectionId = Context.ConnectionId;
-            var producer = producerHubRepository.GetProducerById(clientConnectionId);
-            producer.CountMessagesProducedSinceConnected = producer.CountMessagesProducedSinceConnected + count;
+            if (messages[0].RequiresCallback == true)
+            {
+                Clients.Caller.MessageAccepted(new Model.Producers.Events.MessageAcceptedDetails()
+                {
+                    IdentityId = messages[0].IdentityId,
+                    MessageCount = messages.Count,
+                    AcceptedDate = DateTimeOffset.UtcNow
+                });
+            }
         }
     }
 }

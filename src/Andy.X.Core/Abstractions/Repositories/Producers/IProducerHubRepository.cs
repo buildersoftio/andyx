@@ -1,7 +1,7 @@
 ﻿using Buildersoft.Andy.X.Model.Producers;
 using System.Collections.Generic;
 
-namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers
+namespace Buildersoft.Andy.X.Core.Abstractions.Service.Producers
 {
     public interface IProducerHubRepository
     {
@@ -14,5 +14,6 @@ namespace Buildersoft.Andy.X.Core.Abstractions.Repositories.Producers
         Dictionary<string, Producer> GetProducers(string tenant, string product, string component, string topic);
 
         List<string> GetAllProducers();
+        List<ProducerActivity> GetAllProducerActivities();
     }
 }

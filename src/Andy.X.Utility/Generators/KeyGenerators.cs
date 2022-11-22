@@ -5,9 +5,9 @@ namespace Buildersoft.Andy.X.Utility.Generators
 {
     public static class KeyGenerators
     {
-        public static string GenerateApiKey()
+        public static string GenerateApiSecret()
         {
-            var key = new byte[32];
+            var key = new byte[64];
             using (var generator = RandomNumberGenerator.Create())
                 generator.GetBytes(key);
 

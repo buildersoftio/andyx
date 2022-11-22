@@ -1,11 +1,15 @@
 # Buildersoft Andy X Docker File
 
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+
+# Install needed librarise to run rocksdb embedded
+RUN apt-get update && apt-get install -y libsnappy-dev zlib1g-dev libbz2-dev libyaml-dev libltdl-dev libtool
+
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY ["src/Andy.X.App/Andy.X.App.csproj", "src/Andy.X.App/"]
 COPY ["src/Andy.X.Utility/Andy.X.Utility.csproj", "src/Andy.X.Utility/"]
@@ -14,6 +18,7 @@ COPY ["src/Andy.X.IO/Andy.X.IO.csproj", "src/Andy.X.IO/"]
 COPY ["src/Andy.X.Core/Andy.X.Core.csproj", "src/Andy.X.Core/"]
 COPY ["src/Andy.X.Model/Andy.X.Model.csproj", "src/Andy.X.Model/"]
 RUN dotnet restore "src/Andy.X.App/Andy.X.App.csproj"
+
 COPY . .
 WORKDIR "/src/src/Andy.X.App"
 RUN dotnet build "Andy.X.App.csproj" -c Release -o /app/build
