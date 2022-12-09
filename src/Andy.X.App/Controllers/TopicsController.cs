@@ -12,6 +12,8 @@ using Buildersoft.Andy.X.Model.Entities.Core.Topics;
 using Microsoft.AspNetCore.Authorization;
 using System.Data;
 using Buildersoft.Andy.X.Extensions;
+using Buildersoft.Andy.X.Model.App.Topics;
+using Buildersoft.Andy.X.Core.Abstractions.Repositories;
 
 namespace Buildersoft.Andy.X.Controllers
 {
@@ -27,18 +29,21 @@ namespace Buildersoft.Andy.X.Controllers
         private readonly ICoreService _coreService;
         private readonly ITenantStateService _tenantStateService;
         private readonly ITenantFactory _tenantFactory;
+        private readonly ITenantStateRepository _tenantStateRepository;
 
         public TopicsController(ILogger<TopicsController> logger,
             ICoreRepository coreRepository,
             ICoreService coreService,
             ITenantStateService tenantStateService,
-            ITenantFactory tenantFactory)
+            ITenantFactory tenantFactory,
+            ITenantStateRepository tenantStateRepository)
         {
             _logger = logger;
             _coreRepository = coreRepository;
             _coreService = coreService;
             _tenantStateService = tenantStateService;
             _tenantFactory = tenantFactory;
+            this._tenantStateRepository = tenantStateRepository;
         }
 
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -72,7 +77,7 @@ namespace Buildersoft.Andy.X.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("{topic}")]
         [Authorize(Roles = "admin,readonly")]
-        public ActionResult<Topic> GetTopic(string tenant, string product, string component, string topic)
+        public ActionResult<Model.Entities.Core.Topics.Topic> GetTopic(string tenant, string product, string component, string topic)
         {
             _logger.LogApiCallFrom(HttpContext);
 
@@ -259,5 +264,19 @@ namespace Buildersoft.Andy.X.Controllers
             return BadRequest("Something went wrong, topic settings couldnot be updated");
         }
 
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpGet("{topic}/state")]
+        [Authorize(Roles = "admin")]
+        public ActionResult<TopicStates> GetTopicState(string tenant, string product, string component, string topic)
+        {
+            _logger.LogApiCallFrom(HttpContext);
+
+            var topicDetail = _tenantStateRepository.GetTopic(tenant, product, component, topic);
+            if (topicDetail is null)
+                return NotFound("Topic not found");
+
+            return Ok(topicDetail.TopicStates);
+        }
     }
 }

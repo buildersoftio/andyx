@@ -13,6 +13,8 @@ using Buildersoft.Andy.X.Core.Abstractions.Factories.Subscriptions;
 using Microsoft.AspNetCore.Authorization;
 using System.Data;
 using Buildersoft.Andy.X.Extensions;
+using Buildersoft.Andy.X.Model.Entities.Subscriptions;
+using Buildersoft.Andy.X.Core.Contexts.Subscriptions;
 
 namespace Buildersoft.Andy.X.Controllers
 {
@@ -189,6 +191,46 @@ namespace Buildersoft.Andy.X.Controllers
             }
 
             return BadRequest("Something went wrong, subscription couldnot be deleted");
+        }
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpGet("{subscription}/state")]
+        [Authorize(Roles = "admin,readonly")]
+        public ActionResult<SubscriptionPosition> GetSubscriptionPosition(string tenant, string product, string component, string topic, string subscription)
+        {
+            _logger.LogApiCallFrom(HttpContext);
+
+            var tenantDetails = _coreRepository.GetTenant(tenant);
+            if (tenantDetails is null)
+                return NotFound($"Tenant {tenant} does not exists in this cluster");
+
+            var productDetails = _coreRepository.GetProduct(tenantDetails.Id, product);
+            if (productDetails is null)
+                return NotFound($"Product {product} does not exists in {tenant}");
+
+            var componentDetails = _coreRepository.GetComponent(tenantDetails.Id, productDetails.Id, component);
+            if (componentDetails is null)
+                return NotFound($"Component {component} does not exists in {tenant}/{product}");
+
+            var topicDetails = _coreRepository.GetTopic(componentDetails.Id, topic);
+            if (topicDetails is null)
+                return NotFound($"Topic {topic} does not exists in {tenant}/{product}/{component}");
+
+            var subscriptionDetails = _coreRepository.GetSubscription(topicDetails.Id, subscription);
+            if (subscriptionDetails is null)
+                return NotFound($"Subscription {subscription} does not exists in {tenant}/{product}/{component}/{topic}");
+
+            SubscriptionPosition position;
+            using (var stateContext = new SubscriptionPositionContext(tenant, product, component, topic, subscription))
+            {
+                position = stateContext.CurrentPosition.Find(subscription);
+            }
+
+            if (position is null)
+                return NotFound($"Subscription {subscription} does not exists in {tenant}/{product}/{component}/{topic}");
+
+            return position;
         }
     }
 }
