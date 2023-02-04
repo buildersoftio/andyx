@@ -4,6 +4,6 @@
     {
         public static string Name = "Buildersoft Andy X";
         public static string ShortName = "Andy X";
-        public static string Version = "v3.0.0";
+        public static string Version = "v3.0.1";
     }
 }
