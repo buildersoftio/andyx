@@ -240,7 +240,7 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
                     subDbContext.SaveChanges();
 
                     // storing current position for subscription
-                    _logger.LogInformation($"Subscription subscriptionId={subscriptionTopicData.Subscription.SubscriptionName} at {subscriptionTopicData.Subscription.Tenant}/{subscriptionTopicData.Subscription.Product}/{subscriptionTopicData.Subscription.Component}/{subscriptionTopicData.Subscription.Topic} Seeking to entryPositon {subscriptionTopicData.CurrentPosition.ReadEntryPosition}");
+                    _logger.LogInformation($"Subscription with name {subscriptionTopicData.Subscription.SubscriptionName} at {subscriptionTopicData.Subscription.Tenant}/{subscriptionTopicData.Subscription.Product}/{subscriptionTopicData.Subscription.Component}/{subscriptionTopicData.Subscription.Topic} seeking to entry positon {subscriptionTopicData.CurrentPosition.ReadEntryPosition}");
                 }
             }
 
@@ -258,6 +258,8 @@ namespace Buildersoft.Andy.X.Core.Services.Outbound
 
                     topicStateContext.TopicStates.Update(state);
                     topicStateContext.SaveChanges();
+
+                    _logger.LogInformation($"Unacknowledgment store for subscription {subscriptionTopicData.Subscription.SubscriptionName} at {subscriptionTopicData.Subscription.Tenant}/{subscriptionTopicData.Subscription.Product}/{subscriptionTopicData.Subscription.Component}/{subscriptionTopicData.Subscription.Topic} mark entry positon at {state.CurrentEntry}, mark delete position at {state.MarkDeleteEntryPosition}");
                 }
             }
 

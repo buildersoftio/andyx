@@ -41,7 +41,7 @@ namespace Buildersoft.Andy.X.Router.Hubs.Clusters
             _clusterRepository = clusterRepository;
             _clusterHubService = clusterHubService;
             _orchestratorService = orchestratorService;
-            this._outboundClusterMessageService = outboundClusterMessageService;
+            _outboundClusterMessageService = outboundClusterMessageService;
         }
 
         public override Task OnConnectedAsync()

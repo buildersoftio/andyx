@@ -85,12 +85,19 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
                 return;
             }
 
+
             // dynamic.
             ReplicaShardConnection node = null;
             if (nodeId == "")
             {
-                node = _clusterRepository.GetMainReplicaConnectionByIndex(_topicConnectors[topicKey].GetNextCurrentClusterShardId());
-                nodeId = node.NodeId;
+                // v3.0.1 - bug-fix check if message has node_id and nodeId is ""
+                if (message.NodeId != "")
+                    nodeId = message.NodeId;
+                else
+                {
+                    node = _clusterRepository.GetMainReplicaConnectionByIndex(_topicConnectors[topicKey].GetNextCurrentClusterShardId());
+                    nodeId = node.NodeId;
+                }
             }
             else
             {
@@ -168,7 +175,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
                     }
                     catch (Exception)
                     {
-                        _logger.LogError($"Inbound cluster asyunc processor thread '{thread.Key}' failed to restart");
+                        _logger.LogError($"Inbound cluster async processor thread '{thread.Key}' failed to restart");
                     }
                 }
             }
@@ -177,7 +184,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
 
         private void InboundMessagingProcessor(string topicKey, Guid threadId)
         {
-            while (_topicConnectors[topicKey].MessagesBuffer.TryDequeue(out Model.Entities.Storages.Message message))
+            while (_topicConnectors[topicKey].MessagesBuffer.TryDequeue(out EntityMessage message))
             {
                 try
                 {
@@ -276,6 +283,8 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
 
                     clusterContext.NodeEntryStates.Update(currentData);
                     clusterContext.SaveChanges();
+
+                    _logger.LogInformation($"Distribution Node with id {nodeId} mark entry positon at {currentData.CurrentEntry}, mark delete position at {currentData.MarkDeleteEntryPosition}");
                 }
             }
         }
@@ -299,8 +308,7 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
                     topicStateContext.TopicStates.Update(currentData);
                     topicStateContext.SaveChanges();
 
-                    _logger.LogInformation($"Topic topicId={tenant}/{product}/{component}/{topic} Registering to writeEntryPositon {currentData.CurrentEntry}");
-
+                    _logger.LogInformation($"Topic {tenant}/{product}/{component}/{topic} mark entry positon at {currentData.CurrentEntry}, mark delete position at {currentData.MarkDeleteEntryPosition}");
                 }
             }
         }
