@@ -237,7 +237,11 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
 
         public void TransmitMessage(Message message)
         {
-            _inboundMessageService.AcceptMessage(message);
+            // v3.0.1 - bug-fix check if message has node_id and nodeId is ""
+            if (message.NodeId != "")
+                _inboundMessageService.AcceptMessage(message, message.NodeId);
+            else
+                _inboundMessageService.AcceptMessage(message);
 
             if (message.RequiresCallback == true)
             {
@@ -254,7 +258,11 @@ namespace Buildersoft.Andy.X.Router.Hubs.Producers
         {
             foreach (var message in messages)
             {
-                _inboundMessageService.AcceptMessage(message);
+                // v3.0.1 - bug-fix check if message has node_id and nodeId is ""
+                if (message.NodeId != "")
+                    _inboundMessageService.AcceptMessage(message, message.NodeId);
+                else
+                    _inboundMessageService.AcceptMessage(message);
             }
 
             if (messages[0].RequiresCallback == true)

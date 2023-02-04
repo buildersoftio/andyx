@@ -90,14 +90,9 @@ namespace Buildersoft.Andy.X.Core.Services.Inbound
             ReplicaShardConnection node = null;
             if (nodeId == "")
             {
-                // v3.0.1 - bug-fix check if message has node_id and nodeId is ""
-                if (message.NodeId != "")
-                    nodeId = message.NodeId;
-                else
-                {
-                    node = _clusterRepository.GetMainReplicaConnectionByIndex(_topicConnectors[topicKey].GetNextCurrentClusterShardId());
-                    nodeId = node.NodeId;
-                }
+                node = _clusterRepository.GetMainReplicaConnectionByIndex(_topicConnectors[topicKey].GetNextCurrentClusterShardId());
+                nodeId = node.NodeId;
+
             }
             else
             {
